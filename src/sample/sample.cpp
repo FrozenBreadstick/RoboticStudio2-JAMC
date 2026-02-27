@@ -8,9 +8,9 @@ namespace Sample
         _sample_service = this->create_service<jamc::srv::SampleService>
         ("sample_service", std::bind(&SampleClass::sample_service_handler, this, std::placeholders::_1, std::placeholders::_2));
 
-        for(int i = 10; i < 20; i++)
+        for(int i = 0; i < 10; i++)
         {
-            numbers_[i] = i;
+            numbers_[i] = i + 10;
         }
     }
 
