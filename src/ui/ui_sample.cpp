@@ -26,6 +26,7 @@ namespace UI
     void SampleUI::send_request() {
         auto request = std::make_shared<jamc::srv::SampleService::Request>();
         request->index = _input->value();
+        RCLCPP_INFO(this->get_logger(), "Sending request with index: %d", request->index);
 
         //Check once without blocking the UI indefinitely
         if (!_sample_client->service_is_ready()) {
