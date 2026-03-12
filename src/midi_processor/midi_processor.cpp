@@ -13,3 +13,7 @@ MidiProcessor::MidiProcessor(std::string midi_file_path) {
 
 // open file
 void MidiProcessor::open_file(std::string midi_file_path) {
+
+    // 
+
+}
