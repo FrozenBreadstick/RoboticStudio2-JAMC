@@ -2,9 +2,15 @@
 #include "midi_processor.h"
 
 // constructor ----------------------------------------------------------------
-MidiProcessor::MidiProcessor(std::string midi_file_path) {
+MidiProcessor::MidiProcessor() {
 
     // create midi
+
+}
+
+
+// destructor -----------------------------------------------------------------
+MidiProcessor::~MidiProcessor() {
 
 }
 

@@ -71,11 +71,20 @@ ament_target_dependencies(ui
   rclcpp
 )
 
+#MIDI_Processor_Testing Executable
+add_executable(midi_processor_testing
+  src/midi_processor/midi_testing_main.cpp
+  src/midi_processor/midi_processor.cpp
+  src/midi_processor/midi_processor.h
+)
+
+
 #install executables to lib
 install(
   TARGETS 
     sample
     ui
+    midi_processor_testing
   DESTINATION lib/${PROJECT_NAME}
 )
 

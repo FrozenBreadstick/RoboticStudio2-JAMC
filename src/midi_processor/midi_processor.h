@@ -25,4 +25,9 @@ class MidiProcessor
 
     private:
 
-}
+        void open_file(std::string midi_file_path);
+
+};
+
+
+#endif
