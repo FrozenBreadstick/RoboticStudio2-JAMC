@@ -1,4 +1,4 @@
-#include "ui_piano.h"
+#include "ui/ui_piano.h"
 
 namespace UI
 {
@@ -35,20 +35,21 @@ namespace UI
             _button->setText("▐▐");
             RCLCPP_INFO(this->get_logger(), "MIDI file playing");
         }
+    }
 
     void PianoUI::open_midi_file() {
-    QString file_name = QFileDialog::getOpenFileName(
-        this,
-        "Select MIDI File",
-        QDir::homePath(),           // Start in home directory
-        "MIDI Files (*.mid *.midi)" // Filter
-    );
+        QString file_name = QFileDialog::getOpenFileName(
+            this,
+            "Select MIDI File",
+            QDir::homePath(),           // Start in home directory
+            "MIDI Files (*.mid *.midi)" // Filter
+        );
 
-    if (!file_name.isEmpty()) {
-        _midi_file_path = file_name;
-        _label->setText("Selected: " + _midi_file_path);
-        RCLCPP_INFO(this->get_logger(), "MIDI file selected: %s", file_name.toStdString().c_str());
+        if (!file_name.isEmpty()) {
+            _midi_file_path = file_name;
+            _label->setText("Selected: " + _midi_file_path);
+            RCLCPP_INFO(this->get_logger(), "MIDI file selected: %s", file_name.toStdString().c_str());
+        }
     }
 }
-    }
-}
+

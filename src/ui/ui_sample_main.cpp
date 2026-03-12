@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <QApplication>
 #include <thread>
-#include "ui_sample.h"
+#include "ui/ui_sample.h"
 
 int main(int argc, char *argv[])
 {

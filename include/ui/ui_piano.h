@@ -7,6 +7,8 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
+#include <QFileDialog>
+#include <QDir>
 
 namespace UI
 {

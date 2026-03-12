@@ -1,5 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
-#include "sample.h"
+#include "sample/sample.h"
 
 int main(int argc, char* argv[])
 {

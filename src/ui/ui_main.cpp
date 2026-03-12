@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <QApplication>
 #include <thread>
-#include "ui_sample.h"
+#include "ui/ui_piano.h"
 
 int main(int argc, char *argv[])
 {
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     
     QApplication app(argc, argv); //Init Qt application
 
-    auto ui_node = std::make_shared<UI::SampleUI>(); //Make the UI by instantiating the node
+    auto ui_node = std::make_shared<UI::PianoUI>(); //Make the UI by instantiating the node
     ui_node->show();
 
     std::thread ros_thread([ui_node]() {

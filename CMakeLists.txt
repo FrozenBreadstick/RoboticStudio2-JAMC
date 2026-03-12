@@ -34,7 +34,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 rosidl_get_typesupport_target(custom_messages ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
-# all node executables
+#Sample Executable
 add_executable(sample
   src/sample/sample.cpp
   src/sample/sample_main.cpp
@@ -42,14 +42,27 @@ add_executable(sample
 target_link_libraries(sample
   ${custom_messages}
 )
+target_include_directories(sample
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 ament_target_dependencies(sample
   rclcpp
 )
 
+#UI Executable
 add_executable(ui
-  src/ui/ui_sample.cpp
+  src/ui/ui_piano.cpp
   src/ui/ui_main.cpp
+  include/ui/ui_piano.h
 )
+target_include_directories(ui
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+set_target_properties(ui PROPERTIES AUTOMOC ON)
 target_link_libraries(ui
   Qt6::Widgets
   ${custom_messages}
