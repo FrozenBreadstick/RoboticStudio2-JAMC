@@ -13,8 +13,13 @@
 #include <mutex>
 #include <thread>
 
-// libraries
-
+// MidiFile library
+#include "midiLibrary/include/Binasc.h"
+#include "midiLibrary/include/MidiFile.h"
+#include "midiLibrary/include/MidiEvent.h"
+#include "midiLibrary/include/MidiMessage.h"
+#include "midiLibrary/include/MidiEventList.h"
+#include "midiLibrary/include/Options.h"
 
 // class
 class MidiProcessor
@@ -23,9 +28,15 @@ class MidiProcessor
         MidiProcessor();
         ~MidiProcessor();
 
+        void open_file(std::string midi_file_path);
+
+        std::vector<std::string> get_notes();
+
     private:
 
-        void open_file(std::string midi_file_path);
+        // variables
+        MidiFile midi;
+        
 
 };
 
