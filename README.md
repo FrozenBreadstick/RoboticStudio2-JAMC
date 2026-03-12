@@ -23,7 +23,7 @@ colcon build --symlink-install --packages-select jamc
 - Add an alias for colcon build to your .bashrc file to make it easier!
 ```bash
 nano ~/.bashrc
-alias cb='colcon build --symlink-install --packages-select`
+alias cb='colcon build --symlink-install --packages-select'
 ```
 So you can just type:
 ```bash
