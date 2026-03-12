@@ -1,0 +1,3 @@
+[submodule "src/midi_processor/midifile"]
+	path = src/midi_processor/midifile
+	url = https://github.com/craigsapp/midifile
