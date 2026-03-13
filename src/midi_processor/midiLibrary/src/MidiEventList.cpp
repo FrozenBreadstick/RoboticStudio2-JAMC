@@ -10,7 +10,7 @@
 // Description:   A class which stores a MidiEvents for a MidiFile track.
 //
 
-#include "MidiEventList.h"
+#include "../include/MidiEventList.h"
 
 #include <algorithm>
 #include <cstdlib>

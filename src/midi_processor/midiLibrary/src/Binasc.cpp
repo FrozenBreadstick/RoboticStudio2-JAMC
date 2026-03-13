@@ -9,7 +9,7 @@
 // description:   Interface to convert bytes between binary and ASCII forms.
 //
 
-#include "Binasc.h"
+#include "../include/Binasc.h"
 
 #include <cstdlib>
 #include <sstream>

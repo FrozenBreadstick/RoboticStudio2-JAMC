@@ -8,13 +8,16 @@
 
 
 int main() {
-    std::cout << "Hello, world, from C++!" << std::endl;
+    std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // create midi
     MidiProcessor midi;
 
     // open file
-    midi.open_file("../../midi_files/twinkle-twinkle-little-star.mid");
+    if(!midi.open_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
 
     std::vector<std::string> notes;
     

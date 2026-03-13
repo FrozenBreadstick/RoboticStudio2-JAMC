@@ -30,7 +30,7 @@ class MidiProcessor
         MidiProcessor();
         ~MidiProcessor();
 
-        void open_file(std::string midi_file_path);
+        bool open_file(std::string midi_file_path);
 
         std::vector<std::string> get_notes();
 

@@ -10,7 +10,7 @@
 // Description:   Interface to command-line options.
 //
 
-#include "Options.h"
+#include "../include/Options.h"
 
 #include <algorithm>
 #include <cctype>

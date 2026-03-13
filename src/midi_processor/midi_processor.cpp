@@ -21,16 +21,20 @@ MidiProcessor::~MidiProcessor() {
 // functions ------------------------------------------------------------------
 
 // open file
-void MidiProcessor::open_file(std::string midi_file_path) {
+bool MidiProcessor::open_file(std::string midi_file_path) {
+
+    std::cout << "Opening midi file: " << midi_file_path << std::endl;
 
     if(!midi.read(midi_file_path)) {
         std::cout << "Error opening midi file" << std::endl;
+        return false;
     }
     
     midi.doTimeAnalysis();
     midi.linkNotePairs();
 
     std::cout << "Midi file read successfully" << std::endl;
+    return true;
 
 }
 

@@ -11,7 +11,7 @@
 //                for the MidiFile class.
 //
 
-#include "MidiEvent.h"
+#include "../include/MidiEvent.h"
 
 #include <cstdlib>
 #include <initializer_list>

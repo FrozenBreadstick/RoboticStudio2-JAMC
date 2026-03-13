@@ -11,7 +11,7 @@
 //                MIDI Files.
 //
 
-#include "MidiMessage.h"
+#include "../include/MidiMessage.h"
 
 #include <cmath>
 #include <cstdlib>
