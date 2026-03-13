@@ -21,7 +21,7 @@ int main() {
     notes = midi.get_notes();
 
     std::cout << "Notes: " << std::endl;
-    for(int i = 0; i < notes.size(); i++) {
+    for(size_t i = 0; i < notes.size(); i++) {
         std::cout << notes[i] << std::endl;
     }
 
