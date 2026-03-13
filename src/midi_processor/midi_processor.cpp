@@ -1,6 +1,8 @@
 // includes -------------------------------------------------------------------
 #include "midi_processor.h"
 
+using namespace smf;
+
 // constructor ----------------------------------------------------------------
 MidiProcessor::MidiProcessor() {
 

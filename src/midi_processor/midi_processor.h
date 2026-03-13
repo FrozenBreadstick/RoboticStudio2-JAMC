@@ -21,6 +21,8 @@
 #include "midiLibrary/include/MidiEventList.h"
 #include "midiLibrary/include/Options.h"
 
+using namespace smf;
+
 // class
 class MidiProcessor
 {
