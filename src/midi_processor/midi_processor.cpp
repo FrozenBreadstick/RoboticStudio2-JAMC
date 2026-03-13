@@ -44,7 +44,7 @@ std::vector<std::string> MidiProcessor::get_notes() {
         for(int j = 0; j < midi.getEventCount(i); j++) {
             MidiEvent& event = midi.getEvent(i, j);
             if(event.isNoteOn()) {
-                notes.push_back(std::to_string(event.getNoteNumber()));
+                notes.push_back(std::to_string(event.getKeyNumber()));
             }
         }
     }
