@@ -1,0 +1,32 @@
+{
+  "song_name": "Song Title",
+  "tracks": [
+    {
+      "track_name": "Main Synth",
+      "instrument": "Synthesizer",
+      "data": [
+        ["C4", 64],
+        ["D4", 70],
+        ["E4", 75]
+      ]
+    },
+    {
+      "track_name": "Drums",
+      "instrument": "Drum Kit",
+      "data": [
+        ["Kick", 45],
+        ["Snare", 50],
+        ["HiHat", 55]
+      ]
+    },
+    {
+      "track_name": "Bass",
+      "instrument": "Electric Bass",
+      "data": [
+        ["E2", 33],
+        ["A2", 40],
+        ["D3", 45]
+      ]
+    }
+  ]
+}
