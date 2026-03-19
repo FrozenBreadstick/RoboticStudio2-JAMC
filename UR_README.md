@@ -4,6 +4,11 @@
 sudo apt-get install ros-humble-ur
 ```
 
+## Motion Planner Installation
+```bash
+sudo apt install ros-humble-moveit
+```
+
 ## Running the Driver
 ```bash
 # Replace ur5e with one of ur3, ur5, ur10, ur3e, ur5e, ur7e, ur10e, ur12e, ur16e, ur8long, ur15, ur18, ur20, ur30

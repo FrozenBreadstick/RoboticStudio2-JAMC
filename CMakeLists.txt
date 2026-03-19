@@ -13,9 +13,16 @@ cmake_policy(SET CMP0071 NEW) #SHHHH Make QT be quiet about its MOC warnings
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
+# motion planning dependencies
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_core REQUIRED)
+
+# general dependencies
 find_package(geometry_msgs REQUIRED)
 
 find_package(rclcpp REQUIRED)
+
+find_package(tf2_ros REQUIRED)
 
 #ui dependencies
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
@@ -51,6 +58,26 @@ ament_target_dependencies(sample
   rclcpp
 )
 
+#Controller Executable
+add_executable(controller
+  src/controller/controller.cpp
+  src/controller/controller_main.cpp
+)
+target_link_libraries(controller
+  ${custom_messages}
+)
+target_include_directories(controller
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(controller
+  rclcpp
+  moveit_ros_planning_interface
+  moveit_core
+  geometry_msgs
+  tf2_ros
+)
 #UI Executable
 add_executable(ui
   src/ui/ui_piano.cpp
@@ -90,7 +117,6 @@ add_executable(midi_processor_testing
 target_link_libraries(midi_processor_testing
   midiFile_library
 )
-
 
 #install executables to lib
 install(
