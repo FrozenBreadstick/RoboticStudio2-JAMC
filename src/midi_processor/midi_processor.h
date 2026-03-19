@@ -34,10 +34,16 @@ class MidiProcessor
 
         std::vector<std::string> get_notes();
 
+        std::vector<std::vector<int>> get_instruments();
+
     private:
 
         // variables
         MidiFile midi;
+
+        // current list of instruments/channels
+        std::vector<std::vector<int>> instruments;
+
         
 
 };
