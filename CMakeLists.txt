@@ -35,6 +35,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/StrStr.msg"
   
   "srv/SampleService.srv"
+  "srv/Load.srv"
+  "srv/Func.srv"
+  "srv/TimeScale.srv"
   
   # DEPENDENCIES geometry_msgs
 )
@@ -60,8 +63,8 @@ ament_target_dependencies(sample
 
 #Controller Executable
 add_executable(controller
-  src/controller/controller.cpp
-  src/controller/controller_main.cpp
+  src/control/controller.cpp
+  src/control/controller_main.cpp
 )
 target_link_libraries(controller
   ${custom_messages}

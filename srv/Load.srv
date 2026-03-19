@@ -1,0 +1,4 @@
+string filepath
+int32 index
+---
+string message
