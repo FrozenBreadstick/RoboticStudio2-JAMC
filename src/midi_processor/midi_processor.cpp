@@ -38,6 +38,32 @@ bool MidiProcessor::open_file(std::string midi_file_path) {
 
 }
 
+// get channels and correspeonding instruments --------------------------------
+std::vector<std::vector<int>> MidiProcessor::get_instruments() {
+
+    std::vector<std::vector<int>> instruments;
+
+    // get instruments
+    for(int i = 0; i < midi.getTrackCount(); i++) {
+        for(int j = 0; j < midi.getEventCount(i); j++) {
+            if(midi.getEvent(i, j).isTimbre()) {
+                
+                // pushback information
+                int channel = midi.getEvent(i, j).getChannel();
+                int instrument = midi.getEvent(i, j).getP1();
+
+                std::vector<int> channel_instrument;
+                channel_instrument.push_back(channel);
+                channel_instrument.push_back(instrument);
+                
+                instruments.push_back(channel_instrument);
+            }
+        }
+    }
+
+    return instruments;
+}
+
 // get notes ------------------------------------------------------------------
 std::vector<std::string> MidiProcessor::get_notes() {
     
