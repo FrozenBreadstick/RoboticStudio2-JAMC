@@ -1,12 +1,12 @@
 // test file for midi reading class
 
 // includes
-#include "midi_processor.h"
 #include <iostream>
 #include <vector>
 #include <string>
+#include "../../include/midi_processor/midi_processor.h"
 
-// functions
+// test functions
 int test_notes();
 int test_process();
 

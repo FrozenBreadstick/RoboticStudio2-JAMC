@@ -1,5 +1,5 @@
 // includes -------------------------------------------------------------------
-    #include "midi_processor.h"
+    #include "../../include/midi_processor/midi_processor.h"
 
 // Namespace
     using namespace smf;

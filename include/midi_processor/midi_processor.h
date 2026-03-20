@@ -1,5 +1,3 @@
-// include guards
-
 #ifndef MIDI_PROCESSOR_H
 #define MIDI_PROCESSOR_H
 
