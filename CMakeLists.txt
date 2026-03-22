@@ -13,9 +13,16 @@ cmake_policy(SET CMP0071 NEW) #SHHHH Make QT be quiet about its MOC warnings
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
+# motion planning dependencies
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_core REQUIRED)
+
+# general dependencies
 find_package(geometry_msgs REQUIRED)
 
 find_package(rclcpp REQUIRED)
+
+find_package(tf2_ros REQUIRED)
 
 #ui dependencies
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
@@ -28,6 +35,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/StrStr.msg"
   
   "srv/SampleService.srv"
+  "srv/Load.srv"
+  "srv/Func.srv"
+  "srv/TimeScale.srv"
   
   # DEPENDENCIES geometry_msgs
 )
@@ -51,6 +61,26 @@ ament_target_dependencies(sample
   rclcpp
 )
 
+#Controller Executable
+add_executable(controller
+  src/control/controller.cpp
+  src/control/controller_main.cpp
+)
+target_link_libraries(controller
+  ${custom_messages}
+)
+target_include_directories(controller
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(controller
+  rclcpp
+  moveit_ros_planning_interface
+  moveit_core
+  geometry_msgs
+  tf2_ros
+)
 #UI Executable
 add_executable(ui
   src/ui/ui_piano.cpp
@@ -73,24 +103,23 @@ ament_target_dependencies(ui
 
 #MIDI_Processor Library
 add_library(midiFile_library
-  src/midi_processor/midiLibrary/src/Binasc.cpp
-  src/midi_processor/midiLibrary/src/MidiEvent.cpp
-  src/midi_processor/midiLibrary/src/MidiFile.cpp
-  src/midi_processor/midiLibrary/src/MidiMessage.cpp
-  src/midi_processor/midiLibrary/src/MidiEventList.cpp
-  src/midi_processor/midiLibrary/src/Options.cpp
+  include/midi_processor/midiLibrary/src/Binasc.cpp
+  include/midi_processor/midiLibrary/src/MidiEvent.cpp
+  include/midi_processor/midiLibrary/src/MidiFile.cpp
+  include/midi_processor/midiLibrary/src/MidiMessage.cpp
+  include/midi_processor/midiLibrary/src/MidiEventList.cpp
+  include/midi_processor/midiLibrary/src/Options.cpp
 )
 
 #MIDI_Processor_Testing Executable
 add_executable(midi_processor_testing
   src/midi_processor/midi_testing_main.cpp
   src/midi_processor/midi_processor.cpp
-  src/midi_processor/midi_processor.h
+  include/midi_processor/midi_processor.h
 )
 target_link_libraries(midi_processor_testing
   midiFile_library
 )
-
 
 #install executables to lib
 install(
