@@ -42,6 +42,9 @@ class MidiProcessor
             // gets all instruments
             std::vector<int> get_instruments();
 
+            // gets all instrument names and their channels
+            std::vector<std::string> get_instrument_names();
+
             // gets all notes that correspond to a specific channel
             std::vector<std::vector<int>> get_channel_notes();
 
@@ -62,6 +65,9 @@ class MidiProcessor
 
             // processes and stores all notes that correspond to a specific channel
             bool process_channel_notes(int channel);
+
+            // processes and stores all notes and their timings that correspond to a specific channel
+            // bool process_channel_notes_with_timings(int channel);
 
             // processes and stores all instruments/channels
             bool process_instruments();

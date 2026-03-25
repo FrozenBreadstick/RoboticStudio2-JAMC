@@ -9,14 +9,14 @@
 // test functions
 int test_notes();
 int test_process();
-
+int test_get_instrument_names();
 
 int main() {
     
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_process();
+    test_get_instrument_names();
 
     // close file
     return 0;
@@ -87,3 +87,26 @@ int test_process() {
 }
 
 
+int test_get_instrument_names() {
+
+    // create midi
+    MidiProcessor midi;
+
+    // open file
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
+
+    std::vector<std::string> instrument_names;
+
+    instrument_names = midi.get_instrument_names();
+
+    // display notes
+    std::cout << "Instrument names: " << std::endl;
+    for(size_t i = 0; i < instrument_names.size(); i++) {
+        std::cout << instrument_names[i] << std::endl;
+    }
+
+    return 0;
+}

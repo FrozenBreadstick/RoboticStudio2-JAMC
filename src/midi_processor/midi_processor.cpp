@@ -64,6 +64,23 @@
             return instruments;
         }
 
+    // get instrument names and channels as a string vector
+        std::vector<std::string> MidiProcessor::get_instrument_names()
+        {
+            std::vector<std::string> instrument_names;
+
+            for(size_t i = 0; i < instruments.size(); i++) {
+                
+                std::string name = midi.getGMInstrumentName(instruments.at(i));
+                std::string channel = std::to_string(channels.at(i));
+                
+                instrument_names.push_back(channel + " - " + name);
+
+            }
+
+            return instrument_names;
+        }
+
     // gets all notes that correspond to a specific channel
         std::vector<std::vector<int>> MidiProcessor::get_channel_notes() 
         {
