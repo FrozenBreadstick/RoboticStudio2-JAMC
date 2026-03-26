@@ -55,13 +55,7 @@ class MidiProcessor
             std::vector<std::vector<double>> get_channel_note_durations();
 
             // get song duration
-            double get_song_duration();
-
-        // bonus functions --------------------------------------------------------------
-        
-            // gets all notes in a midi file (pass level)
-            std::vector<int> get_notes();
-
+            double get_song_duration();`
 
         // public variables -------------------------------------------------------------
 

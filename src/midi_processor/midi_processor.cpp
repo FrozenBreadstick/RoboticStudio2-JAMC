@@ -259,26 +259,3 @@
         {
             return true;
         }
-
-
-
-// bonus functions --------------------------------------------------------------
-
-    // get notes ------------------------------------------------------------------
-        std::vector<int> MidiProcessor::get_notes() 
-        {
-            
-            std::vector<int> notes;
-
-            // get notes
-            for(int i = 0; i < midi.getTrackCount(); i++) {
-                for(int j = 0; j < midi.getEventCount(i); j++) {
-                    MidiEvent& event = midi.getEvent(i, j);
-                    if(event.isNoteOn()) {
-                        notes.push_back(event.getKeyNumber());
-                    }
-                }
-            }
-
-            return notes;
-        }
