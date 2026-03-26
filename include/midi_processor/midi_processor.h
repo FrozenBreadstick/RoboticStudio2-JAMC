@@ -54,6 +54,9 @@ class MidiProcessor
             // gets all note durations that correspond to a specific channel
             std::vector<std::vector<double>> get_channel_note_durations();
 
+            // get song duration
+            double get_song_duration();
+
         // bonus functions --------------------------------------------------------------
         
             // gets all notes in a midi file (pass level)
@@ -78,6 +81,9 @@ class MidiProcessor
             // processes and stores all instruments/channels
             bool process_instruments();
 
+            // process song duration
+            bool process_song_duration();
+
             // stores all data for current midi file in a storage file
             bool save_midi_data();
 
@@ -101,6 +107,9 @@ class MidiProcessor
 
             // current list of note_durations
             std::vector<std::vector<double>> note_durations;
+
+            // current song duration
+            double fileDuration;
     
 };
 

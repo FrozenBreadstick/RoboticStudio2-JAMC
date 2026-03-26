@@ -44,6 +44,11 @@
                 }
             }
 
+            // process song duration
+            if(!process_song_duration()) {
+                return false;
+            }
+
             // save data
             if(!save_midi_data()) {
                 return false;
@@ -97,6 +102,12 @@
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_durations() 
         {
             return note_durations;
+        }
+
+    // get song duration
+        double MidiProcessor::get_song_duration() 
+        {
+            return fileDuration;
         }
 
 
@@ -223,6 +234,22 @@
             notes.push_back(channel_notes);
             note_timeStamps.push_back(note_on_timeStamps);
             note_durations.push_back(channel_note_durations);
+
+            return true;
+        }
+
+    // process song duration
+        bool MidiProcessor::process_song_duration()
+        {
+            double duration;
+
+            // sort tracks
+            midi.sortTracksNoteOnsBeforeOffs();
+
+            // get song duration
+            duration = midi.getFileDurationInSeconds();
+
+            fileDuration = duration;
 
             return true;
         }

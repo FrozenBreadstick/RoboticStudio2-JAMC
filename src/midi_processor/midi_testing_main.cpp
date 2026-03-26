@@ -63,6 +63,10 @@ int test_process() {
     std::vector<std::vector<int>> notes;
     std::vector<std::vector<double>> durations;
     std::vector<std::vector<double>> timings;
+    double duration;
+
+    duration = midi.get_song_duration();
+    std::cout << "Song duration: " << duration << std::endl;
 
     channels = midi.get_channels();
 
