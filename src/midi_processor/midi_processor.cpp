@@ -39,7 +39,7 @@
 
             // get notes
             for(size_t i = 0; i < channels.size(); i++) {
-                if(!process_channel_notes(channels.at(i))) {
+                if(!process_channel_notes_with_timings(channels.at(i))) {
                     return false;
                 }
             }
@@ -87,6 +87,18 @@
             return notes;
         }
 
+    // gets all note timings that correspond to a specific channel
+        std::vector<std::vector<double>> MidiProcessor::get_channel_note_timings() 
+        {
+            return note_timeStamps;
+        }
+
+    // gets all note durations that correspond to a specific channel
+        std::vector<std::vector<double>> MidiProcessor::get_channel_note_durations() 
+        {
+            return note_durations;
+        }
+
 
 // primary private functions ---------------------------------------------------
 
@@ -125,7 +137,7 @@
                         // check for dupe channels
                         bool dupe = false;
 
-                        for(int i; i < channels.size(); i++) {
+                        for(unsigned int i; i < channels.size(); i++) {
 
                             if(channels.at(i) == channel && instruments.at(i) == instrument) {
                                 dupe = true;
@@ -178,6 +190,42 @@
             return true;
         }
 
+
+    // process channel notes WITH timings ------------------------------------------
+        bool MidiProcessor::process_channel_notes_with_timings(int channel)
+        {
+
+            std::vector<int> channel_notes;
+            std::vector<double> channel_note_durations;
+            std::vector<double> note_on_timeStamps;
+
+
+
+            // get notes for specified channel
+            for(int i = 0; i < midi.getTrackCount(); i++) {
+                for(int j = 0; j < midi.getEventCount(i); j++) {
+                    MidiEvent& event = midi.getEvent(i, j);
+                    if(event.isNoteOn()) {
+                        if(event.getChannel() == channel) {
+                            channel_notes.push_back(event.getKeyNumber());
+                            channel_note_durations.push_back(event.getDurationInSeconds());
+                            note_on_timeStamps.push_back(midi.getTimeInSeconds(i, j));
+                        }
+                    }
+                }
+            }
+
+            if(channel_notes.size() == 0) {
+                std::cout << "No notes found" << std::endl;
+                return false;
+            }
+
+            notes.push_back(channel_notes);
+            note_timeStamps.push_back(note_on_timeStamps);
+            note_durations.push_back(channel_note_durations);
+
+            return true;
+        }
 
     // stores all data for current midi file in a storage file
         bool MidiProcessor::save_midi_data()

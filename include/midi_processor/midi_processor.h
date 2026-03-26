@@ -48,6 +48,12 @@ class MidiProcessor
             // gets all notes that correspond to a specific channel
             std::vector<std::vector<int>> get_channel_notes();
 
+            // gets all note timings that correspond to a specific channel
+            std::vector<std::vector<double>> get_channel_note_timings();
+
+            // gets all note durations that correspond to a specific channel
+            std::vector<std::vector<double>> get_channel_note_durations();
+
         // bonus functions --------------------------------------------------------------
         
             // gets all notes in a midi file (pass level)
@@ -67,7 +73,7 @@ class MidiProcessor
             bool process_channel_notes(int channel);
 
             // processes and stores all notes and their timings that correspond to a specific channel
-            // bool process_channel_notes_with_timings(int channel);
+            bool process_channel_notes_with_timings(int channel);
 
             // processes and stores all instruments/channels
             bool process_instruments();
@@ -89,6 +95,12 @@ class MidiProcessor
 
             // current list of notes
             std::vector<std::vector<int>> notes;
+
+            // current list of note_timeStamps
+            std::vector<std::vector<double>> note_timeStamps;
+
+            // current list of note_durations
+            std::vector<std::vector<double>> note_durations;
     
 };
 

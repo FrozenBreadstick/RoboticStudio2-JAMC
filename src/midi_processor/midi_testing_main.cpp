@@ -16,7 +16,7 @@ int main() {
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_get_instrument_names();
+    test_process();
 
     // close file
     return 0;
@@ -61,6 +61,8 @@ int test_process() {
     std::vector<int> channels;
     std::vector<int> instruments;
     std::vector<std::vector<int>> notes;
+    std::vector<std::vector<double>> durations;
+    std::vector<std::vector<double>> timings;
 
     channels = midi.get_channels();
 
@@ -76,10 +78,14 @@ int test_process() {
     }
 
     notes = midi.get_channel_notes();
+    durations = midi.get_channel_note_durations();
+    timings = midi.get_channel_note_timings();
+
     for(size_t i = 0; i < notes.size(); i++) {
         std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+
         for(size_t j = 0; j < notes.at(i).size(); j++) {
-            std::cout << notes.at(i).at(j) << std::endl;
+            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
         }
     }
 
