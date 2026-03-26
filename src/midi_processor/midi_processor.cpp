@@ -4,7 +4,7 @@
 // Namespace
     using namespace smf;
 
-// Core functions --------------------------------------------------------------
+// Core functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // constructor ----------------------------------------------------------------
         MidiProcessor::MidiProcessor() 
@@ -22,7 +22,7 @@
         }
 
 
-// primary public functions ----------------------------------------------------
+// primary public functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
         bool MidiProcessor::processMidiFile(std::string midi_file_path)
@@ -57,19 +57,19 @@
             return true;
         }
 
-    // get channels
+    // get channels --------------------------------------------------------------
         std::vector<int> MidiProcessor::get_channels()
         {
             return channels;
         }
 
-    // get instruments
+    // get instruments ----------------------------------------------------------
         std::vector<int> MidiProcessor::get_instruments()
         {
             return instruments;
         }
 
-    // get instrument names and channels as a string vector
+    // get instrument names and channels as a string vector ----------------------
         std::vector<std::string> MidiProcessor::get_instrument_names()
         {
             std::vector<std::string> instrument_names;
@@ -86,34 +86,34 @@
             return instrument_names;
         }
 
-    // gets all notes that correspond to a specific channel
+    // gets all notes that correspond to a specific channel ----------------------
         std::vector<std::vector<int>> MidiProcessor::get_channel_notes() 
         {
             return notes;
         }
 
-    // gets all note timings that correspond to a specific channel
+    // gets all note timings that correspond to a specific channel ---------------
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_timings() 
         {
             return note_timeStamps;
         }
 
-    // gets all note durations that correspond to a specific channel
+    // gets all note durations that correspond to a specific channel -------------
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_durations() 
         {
             return note_durations;
         }
 
-    // get song duration
+    // get song duration ---------------------------------------------------------
         double MidiProcessor::get_song_duration() 
         {
             return fileDuration;
         }
 
 
-// primary private functions ---------------------------------------------------
+// primary private functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // open file
+    // open file ------------------------------------------------------------------
         bool MidiProcessor::open_file(std::string midi_file_path) 
         {
 
@@ -238,7 +238,14 @@
             return true;
         }
 
-    // process song duration
+    // filters chords down to only the root note ----------------------------------
+        bool MidiProcessor::filter_chords()
+        {
+            return true;
+        }
+
+
+    // process song duration ------------------------------------------------------
         bool MidiProcessor::process_song_duration()
         {
             double duration;
@@ -254,7 +261,7 @@
             return true;
         }
 
-    // stores all data for current midi file in a storage file
+    // stores all data for current midi file in a storage file --------------------
         bool MidiProcessor::save_midi_data()
         {
             return true;

@@ -11,6 +11,7 @@ int test_notes();
 int test_process();
 int test_get_instrument_names();
 
+
 int main() {
     
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
@@ -21,6 +22,7 @@ int main() {
     // close file
     return 0;
 }
+
 
 int test_process() {
 

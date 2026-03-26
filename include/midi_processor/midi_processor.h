@@ -55,7 +55,7 @@ class MidiProcessor
             std::vector<std::vector<double>> get_channel_note_durations();
 
             // get song duration
-            double get_song_duration();`
+            double get_song_duration();
 
         // public variables -------------------------------------------------------------
 
@@ -66,14 +66,17 @@ class MidiProcessor
             // opens a selected midi file
             bool open_file(std::string midi_file_path);
 
+            // processes and stores all instruments/channels
+            bool process_instruments();
+
             // processes and stores all notes that correspond to a specific channel
             bool process_channel_notes(int channel);
 
             // processes and stores all notes and their timings that correspond to a specific channel
             bool process_channel_notes_with_timings(int channel);
 
-            // processes and stores all instruments/channels
-            bool process_instruments();
+            // filters chords down to only the root note
+            bool filter_chords();
 
             // process song duration
             bool process_song_duration();
