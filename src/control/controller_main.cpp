@@ -85,3 +85,12 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
 }
+
+/** TODO
+ * 1. Create class from above code
+ * 2. Create method that publishes velocity vectors determined by comparing current EE position to target position
+ * 3. Create service that accepts target position and updates the target position used by the method in #2
+ * 4. Create visual servoing test class
+ * 4. Create service that accepts time scale factor and updates the speed of the published velocity vectors accordingly
+ * 5. Create service that accepts a JSON string containing a list of target positions and pause/hold times
+ *  */
