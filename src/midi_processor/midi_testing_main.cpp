@@ -1,22 +1,22 @@
 // test file for midi reading class
 
 // includes
-#include "midi_processor.h"
 #include <iostream>
 #include <vector>
 #include <string>
+#include "../../include/midi_processor/midi_processor.h"
 
-// functions
+// test functions
 int test_notes();
-int test_instruments();
-
+int test_process();
+int test_get_instrument_names();
 
 int main() {
     
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_instruments();
+    test_process();
 
     // close file
     return 0;
@@ -29,12 +29,12 @@ int test_notes() {
     MidiProcessor midi;
 
     // open file
-    if(!midi.open_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
         std::cout << "Error opening midi file" << std::endl;
         return 0;
     }
 
-    std::vector<std::string> notes;
+    std::vector<int> notes;
     
     notes = midi.get_notes();
 
@@ -47,29 +47,72 @@ int test_notes() {
     return 0;
 }
 
-int test_instruments() {
+int test_process() {
 
     // create midi
     MidiProcessor midi;
 
     // open file
-    if(!midi.open_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
         std::cout << "Error opening midi file" << std::endl;
         return 0;
     }
 
-    std::vector<std::vector<int>> instruments;
-    
+    std::vector<int> channels;
+    std::vector<int> instruments;
+    std::vector<std::vector<int>> notes;
+    std::vector<std::vector<double>> durations;
+    std::vector<std::vector<double>> timings;
+
+    channels = midi.get_channels();
+
+    std::cout << "Channels: " << std::endl;
+    for(size_t i = 0; i < channels.size(); i++) {
+        std::cout << channels[i] << std::endl;
+    }
+
     instruments = midi.get_instruments();
-
-    // display notes
-    std::cout << "Channels - Instruments: " << std::endl;
+    std::cout << "Instruments: " << std::endl;
     for(size_t i = 0; i < instruments.size(); i++) {
+        std::cout << instruments[i] << std::endl;
+    }
 
-        std::cout << "Channel " << instruments[i][0] << " - Instrument " << instruments[i][1] << std::endl;
+    notes = midi.get_channel_notes();
+    durations = midi.get_channel_note_durations();
+    timings = midi.get_channel_note_timings();
+
+    for(size_t i = 0; i < notes.size(); i++) {
+        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+
+        for(size_t j = 0; j < notes.at(i).size(); j++) {
+            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
     }
 
     return 0;
 }
 
 
+int test_get_instrument_names() {
+
+    // create midi
+    MidiProcessor midi;
+
+    // open file
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
+
+    std::vector<std::string> instrument_names;
+
+    instrument_names = midi.get_instrument_names();
+
+    // display notes
+    std::cout << "Instrument names: " << std::endl;
+    for(size_t i = 0; i < instrument_names.size(); i++) {
+        std::cout << instrument_names[i] << std::endl;
+    }
+
+    return 0;
+}

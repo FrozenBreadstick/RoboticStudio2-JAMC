@@ -103,19 +103,19 @@ ament_target_dependencies(ui
 
 #MIDI_Processor Library
 add_library(midiFile_library
-  src/midi_processor/midiLibrary/src/Binasc.cpp
-  src/midi_processor/midiLibrary/src/MidiEvent.cpp
-  src/midi_processor/midiLibrary/src/MidiFile.cpp
-  src/midi_processor/midiLibrary/src/MidiMessage.cpp
-  src/midi_processor/midiLibrary/src/MidiEventList.cpp
-  src/midi_processor/midiLibrary/src/Options.cpp
+  include/midi_processor/midiLibrary/src/Binasc.cpp
+  include/midi_processor/midiLibrary/src/MidiEvent.cpp
+  include/midi_processor/midiLibrary/src/MidiFile.cpp
+  include/midi_processor/midiLibrary/src/MidiMessage.cpp
+  include/midi_processor/midiLibrary/src/MidiEventList.cpp
+  include/midi_processor/midiLibrary/src/Options.cpp
 )
 
 #MIDI_Processor_Testing Executable
 add_executable(midi_processor_testing
   src/midi_processor/midi_testing_main.cpp
   src/midi_processor/midi_processor.cpp
-  src/midi_processor/midi_processor.h
+  include/midi_processor/midi_processor.h
 )
 target_link_libraries(midi_processor_testing
   midiFile_library

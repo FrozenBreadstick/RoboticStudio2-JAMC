@@ -7,8 +7,14 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QSlider>
+#include <QtWidgets/QGroupBox>
 #include <QFileDialog>
+#include <QComboBox>
+#include <QRadioButton>
 #include <QDir>
+#include <QString>
 
 namespace UI
 {
@@ -21,18 +27,26 @@ namespace UI
 
         private:
             void send_request();
-            void play_pause();
             
-            QLabel* _label;
-            QSpinBox* _input;
-            QPushButton* _button;
-            QPushButton* _file_button;  // New button
-            QString _midi_file_path;    // Store selected path
+            QLabel* _title;
+            QSlider* _track_slider;
+            QPushButton* _play_pause_button;
+            QPushButton* _forward_button;
+            QPushButton* _reverse_button;
+            QLabel* _channel_title;
+            QRadioButton* _channel_select;
+            QSlider* _speed_control;
+            QLabel* _new_file_label;
+            QPushButton* _new_file_button;
+            QLabel* _old_file_label;
+            QComboBox* _old_file_button;
+            QString _midi_file_path;
 
             bool is_playing = false;
 
         private slots:
-            void open_midi_file();      // Slot for file selection
+            void play_pause();
+            void open_midi_file();      
     };
 }
 

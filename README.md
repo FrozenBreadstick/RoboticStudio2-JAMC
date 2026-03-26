@@ -31,3 +31,8 @@ cb PACKAGE_NAME
 ```
 To compile a package.
 
+To run the UI
+```bash
+ros2 launch jamc ui_test.launch.py
+```
+
