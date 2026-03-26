@@ -22,31 +22,6 @@ int main() {
     return 0;
 }
 
-
-int test_notes() {
-
-    // create midi
-    MidiProcessor midi;
-
-    // open file
-    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
-        std::cout << "Error opening midi file" << std::endl;
-        return 0;
-    }
-
-    std::vector<int> notes;
-    
-    notes = midi.get_notes();
-
-    // display notes
-    std::cout << "Notes: " << std::endl;
-    for(size_t i = 0; i < notes.size(); i++) {
-        std::cout << notes[i] << std::endl;
-    }
-
-    return 0;
-}
-
 int test_process() {
 
     // create midi
@@ -63,6 +38,10 @@ int test_process() {
     std::vector<std::vector<int>> notes;
     std::vector<std::vector<double>> durations;
     std::vector<std::vector<double>> timings;
+    double duration;
+
+    duration = midi.get_song_duration();
+    std::cout << "Song duration: " << duration << std::endl;
 
     channels = midi.get_channels();
 

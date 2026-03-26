@@ -44,6 +44,11 @@
                 }
             }
 
+            // process song duration
+            if(!process_song_duration()) {
+                return false;
+            }
+
             // save data
             if(!save_midi_data()) {
                 return false;
@@ -97,6 +102,12 @@
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_durations() 
         {
             return note_durations;
+        }
+
+    // get song duration
+        double MidiProcessor::get_song_duration() 
+        {
+            return fileDuration;
         }
 
 
@@ -227,31 +238,24 @@
             return true;
         }
 
+    // process song duration
+        bool MidiProcessor::process_song_duration()
+        {
+            double duration;
+
+            // sort tracks
+            midi.sortTracksNoteOnsBeforeOffs();
+
+            // get song duration
+            duration = midi.getFileDurationInSeconds();
+
+            fileDuration = duration;
+
+            return true;
+        }
+
     // stores all data for current midi file in a storage file
         bool MidiProcessor::save_midi_data()
         {
             return true;
-        }
-
-
-
-// bonus functions --------------------------------------------------------------
-
-    // get notes ------------------------------------------------------------------
-        std::vector<int> MidiProcessor::get_notes() 
-        {
-            
-            std::vector<int> notes;
-
-            // get notes
-            for(int i = 0; i < midi.getTrackCount(); i++) {
-                for(int j = 0; j < midi.getEventCount(i); j++) {
-                    MidiEvent& event = midi.getEvent(i, j);
-                    if(event.isNoteOn()) {
-                        notes.push_back(event.getKeyNumber());
-                    }
-                }
-            }
-
-            return notes;
         }
