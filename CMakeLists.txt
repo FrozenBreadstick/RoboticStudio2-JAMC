@@ -127,6 +127,7 @@ install(
     sample
     ui
     midi_processor_testing
+    controller
   DESTINATION lib/${PROJECT_NAME}
 )
 
