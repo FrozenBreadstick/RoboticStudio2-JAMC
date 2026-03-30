@@ -1,0 +1,52 @@
+/** \mainpage
+
+@b MIPI
+
+This package implements 3 standalone nodes that work together to control a UR3e to play the piano.
+
+@section main_overview Main Page Overview
+
+The system is designed to:
+- 1
+
+The main components are:
+- **UI** Which does this
+   - **MIDI Processing** Which does this (Subection of UI)
+- **Controller** Which does this
+- **Percpetion** Which does this
+
+@section node_descriptions Node and Library Descriptions
+
+@subsection ui_section UI - Human 2 Robot Interaction
+
+Describe what it does with images, diagrams, code snippets, etc
+
+@subsection midi_section MIDI Processing - For parsing and converting midi files to a readable format by our system
+
+Describe what it does with images, diagrams, code snippets, etc
+
+@subsection controller_section Controller - Control Engine for UR3e Piano Playing
+
+Describe what it does with images, diagrams, code snippets, etc
+
+@subsection perception_section Perception & Computer Vision - Let's the robot see
+
+Describe what it does with images, diagrams, code snippets, etc
+
+@subsection external_section External Libraries - JSON, MIDI Parsing, etc
+
+@section code_behaviour Code Behaviour and Usage
+
+@subsection launch_method Launch Files - Node Startup and Execution (Usage)
+
+The available launch files are:
+etc etc etc
+
+
+Build, And launch a launch file
+
+
+Refer to the source code for detailed topic and service names, and to adjust parameters as needed for your environment.
+
+*/
+
