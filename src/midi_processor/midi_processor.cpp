@@ -94,24 +94,18 @@
     // gets all notes that correspond to a specific channel ----------------------
         std::vector<std::vector<int>> MidiProcessor::get_channel_notes() 
         {
-            std::cout << "Getting channel notes" << std::endl;
-            std::cout << "notes size: " << notes.size() << std::endl;
-            std::cout << "notes at 0 size: " << notes.at(0).size() << std::endl;
-            std::cout << "notes vector" << notes.at(0).size() << std::endl;
             return notes;
         }
 
     // gets all note timings that correspond to a specific channel ---------------
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_timings() 
         {
-            std::cout << "Getting channel note timings" << std::endl;
             return note_timeStamps;
         }
 
     // gets all note durations that correspond to a specific channel -------------
         std::vector<std::vector<double>> MidiProcessor::get_channel_note_durations() 
         {
-            std::cout << "Getting channel note durations" << std::endl;
             return note_durations;
         }
 
