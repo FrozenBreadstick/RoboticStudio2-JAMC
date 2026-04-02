@@ -274,8 +274,6 @@
 
                 while(j >= 0) {
 
-                    std::cout << "j: " << j << " note: " << notes.at(i).at(j) << " time stamp: " << note_timeStamps.at(i).at(j) << std::endl;
-
                     // get timestamp
                     double note_timeStamp = note_timeStamps.at(i).at(j);
 
@@ -326,56 +324,29 @@
                                 }
 
                             }
-                            std::cout << " " << std::endl;
-                            std::cout << "pre index erase: " << current_indexs.size() << std::endl;
-                            // for(size_t k = 0; k < current_indexs.size(); k++) {
-                            //     std::cout << "current_indexs: " << current_indexs.at(k) << std::endl;
-                            // }
 
+                            // remove safe note from list of indexs to kill
                             current_indexs.erase(current_indexs.begin() + kept_note_index);
                             
-                            std::cout << "post index erase: " << current_indexs.size() << std::endl;
-                            // for(size_t k = 0; k < current_indexs.size(); k++) {
-                            //     std::cout << "current_indexs: " << current_indexs.at(k) << std::endl;
-                            // }                        
-
-                            //std::sort(current_indexs.begin(), current_indexs.end(), std::greater<int>());
-                            std::cout << " " << std::endl;
-                            
+                            // remove all other notes from the arrays
                             for(size_t k = 0; k < current_indexs.size(); k++) {
 
                                 int index = current_indexs.at(k);
-
-                                std::cout << "index: " << index << std::endl;
-
-                                std::cout << "pre erase - notes size: " << notes.at(i).size() << " notes duration size: " << note_durations.at(i).size() << " notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
-
-                                if(notes.at(i).size() != note_durations.at(i).size() || notes.at(i).size() != note_timeStamps.at(i).size()) {
-                                    std::cout << "Error erasing notes" << std::endl;
-                                    std::cout << "notes size: " << notes.at(i).size() << " notes duration size: " << note_durations.at(i).size() << " notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
-                                }
 
                                 notes.at(i).erase(notes.at(i).begin() + index);
                                 note_durations.at(i).erase(note_durations.at(i).begin() + index);
                                 note_timeStamps.at(i).erase(note_timeStamps.at(i).begin() + index);
 
-                                std::cout << "post erase - notes size: " << notes.at(i).size() << " notes duration size: " << note_durations.at(i).size() << "notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
-
+                                // error checking
                                 if(notes.at(i).size() != note_durations.at(i).size() || notes.at(i).size() != note_timeStamps.at(i).size()) {
                                     std::cout << "Error erasing notes" << std::endl;
                                     std::cout << "notes size: " << notes.at(i).size() << "notes duration size: " << note_durations.at(i).size() << "notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
                                 }
-
-                                std::cout << " " << std::endl;
                             }
-
-                            current_indexs.clear();
-
                         }
-                        else {
-                            std::cout << "ignoring note (only 1 note)" << std::endl;
-                            current_indexs.clear();
-                        }
+                        
+                        // reset the list of indexs
+                        current_indexs.clear();
                     }
 
                     // reset the current stamp
@@ -384,7 +355,6 @@
                 }
 
             }
-
 
             return true;
         }
