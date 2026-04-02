@@ -62,6 +62,8 @@ int test_process() {
     durations = midi.get_channel_note_durations();
     timings = midi.get_channel_note_timings();
 
+    std::cout << "Notes size: " << notes.at(0).size() << std::endl;
+
     for(size_t i = 0; i < notes.size(); i++) {
         std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
 

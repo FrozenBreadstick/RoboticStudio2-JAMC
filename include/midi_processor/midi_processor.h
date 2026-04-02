@@ -57,6 +57,9 @@ class MidiProcessor
             // get song duration
             double get_song_duration();
 
+            // load JSON file
+            bool load_json_file(std::string json_file_path);
+
         // public variables -------------------------------------------------------------
 
     private:
