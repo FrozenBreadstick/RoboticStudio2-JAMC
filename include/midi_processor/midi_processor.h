@@ -18,8 +18,10 @@
 #include "midiLibrary/include/MidiMessage.h"
 #include "midiLibrary/include/MidiEventList.h"
 #include "midiLibrary/include/Options.h"
+#include "../external/json.hpp"
 
 using namespace smf;
+using json =nlohmann::json;
 
 // class
 class MidiProcessor
@@ -57,6 +59,12 @@ class MidiProcessor
             // get song duration
             double get_song_duration();
 
+            // get assigned keys
+            std::vector<std::vector<int>> get_assigned_keys();
+
+            // get keyboard values
+            std::vector<std::vector<int>> get_keyboard_values();
+
             // load JSON file
             bool load_json_file(std::string json_file_path);
 
@@ -84,6 +92,9 @@ class MidiProcessor
             // process song duration
             bool process_song_duration();
 
+            // key assignment function
+            bool assign_keys();
+
             // stores all data for current midi file in a storage file
             bool save_midi_data();
 
@@ -92,6 +103,8 @@ class MidiProcessor
 
             // MidiFile library
             MidiFile midi;
+
+            // JSON object
 
             // current list of channels
             std::vector<int> channels;
@@ -110,6 +123,12 @@ class MidiProcessor
 
             // current song duration
             double fileDuration;
+
+            // current list of assigned keys for each channel
+            std::vector<std::vector<int>> assigned_keys;
+
+            // current list of keyboard values for each channel
+            std::vector<std::vector<int>> keyboard_values;
     
 };
 

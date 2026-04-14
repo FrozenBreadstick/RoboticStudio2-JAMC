@@ -12,6 +12,8 @@
             // create midi
             midi = MidiFile();
 
+            // create json object
+
         }
 
 
@@ -51,6 +53,11 @@
 
             // process song duration
             if(!process_song_duration()) {
+                return false;
+            }
+
+            // assign keys
+            if(!assign_keys()) {
                 return false;
             }
 
@@ -113,6 +120,18 @@
         double MidiProcessor::get_song_duration() 
         {
             return fileDuration;
+        }
+
+    // get assigned keys ---------------------------------------------------------
+        std::vector<std::vector<int>> MidiProcessor::get_assigned_keys() 
+        {
+            return assigned_keys;
+        }
+
+    // get keyboard values ---------------------------------------------------------
+        std::vector<std::vector<int>> MidiProcessor::get_keyboard_values() 
+        {
+            return keyboard_values;
         }
 
     // load JSON file -----------------------------------------------------------
@@ -370,8 +389,105 @@
             return true;
         }
 
+    
+    // key assignment function ------------------------------------------------------
+        bool MidiProcessor::assign_keys()
+        {
+
+            // keyboard min max values (around middle C)
+            int keyboard_min = 41;
+            int keyboard_max = 77;
+
+            if(channels.size() == 0) {
+                std::cout << "No channels found" << std::endl;
+                return false;
+            }
+
+            // for each channel
+            for(size_t i = 0; i < channels.size(); i++) {
+
+                // current list of keys
+                std::vector<int> keys;
+
+                // current keyboard values
+                std::vector<int> this_keyboard_values;
+
+                // finding average key value per channel
+                int average_key = 0;
+             
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+
+                    average_key += notes.at(i).at(j);
+
+                }
+
+                average_key = average_key / notes.at(i).size();
+
+                // get key name
+                int  key_name = average_key % 12;
+
+                // find diff between middle C and average key
+                int diff = 60 + key_name - average_key;
+
+                if(diff > 36) {
+                    diff = 36;
+                }
+                else if(diff < -48) {
+                    diff = -48;
+                }
+
+                int this_keyboard_max = keyboard_max - diff;
+                int this_keyboard_min = keyboard_min - diff;
+
+                // set keyboard values for the channel
+                for(int k = 0; k < 37; k++) {
+                    this_keyboard_values.push_back(this_keyboard_min + k);
+                }
+
+                keyboard_values.push_back(this_keyboard_values);
+
+                // iteratite through all notes pushing back if within bounds and rounding to nearest note in bounds if not
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+                    
+                    int note = notes.at(i).at(j);
+
+                    if(note >= this_keyboard_min && note <= this_keyboard_max) {
+                        keys.push_back(note);
+                    }
+                    else if(note < this_keyboard_min) {
+
+                        while(note < this_keyboard_min) {
+                            note += 12;
+                        }
+
+                        keys.push_back(note);
+                    }
+                    else if(note > this_keyboard_max) {
+
+                        while(note > this_keyboard_max) {
+                            note -= 12;
+                        }
+
+                        keys.push_back(note);
+                    }
+
+                }
+
+                // pushback keys for this channel
+                assigned_keys.push_back(keys);
+
+            }
+
+            return true;
+        }
+
+
+
     // stores all data for current midi file in a storage file --------------------
         bool MidiProcessor::save_midi_data()
         {
+            // new 
+
+
             return true;
         }
