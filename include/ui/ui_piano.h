@@ -4,7 +4,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QHBoxLayout>
@@ -15,9 +14,13 @@
 #include <QRadioButton>
 #include <QDir>
 #include <QString>
+#include <QFileInfo>
 
 namespace UI
 {
+    // Enum to track current direction state
+    enum class PlaybackDirection { Forward, Reverse, None };
+
     class PianoUI : public QWidget, public rclcpp::Node
     {
         Q_OBJECT
@@ -26,8 +29,12 @@ namespace UI
             ~PianoUI();
 
         private:
-            void send_request();
-            
+            // State tracking
+            bool is_playing = false;
+            PlaybackDirection current_dir = PlaybackDirection::None;
+            QString _midi_file_path;
+
+            // UI Elements
             QLabel* _title;
             QSlider* _track_slider;
             QPushButton* _play_pause_button;
@@ -40,13 +47,19 @@ namespace UI
             QPushButton* _new_file_button;
             QLabel* _old_file_label;
             QComboBox* _old_file_button;
-            QString _midi_file_path;
+            
+            // Status Labels
+            QLabel* _status_val;
+            QLabel* _speed_val;
+            QLabel* _time_val;
 
-            bool is_playing = false;
+            void update_status_info();
 
         private slots:
             void play_pause();
-            void open_midi_file();      
+            void open_midi_file();
+            void set_direction_forward();
+            void set_direction_reverse();
     };
 }
 
