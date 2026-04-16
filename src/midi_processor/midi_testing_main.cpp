@@ -10,6 +10,7 @@
 int test_notes();
 int test_process();
 int test_get_instrument_names();
+int test_save_and_load_mipi_data();
 
 
 int main() {
@@ -17,7 +18,7 @@ int main() {
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_process();
+    test_save_and_load_mipi_data();
 
     // close file
     return 0;
@@ -35,7 +36,7 @@ int test_process() {
     std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid";
 
     // open file
-    if(!midi.processMidiFile(midi_file_path)) {
+    if(!midi.processMidiFile(midi_file_path, "test_name.mipi")) {
         std::cout << "Error opening midi file" << std::endl;
         return 0;
     }
@@ -128,7 +129,7 @@ int test_get_instrument_names() {
     MidiProcessor midi;
 
     // open file
-    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid")) {
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid", "test_name.mipi")) {
         std::cout << "Error opening midi file" << std::endl;
         return 0;
     }
@@ -141,6 +142,184 @@ int test_get_instrument_names() {
     std::cout << "Instrument names: " << std::endl;
     for(size_t i = 0; i < instrument_names.size(); i++) {
         std::cout << instrument_names[i] << std::endl;
+    }
+
+    return 0;
+}
+
+
+
+int test_save_and_load_mipi_data() {
+
+    // create midi
+    MidiProcessor midi;
+
+    // open file 1
+    std::cout << "Opening midi file 1" << std::endl;
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid", "mary.mipi")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
+
+    // get the data 
+    std::vector<int> channels = midi.get_channels();
+    std::vector<int> instruments = midi.get_instruments();
+    std::vector<std::vector<int>> notes = midi.get_channel_notes();
+    std::vector<std::vector<double>> durations = midi.get_channel_note_durations();
+    std::vector<std::vector<double>> timings = midi.get_channel_note_timings();
+    double duration = midi.get_song_duration();
+    std::vector<std::vector<int>> assigned_keys = midi.get_assigned_keys();
+    std::vector<std::vector<int>> keyboard_values = midi.get_keyboard_values();
+
+
+    // print the data for file 1
+    std::cout << "Channels: " << std::endl;
+    for(size_t i = 0; i < channels.size(); i++) {
+        std::cout << channels[i] << std::endl;
+    }
+
+    std::cout << "Instruments: " << std::endl;
+    for(size_t i = 0; i < instruments.size(); i++) {
+        std::cout << instruments[i] << std::endl;
+    }
+
+    std::cout << "Notes: " << std::endl;
+    for(size_t i = 0; i < notes.size(); i++) {
+        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
+
+        for(size_t j = 0; j < notes.at(i).size(); j++) {
+            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+    }
+
+    for(size_t i = 0; i < keyboard_values.size(); i++) {
+        std::cout << "keyboard values: " << std::endl;
+
+        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
+            std::cout << keyboard_values.at(i).at(j) << std::endl;
+        }
+
+        std::cout << "Assigned keys: " << std::endl;
+        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+
+         std::cout << std::endl;
+    }
+
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // open file 2
+    std::cout << "Opening midi file 2 (overidding data)" << std::endl;
+    if(!midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid", "twinkle.mipi")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
+
+    // get the data 
+    channels = midi.get_channels();
+    instruments = midi.get_instruments();
+    notes = midi.get_channel_notes();
+    durations = midi.get_channel_note_durations();
+    timings = midi.get_channel_note_timings();
+    duration = midi.get_song_duration();
+    assigned_keys = midi.get_assigned_keys();
+    keyboard_values = midi.get_keyboard_values();
+
+
+    // print the data for file 2
+    std::cout << "Channels: " << std::endl;
+    for(size_t i = 0; i < channels.size(); i++) {
+        std::cout << channels[i] << std::endl;
+    }
+
+    std::cout << "Instruments: " << std::endl;
+    for(size_t i = 0; i < instruments.size(); i++) {
+        std::cout << instruments[i] << std::endl;
+    }
+
+    std::cout << "Notes: " << std::endl;
+    for(size_t i = 0; i < notes.size(); i++) {
+        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
+
+        for(size_t j = 0; j < notes.at(i).size(); j++) {
+            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+    }
+
+    for(size_t i = 0; i < keyboard_values.size(); i++) {
+        std::cout << "keyboard values: " << std::endl;
+
+        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
+            std::cout << keyboard_values.at(i).at(j) << std::endl;
+        }
+
+        std::cout << "Assigned keys: " << std::endl;
+        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+
+         std::cout << std::endl;
+    }
+
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // load the data for file 1
+
+    std::cout << "Loading midi data for file 1" << std::endl;
+    midi.load_json_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/mipi_files/mary.mipi");
+
+    // get the data 
+    channels = midi.get_channels();
+    instruments = midi.get_instruments();
+    notes = midi.get_channel_notes();
+    durations = midi.get_channel_note_durations();
+    timings = midi.get_channel_note_timings();
+    duration = midi.get_song_duration();
+    assigned_keys = midi.get_assigned_keys();
+    keyboard_values = midi.get_keyboard_values();
+
+
+    // print the data for file 1
+    std::cout << "Channels: " << std::endl;
+    for(size_t i = 0; i < channels.size(); i++) {
+        std::cout << channels[i] << std::endl;
+    }
+
+    std::cout << "Instruments: " << std::endl;
+    for(size_t i = 0; i < instruments.size(); i++) {
+        std::cout << instruments[i] << std::endl;
+    }
+
+    std::cout << "Notes: " << std::endl;
+    for(size_t i = 0; i < notes.size(); i++) {
+        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
+
+        for(size_t j = 0; j < notes.at(i).size(); j++) {
+            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+    }
+
+    for(size_t i = 0; i < keyboard_values.size(); i++) {
+        std::cout << "keyboard values: " << std::endl;
+
+        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
+            std::cout << keyboard_values.at(i).at(j) << std::endl;
+        }
+
+        std::cout << "Assigned keys: " << std::endl;
+        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
+        }
+
+         std::cout << std::endl;
     }
 
     return 0;
