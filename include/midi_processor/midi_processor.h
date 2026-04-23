@@ -10,6 +10,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <filesystem>
 
 // MidiFile library
 #include "midiLibrary/include/Binasc.h"
@@ -21,7 +22,7 @@
 #include "../external/json.hpp"
 
 using namespace smf;
-using json =nlohmann::json;
+using json = nlohmann::json;
 
 // class
 class MidiProcessor
@@ -36,7 +37,7 @@ class MidiProcessor
         // primary public functions -----------------------------------------------------
 
             // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
-            bool processMidiFile(std::string midi_file_path);
+            bool processMidiFile(std::string midi_file_path, std::string json_file_name);
 
             // gets all channels
             std::vector<int> get_channels();
@@ -96,7 +97,7 @@ class MidiProcessor
             bool assign_keys();
 
             // stores all data for current midi file in a storage file
-            bool save_midi_data();
+            bool save_midi_data(std::string file_name);
 
 
         // private variables ------------------------------------------------------------
@@ -104,7 +105,8 @@ class MidiProcessor
             // MidiFile library
             MidiFile midi;
 
-            // JSON object
+            // home directory
+            const char* homeDir = getenv("HOME");
 
             // current list of channels
             std::vector<int> channels;

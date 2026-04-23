@@ -43,6 +43,25 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 rosidl_get_typesupport_target(custom_messages ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
+#MIDI_Processor Library
+add_library(midiFile_library
+  include/midi_processor/midiLibrary/src/Binasc.cpp
+  include/midi_processor/midiLibrary/src/MidiEvent.cpp
+  include/midi_processor/midiLibrary/src/MidiFile.cpp
+  include/midi_processor/midiLibrary/src/MidiMessage.cpp
+  include/midi_processor/midiLibrary/src/MidiEventList.cpp
+  include/midi_processor/midiLibrary/src/Options.cpp
+)
+
+#MIDI_Processor_Testing Executable
+add_executable(midi_processor_testing
+  src/midi_processor/midi_testing_main.cpp
+  src/midi_processor/midi_processor.cpp
+  include/midi_processor/midi_processor.h
+)
+target_link_libraries(midi_processor_testing
+  midiFile_library
+)
 
 #Sample Executable
 add_executable(sample
@@ -65,9 +84,11 @@ ament_target_dependencies(sample
 add_executable(controller
   src/control/controller.cpp
   src/control/controller_main.cpp
+  src/midi_processor/midi_processor.cpp
 )
 target_link_libraries(controller
   ${custom_messages}
+  midiFile_library
 )
 target_include_directories(controller
   PUBLIC
@@ -81,6 +102,7 @@ ament_target_dependencies(controller
   geometry_msgs
   tf2_ros
 )
+
 #UI Executable
 add_executable(ui
   src/ui/ui_piano.cpp
@@ -99,26 +121,6 @@ target_link_libraries(ui
 )
 ament_target_dependencies(ui
   rclcpp
-)
-
-#MIDI_Processor Library
-add_library(midiFile_library
-  include/midi_processor/midiLibrary/src/Binasc.cpp
-  include/midi_processor/midiLibrary/src/MidiEvent.cpp
-  include/midi_processor/midiLibrary/src/MidiFile.cpp
-  include/midi_processor/midiLibrary/src/MidiMessage.cpp
-  include/midi_processor/midiLibrary/src/MidiEventList.cpp
-  include/midi_processor/midiLibrary/src/Options.cpp
-)
-
-#MIDI_Processor_Testing Executable
-add_executable(midi_processor_testing
-  src/midi_processor/midi_testing_main.cpp
-  src/midi_processor/midi_processor.cpp
-  include/midi_processor/midi_processor.h
-)
-target_link_libraries(midi_processor_testing
-  midiFile_library
 )
 
 #install executables to lib

@@ -1,6 +1,20 @@
 // includes -------------------------------------------------------------------
     #include "../../include/midi_processor/midi_processor.h"
 
+
+
+/**
+ * @brief Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano. Exposes various services for control.
+ * 
+ * @details This class contains the following ROS2 I/O
+ * - **Services**
+ *  - '-/MIPI_Controller/load' (jamc/srv/Load): Takes a string which should be the filepath to a .mipi file to be loaded, and an integer that is the index of the instrument to play.
+ *  - '-/MIPI_Controller/time_scale' (jamc/srv/TimeScale): Take a float between -1 and 1 used to scale the speed that the robot plays at (Negative numbers cause the robot to play in reverse)
+ *  - '-/MIPI_Controller/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the current track
+ */
+
+
+
 // Namespace
     using namespace smf;
 
@@ -11,8 +25,6 @@
         {
             // create midi
             midi = MidiFile();
-
-            // create json object
 
         }
 
@@ -27,8 +39,18 @@
 // primary public functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
-        bool MidiProcessor::processMidiFile(std::string midi_file_path)
+        bool MidiProcessor::processMidiFile(std::string midi_file_path, std::string json_file_name)
         {
+            // clear all variables
+            channels.clear();
+            instruments.clear();
+            notes.clear();
+            note_timeStamps.clear();
+            note_durations.clear();
+            fileDuration = 0;
+            assigned_keys.clear();
+            keyboard_values.clear();
+
             // open file
             if(!open_file(midi_file_path)) {
                 return false;
@@ -61,8 +83,10 @@
                 return false;
             }
 
+            //std::string file_name = "test_name.mipi";
+
             // save data
-            if(!save_midi_data()) {
+            if(!save_midi_data(json_file_name)) {
                 return false;
             }
 
@@ -137,7 +161,41 @@
     // load JSON file -----------------------------------------------------------
         bool MidiProcessor::load_json_file(std::string json_file_path) 
         {
-            std::cout << "Loading JSON file: " << json_file_path << std::endl;
+            // file path for loading
+            std::filesystem::path file_path = std::filesystem::path(homeDir) / "mipi_files" / json_file_path;
+
+            std::cout << "Loading JSON file: " << file_path << std::endl;
+
+            // create json object
+            json j;
+
+            // open file
+            std::ifstream file;
+            file.open(file_path);
+
+            // read file
+            j = json::parse(file);
+
+            // close file
+            file.close();
+
+            // dump to terminal (for testing)
+            std::cout << j << std::endl;
+
+            // get data from JSON object
+            channels = j["channels"].get<std::vector<int>>();
+            instruments = j["instruments"].get<std::vector<int>>();
+            notes = j["notes"].get<std::vector<std::vector<int>>>();
+            note_timeStamps = j["note_timeStamps"].get<std::vector<std::vector<double>>>();
+            note_durations = j["note_durations"].get<std::vector<std::vector<double>>>();
+            fileDuration = j["song_duration"].get<double>();
+            assigned_keys = j["assigned_keys"].get<std::vector<std::vector<int>>>();
+            keyboard_values = j["keyboard_values"].get<std::vector<std::vector<int>>>();
+
+            std::cout << "Loaded midi data" << std::endl;
+
+            // clear json object for next file
+            j.clear();
 
             return true;
         }
@@ -484,10 +542,54 @@
 
 
     // stores all data for current midi file in a storage file --------------------
-        bool MidiProcessor::save_midi_data()
+        bool MidiProcessor::save_midi_data(std::string file_name)
         {
-            // new 
 
+            // create json object
+            json j;
+
+            // store data into JSON object
+            std::cout << "Saving midi data" << std::endl;
+
+            j["channels"] = channels;
+            j["instruments"] = instruments;
+            j["notes"] = notes;
+            j["note_timeStamps"] = note_timeStamps;
+            j["note_durations"] = note_durations;
+            j["song_duration"] = fileDuration;
+            j["assigned_keys"] = assigned_keys;
+            j["keyboard_values"] = keyboard_values;
+
+            // dump to terminal (for testing)
+            std::cout << j << std::endl;
+
+            // create file path
+            std::filesystem::path folder = std::filesystem::path(homeDir) / "mipi_files";
+
+            if (!std::filesystem::exists(folder)) {
+                std::filesystem::create_directory(folder);
+                std::cout << "Folder created!\n";
+            } else {
+                std::cout << "Folder already exists.\n";
+            }
+
+            std::filesystem::path file_path = folder / file_name;
+
+            // open file
+            std::ofstream file(file_path);
+            if(!file.is_open()) {
+                std::cout << "Error opening file!\n" << std::endl;
+                return false;
+            }
+
+            // dump to file
+            file << j;
+
+            // close file
+            file.close();
+
+            // clear json object for next file
+            j.clear();
 
             return true;
         }
