@@ -2,6 +2,7 @@
 #define UI_PIANO_H
 
 #include "rclcpp/rclcpp.hpp"
+
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
@@ -15,9 +16,12 @@
 #include <QDir>
 #include <QString>
 #include <QFileInfo>
+
 #include "jamc/srv/func.hpp"
 #include "jamc/srv/time_scale.hpp"
 #include "jamc/srv/load.hpp"
+
+#include "midi_processor/midi_processor.h"
 
 namespace UI
 {
@@ -63,11 +67,14 @@ namespace UI
             rclcpp::Client<jamc::srv::TimeScale>::SharedPtr time_scale_client;
             rclcpp::Client<jamc::srv::Load>::SharedPtr channel_client;
 
+            MidiProcessor processor;
+
         private slots:
             void play_pause();
             void open_midi_file();
             void set_direction_forward();
             void set_direction_reverse();
+            void send_time_scale();
     };
 };
 

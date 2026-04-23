@@ -15,6 +15,8 @@ namespace UI
             "QSlider::handle:horizontal { background: #00aaff; border: 1px solid #007acc; width: 16px; margin: -4px 0; border-radius: 8px; }"
         );
 
+        processor = MidiProcessor();
+
         //Client Creations
             playback_client = this->create_client<jamc::srv::Func>("playback_control");
             direction_client = this->create_client<jamc::srv::Func>("playback_direction");
@@ -97,7 +99,7 @@ namespace UI
         connect(_play_pause_button, &QPushButton::clicked, this, &PianoUI::play_pause);
         connect(_forward_button, &QPushButton::clicked, this, &PianoUI::set_direction_forward);
         connect(_reverse_button, &QPushButton::clicked, this, &PianoUI::set_direction_reverse);
-        connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::update_status_info);
+        connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::send_time_scale);
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
 
         main_layout->addStretch(2);
@@ -154,7 +156,7 @@ namespace UI
     }
 
     void PianoUI::set_direction_forward() {
-        if (current_dir != PlaybackDirection::Forward)
+        if (current_dir == PlaybackDirection::Forward)
             {return;} // Prevent redundant requests if already in desired state
 
             // Create and send direction control request
@@ -175,7 +177,7 @@ namespace UI
     }
 
     void PianoUI::set_direction_reverse() {
-        if (current_dir != PlaybackDirection::Reverse)
+        if (current_dir == PlaybackDirection::Reverse)
             {return;} // Prevent redundant requests if already in desired state
 
             // Create and send direction control request
@@ -204,6 +206,33 @@ namespace UI
         // Time Display
         _time_val->setText(QString("Time: %1 / %2")
             .arg(_track_slider->value())
-            .arg(_track_slider->maximum()));
+            .arg(processor.get_song_duration()));
+    }
+
+    void PianoUI::send_time_scale() {
+        // Update the UI labels to reflect the slider movement immediately
+        update_status_info();
+
+        // Create and send time scale control request
+        auto request = std::make_shared<jamc::srv::TimeScale::Request>();
+        request->scale = static_cast<double>(_speed_control->value()) / 100.0;
+        
+        RCLCPP_INFO(this->get_logger(), "Sending TimeScale request: %f", request->scale);
+
+        // Check service availability before sending request to avoid blocking the UI
+        if (!time_scale_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "TimeScale service is not available.");
+            return;
+        }
+
+        time_scale_client->async_send_request(request,
+            [this](rclcpp::Client<jamc::srv::TimeScale>::SharedFuture future) {
+                try {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "TimeScale updated successfully");
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "TimeScale service call failed: %s", e.what());
+                }
+            });
     }
 }

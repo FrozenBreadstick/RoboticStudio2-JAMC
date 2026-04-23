@@ -108,6 +108,7 @@ add_executable(ui
   src/ui/ui_piano.cpp
   src/ui/ui_main.cpp
   include/ui/ui_piano.h
+  src/midi_processor/midi_processor.cpp
 )
 target_include_directories(ui
   PUBLIC
@@ -118,6 +119,7 @@ set_target_properties(ui PROPERTIES AUTOMOC ON)
 target_link_libraries(ui
   Qt6::Widgets
   ${custom_messages}
+  midiFile_library
 )
 ament_target_dependencies(ui
   rclcpp
