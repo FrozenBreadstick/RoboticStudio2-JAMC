@@ -134,6 +134,10 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::Request> request, std::shared_ptr<jamc::srv::Load::Response> response)
 {
     RCLCPP_INFO(this->get_logger(), "Received load request: filepath=%s, instrument_index=%d", request->filepath.c_str(), request->index);
+    if (!connor.load_json_file(request->filepath)) {
+        response->message = "[ERROR] Failed to load file: " + request->filepath;
+        return;
+    }
     song_ = connor.get_channel_notes()[request->index];
     note_timings_ = connor.get_channel_note_timings()[request->index];
     note_durations_ = connor.get_channel_note_durations()[request->index];
