@@ -18,7 +18,7 @@ int main() {
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_save_and_load_mipi_data();
+    test_process();
 
     // close file
     return 0;
@@ -50,6 +50,7 @@ int test_process() {
     double duration;
     std::vector<std::vector<int>> assigned_keys;
     std::vector<std::vector<int>> keyboard_values;
+    std::vector<std::vector<int>> keyboard_indexs;
 
     // get and print song duration
     duration = midi.get_song_duration();
@@ -119,6 +120,22 @@ int test_process() {
          std::cout << std::endl;
     }
 
+    std::cout << std::endl;
+
+    // get and print keyboard indexs
+
+    keyboard_indexs = midi.get_keyboard_indexs();
+
+    for(size_t i = 0; i < keyboard_indexs.size(); i++) {
+        std::cout << "keyboard indexs: " << std::endl;
+
+        for(size_t j = 0; j < keyboard_indexs.at(i).size(); j++) {
+            std::cout << keyboard_indexs.at(i).at(j) << std::endl;
+        }
+
+         std::cout << std::endl;
+    }
+
     return 0;
 }
 
@@ -170,6 +187,7 @@ int test_save_and_load_mipi_data() {
     double duration = midi.get_song_duration();
     std::vector<std::vector<int>> assigned_keys = midi.get_assigned_keys();
     std::vector<std::vector<int>> keyboard_values = midi.get_keyboard_values();
+
 
 
     // print the data for file 1

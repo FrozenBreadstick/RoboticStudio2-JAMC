@@ -156,6 +156,15 @@ class MidiProcessor
             std::vector<std::vector<int>> get_keyboard_values();
 
 
+            /*! @brief get keyboard indexs
+             *
+             *  @return std::vector<std::vector<int>> - A vector of vectors of ints.
+             * 
+             *  @details This function returns a vector of vectors of ints. Each vector contains the indexs for the notes of the assigned keys as they appear in the keyboard values vector. The indexs of these keys match the corresponding indexs for the key position vector.
+             */
+            std::vector<std::vector<int>> get_keyboard_indexs();
+
+
             /*! @brief load JSON file
              *
              *  @param[in] std::string - the name of the mipi file that should be loaded into the class variables (e.g. "filename.mipi")
@@ -291,6 +300,9 @@ class MidiProcessor
 
             //!< current list of keyboard values for each channel
             std::vector<std::vector<int>> keyboard_values;
+
+            //!< current list of keyboard indexs for each channel
+            std::vector<std::vector<int>> keyboard_indexs;
     
 };
 

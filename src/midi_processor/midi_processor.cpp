@@ -144,6 +144,12 @@
             return keyboard_values;
         }
 
+    // get keyboard indexs ---------------------------------------------------------
+        std::vector<std::vector<int>> MidiProcessor::get_keyboard_indexs() 
+        {
+            return keyboard_indexs;
+        }
+
     // load JSON file -----------------------------------------------------------
         bool MidiProcessor::load_json_file(std::string json_file_path) 
         {
@@ -519,6 +525,27 @@
 
                 // pushback keys for this channel
                 assigned_keys.push_back(keys);
+
+                // process the assigned keys and find their indexs in the keyboard values vector and save them in a new keyboard_indexs vector
+                std::vector<int> indexs;
+
+                for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+
+                    // default index to 0
+                    int index = 0;
+
+                    for(size_t k = 0; k < keyboard_values.at(i).size(); k++) {
+                        if(assigned_keys.at(i).at(j) == keyboard_values.at(i).at(k)) {
+                            index = k;
+                            break;
+                        }
+                    }
+
+                    indexs.push_back(index);
+                }
+
+                // store the keyboard indexs in the keyboard_indexs vector
+                keyboard_indexs.push_back(indexs);
 
             }
 
