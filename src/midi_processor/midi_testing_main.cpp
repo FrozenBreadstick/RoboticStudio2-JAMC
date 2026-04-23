@@ -273,7 +273,7 @@ int test_save_and_load_mipi_data() {
     // load the data for file 1
 
     std::cout << "Loading midi data for file 1" << std::endl;
-    midi.load_json_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/mipi_files/mary.mipi");
+    midi.load_json_file("mary.mipi");
 
     // get the data 
     channels = midi.get_channels();
