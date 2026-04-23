@@ -1,20 +1,6 @@
 // includes -------------------------------------------------------------------
     #include "../../include/midi_processor/midi_processor.h"
 
-
-
-/**
- * @brief Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano. Exposes various services for control.
- * 
- * @details This class contains the following ROS2 I/O
- * - **Services**
- *  - '-/MIPI_Controller/load' (jamc/srv/Load): Takes a string which should be the filepath to a .mipi file to be loaded, and an integer that is the index of the instrument to play.
- *  - '-/MIPI_Controller/time_scale' (jamc/srv/TimeScale): Take a float between -1 and 1 used to scale the speed that the robot plays at (Negative numbers cause the robot to play in reverse)
- *  - '-/MIPI_Controller/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the current track
- */
-
-
-
 // Namespace
     using namespace smf;
 

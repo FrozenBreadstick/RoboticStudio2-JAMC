@@ -21,37 +21,96 @@
 #include "midiLibrary/include/Options.h"
 #include "../external/json.hpp"
 
+
+
+
 using namespace smf;
 using json = nlohmann::json;
 
-// class
+/*!
+ * @brief Standalone Class for processing midi files and saving/loading mipi files. Contains various getters to store and provide data about midi/mipi files.
+ * 
+ * @author Connor McGannon
+ * 
+ * @details This class contains the following accesible data:
+ * - **Channels**: A vector of all channels in the midi file
+ * - **Instruments**: A vector of all instruments in the midi file
+ * - **Notes**: A vector of all notes in the midi file, where each note is a vector of the note pitch and the note timing
+ * - **Note Timings**: A vector of all note timings in the midi file, where each note timing is a vector of the note timing and the note duration
+ * - **Note Durations**: A vector of all note durations in the midi file, where each note duration is a vector of the note duration and the note timing
+ * - **Song Duration**: The duration of the song in seconds
+ * - **Assigned Keys**: A vector of all assigned keys in the midi file, where each assigned key is a vector of the assigned key and the note timing 
+ * - **Keyboard Values**: A vector of all keyboard values in the midi file, where each keyboard value is a vector of the keyboard value and the note timing
+ */
 class MidiProcessor
 {
     public:
 
         // constructor & destructor -----------------------------------------------------
-
+            
+            /*! @brief Constructor that allocates internals
+             *
+             */
             MidiProcessor();
+
+
+            /*! @brief Destructor
+             *
+             */
             ~MidiProcessor();
 
         // primary public functions -----------------------------------------------------
 
-            // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
+            /*! @brief processes a midi file by saving all instruments (and their channels) to a set of vectors
+             *
+             *  @param midi_file_path The path to the midi file to be processed
+             * 
+             *  @param json_file_name The name of the json file to be saved
+             */
             bool processMidiFile(std::string midi_file_path, std::string json_file_name);
 
-            // gets all channels
+
+            /*! @brief gets all channels
+             *
+             *  @return std::vector<int> - A vector of all channels in the midi file
+             * 
+             *  @details This function returns a vector of integers. Each integer is a channel number
+             */
             std::vector<int> get_channels();
 
-            // gets all instruments
+
+            /*! @brief gets all instruments
+             *
+             *  @return std::vector<int> - A vector of all instruments in the midi file
+             * 
+             *  @details This function returns a vector of integers. Each integer is an instrument number
+             */
             std::vector<int> get_instruments();
 
-            // gets all instrument names and their channels
+
+            /*! @brief gets all instrument names and their channels
+             *
+             *  @return std::vector<std::string> - A vector of all instrument names and their channel numbers
+             * 
+             *  @details This function returns a vector of strings. Each string is the name of an instrument and its channel number
+             */
             std::vector<std::string> get_instrument_names();
 
-            // gets all notes that correspond to a specific channel
+
+            /*! @brief gets all notes that correspond to a specific channel
+             *
+             *  @return std::vector<std::vector<int>> - A vector of vectors of ints. Each vector contains notes for 1 channel as written in the midi file.
+             * 
+             *  @details This function returns a vector of vectors. Each vector contains a note as it is written in the midi file.
+             */
             std::vector<std::vector<int>> get_channel_notes();
 
-            // gets all note timings that correspond to a specific channel
+            /*! @brief gets all note timings that correspond to a specific channel
+             *
+             *  @return std::vector<std::vector<double>> - A vector of vectors of doubles. Each vector contains note timestamps for 1 channel.
+             * 
+             *  @details This function returns a vector of vectors. Each vector contains a note timing as it is written in the midi file.
+             */
             std::vector<std::vector<double>> get_channel_note_timings();
 
             // gets all note durations that correspond to a specific channel
