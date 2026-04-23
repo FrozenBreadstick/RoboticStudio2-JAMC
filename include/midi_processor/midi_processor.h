@@ -10,6 +10,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <filesystem>
 
 // MidiFile library
 #include "midiLibrary/include/Binasc.h"
@@ -103,6 +104,9 @@ class MidiProcessor
 
             // MidiFile library
             MidiFile midi;
+
+            // home directory
+            const char* homeDir = getenv("HOME");
 
             // current list of channels
             std::vector<int> channels;

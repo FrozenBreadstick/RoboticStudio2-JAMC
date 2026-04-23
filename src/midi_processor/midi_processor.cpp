@@ -1,6 +1,20 @@
 // includes -------------------------------------------------------------------
     #include "../../include/midi_processor/midi_processor.h"
 
+
+
+/**
+ * @brief Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano. Exposes various services for control.
+ * 
+ * @details This class contains the following ROS2 I/O
+ * - **Services**
+ *  - '-/MIPI_Controller/load' (jamc/srv/Load): Takes a string which should be the filepath to a .mipi file to be loaded, and an integer that is the index of the instrument to play.
+ *  - '-/MIPI_Controller/time_scale' (jamc/srv/TimeScale): Take a float between -1 and 1 used to scale the speed that the robot plays at (Negative numbers cause the robot to play in reverse)
+ *  - '-/MIPI_Controller/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the current track
+ */
+
+
+
 // Namespace
     using namespace smf;
 
@@ -147,14 +161,17 @@
     // load JSON file -----------------------------------------------------------
         bool MidiProcessor::load_json_file(std::string json_file_path) 
         {
-            std::cout << "Loading JSON file: " << json_file_path << std::endl;
+            // file path for loading
+            std::filesystem::path file_path = std::filesystem::path(homeDir) / "mipi_files" / json_file_path;
+
+            std::cout << "Loading JSON file: " << file_path << std::endl;
 
             // create json object
             json j;
 
             // open file
             std::ifstream file;
-            file.open(json_file_path);
+            file.open(file_path);
 
             // read file
             j = json::parse(file);
@@ -547,11 +564,23 @@
             std::cout << j << std::endl;
 
             // create file path
-            std::string file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/mipi_files/" + file_name;
+            std::filesystem::path folder = std::filesystem::path(homeDir) / "mipi_files";
+
+            if (!std::filesystem::exists(folder)) {
+                std::filesystem::create_directory(folder);
+                std::cout << "Folder created!\n";
+            } else {
+                std::cout << "Folder already exists.\n";
+            }
+
+            std::filesystem::path file_path = folder / file_name;
 
             // open file
-            std::ofstream file;
-            file.open(file_path);
+            std::ofstream file(file_path);
+            if(!file.is_open()) {
+                std::cout << "Error opening file!\n" << std::endl;
+                return false;
+            }
 
             // dump to file
             file << j;
