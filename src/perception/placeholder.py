@@ -1,3 +1,0 @@
-import rclpy
-
-#Perception code
