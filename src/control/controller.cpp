@@ -93,15 +93,30 @@ int Control::Controller::activeTrackDebug(vector3 target, bool x, bool y, bool z
 void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg)
 {
     RCLCPP_INFO(this->get_logger(), "Received debug target: (%.2f, %.2f, %.2f)", msg->x, msg->y, msg->z);
-    //Clamp values for speed safety
-    double scaling = 2.0;
-    vector3 vec;
-    double max = std::max({std::abs(msg->x), std::abs(msg->y), std::abs(msg->z)});
-    if (max > 2.0) {
-        vec.x = (msg->x/max) * scaling;
-        vec.y = (msg->y/max) * scaling;
-        vec.z = (msg->z/max) * scaling;
-    }
-    activeTrackDebug(vec, true, true);
 
+    double scaling = 4;
+    vector3 vec;
+
+    vec.x = msg->x;
+    vec.y = msg->y;
+    vec.z = msg->z;
+
+    // Clamp to safe range
+    double max_val = std::max({std::abs(vec.x), std::abs(vec.y), std::abs(vec.z)});
+    if (max_val > 1.0) {
+        vec.x /= max_val;
+        vec.y /= max_val;
+        vec.z /= max_val;
+    }
+
+    // Apply scaling (velocity gain)
+    vec.x *= scaling;
+    vec.y *= scaling;
+    vec.z *= scaling;
+
+    double deadzone = 0.05; //prevent jitter
+    if (std::abs(vec.x) < deadzone) vec.x = 0.0;
+    if (std::abs(vec.y) < deadzone) vec.y = 0.0;
+
+    activeTrackDebug(vec, true, true, false);
 }
