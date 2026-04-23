@@ -136,11 +136,21 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
     RCLCPP_INFO(this->get_logger(), "Received load request: filepath=%s, instrument_index=%d", request->filepath.c_str(), request->index);
     if (!connor.load_json_file(request->filepath)) {
         response->message = "[ERROR] Failed to load file: " + request->filepath;
+        song_loaded_ = false;
         return;
     }
+    std::lock_guard<std::mutex> lock(song_mutex_); // Ensure thread-safe access to song data
+    play_ = false; //Reset play state when loading a new song
+    current_note_index_ = 0; //Reset note index when loading a new song
+    song_loaded_ = true; //Mark that a song has been loaded
     song_ = connor.get_channel_notes()[request->index];
     note_timings_ = connor.get_channel_note_timings()[request->index];
     note_durations_ = connor.get_channel_note_durations()[request->index];
+    if (song_.empty() or song_.size() < 2) {
+        response->message = "[ERROR] Loaded file but no (or 1) note(s) found for instrument index: " + std::to_string(request->index);
+        song_loaded_ = false;
+        return;
+    }
     response->message = "[SUCCESS] Loaded file: " + request->filepath + " with instrument index: " + std::to_string(request->index);
 }
 
@@ -151,6 +161,7 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
  */
 void Control::Controller::time_scale_callback(const std::shared_ptr<jamc::srv::TimeScale::Request> request, std::shared_ptr<jamc::srv::TimeScale::Response> response)
 {
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to time_scale_
     RCLCPP_INFO(this->get_logger(), "Received time scale request: time_scale=%.2f", request->scale);
     time_scale_ = request->scale;
     response->message = "[SUCCESS] Set time scale to: " + std::to_string(request->scale);
@@ -163,6 +174,7 @@ void Control::Controller::time_scale_callback(const std::shared_ptr<jamc::srv::T
  */
 void Control::Controller::play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response)
 {
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to play_
     (void)request; // Unused parameter
     play_ = !play_;
     RCLCPP_INFO(this->get_logger(), "Toggled play/pause. Now playing: %s", play_ ? "true" : "false");
@@ -175,7 +187,9 @@ void Control::Controller::play_pause_callback(const std::shared_ptr<jamc::srv::F
  * @param response The response for the service call, containing a message
  */
 void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response)
-{    (void)request; // Unused parameter
+{   
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to direction_
+    (void)request; // Unused parameter
     direction_ = !direction_;
     RCLCPP_INFO(this->get_logger(), "Toggled play direction. Now playing: %s", direction_ ? "forward" : "backward");
     response->message = std::string("[SUCCESS] Toggled play direction. Now playing: ") + (direction_ ? "forward" : "backward");

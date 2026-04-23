@@ -42,6 +42,7 @@ namespace Control
         //Variables & Helpers
         MidiProcessor connor;
 
+        std::mutex song_mutex_; //Mutex to protect access to the song data
         std::vector<int> song_; //The notes in the currently loaded channel of the currently loaded song
         std::vector<double> note_timings_; //The timings of the notes in the current channel of the currently loaded song
         std::vector<double> note_durations_; //The durations of the notes in the current channel of the currently loaded song
@@ -49,6 +50,8 @@ namespace Control
         bool play_ = false; //Whether the song should be playing or not
         double time_scale_ = 1.0; //The time scaling factor for playback, default is 1.0 (normal speed)
         bool direction_ = true; //The direction of playback, true for forward, false for backward
+        int current_note_index_ = 0; //The index of the current note being played in the song
+        bool song_loaded_ = false; //Whether a song has been loaded or not
 
         //Methods
         void sendTwistMsg(double x, double y, double z, double angular_x = 0.0, double angular_y = 0.0, double angular_z = 0.0);
