@@ -15,6 +15,15 @@ namespace UI
             "QSlider::handle:horizontal { background: #00aaff; border: 1px solid #007acc; width: 16px; margin: -4px 0; border-radius: 8px; }"
         );
 
+        processor = MidiProcessor();
+
+        //Client Creations
+            playback_client = this->create_client<jamc::srv::Func>("playback_control");
+            direction_client = this->create_client<jamc::srv::Func>("playback_direction");
+            time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
+            channel_client = this->create_client<jamc::srv::Load>("channel_select");
+
+
         auto* main_layout = new QVBoxLayout(this);
         
         _title = new QLabel("MIDI To UR3", this);
@@ -90,7 +99,7 @@ namespace UI
         connect(_play_pause_button, &QPushButton::clicked, this, &PianoUI::play_pause);
         connect(_forward_button, &QPushButton::clicked, this, &PianoUI::set_direction_forward);
         connect(_reverse_button, &QPushButton::clicked, this, &PianoUI::set_direction_reverse);
-        connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::update_status_info);
+        connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::send_time_scale);
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
 
         main_layout->addStretch(2);
@@ -102,7 +111,39 @@ namespace UI
     void PianoUI::play_pause(){
         is_playing = !is_playing;
         _play_pause_button->setText(is_playing ? "▐▐" : "▶");
-        RCLCPP_INFO(this->get_logger(), is_playing ? "MIDI Playing" : "MIDI Paused");
+            // Create and send playback control request
+            if (is_playing){
+                auto request = std::make_shared<jamc::srv::Func::Request>();
+                RCLCPP_INFO(this->get_logger(), "Sending PLAY request");
+
+                //check service availability before sending request to avoid blocking the UI
+                if (!playback_client->service_is_ready()) {
+                    RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
+                    return;
+                }
+
+                playback_client->async_send_request(request, 
+                    [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Response: %s", response->message.c_str());
+                });
+            }
+            else {
+                auto request = std::make_shared<jamc::srv::Func::Request>();
+                RCLCPP_INFO(this->get_logger(), "Sending PAUSE request");
+                
+                //check service availability before sending request to avoid blocking the UI
+                if (!playback_client->service_is_ready()) {
+                    RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
+                    return;
+                }
+
+                playback_client->async_send_request(request, 
+                    [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Response: %s", response->message.c_str());
+                });
+            }
     }
 
     void PianoUI::open_midi_file() {
@@ -115,17 +156,45 @@ namespace UI
     }
 
     void PianoUI::set_direction_forward() {
-        if (current_dir != PlaybackDirection::Forward) {
-            current_dir = PlaybackDirection::Forward;
-            RCLCPP_INFO(this->get_logger(), "Direction set to: FORWARD");
-        }
+        if (current_dir == PlaybackDirection::Forward)
+            {return;} // Prevent redundant requests if already in desired state
+
+            // Create and send direction control request
+            auto request = std::make_shared<jamc::srv::Func::Request>();
+            RCLCPP_INFO(this->get_logger(), "Sending FORWARD direction request");
+            
+            //check service availability before sending request to avoid blocking the UI
+            if (!direction_client->service_is_ready()) {
+                RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
+                return;
+            }
+
+            direction_client->async_send_request(request, 
+                [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
+                });
     }
 
     void PianoUI::set_direction_reverse() {
-        if (current_dir != PlaybackDirection::Reverse) {
-            current_dir = PlaybackDirection::Reverse;
-            RCLCPP_INFO(this->get_logger(), "Direction set to: REVERSE");
-        }
+        if (current_dir == PlaybackDirection::Reverse)
+            {return;} // Prevent redundant requests if already in desired state
+
+            // Create and send direction control request
+            auto request = std::make_shared<jamc::srv::Func::Request>();
+            RCLCPP_INFO(this->get_logger(), "Sending REVERSE direction request");
+            
+            //check service availability before sending request to avoid blocking the UI
+            if (!direction_client->service_is_ready()) {
+                RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
+                return;
+            }
+
+            direction_client->async_send_request(request, 
+                [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
+                });
     }
 
     void PianoUI::update_status_info() {
@@ -137,6 +206,33 @@ namespace UI
         // Time Display
         _time_val->setText(QString("Time: %1 / %2")
             .arg(_track_slider->value())
-            .arg(_track_slider->maximum()));
+            .arg(processor.get_song_duration()));
+    }
+
+    void PianoUI::send_time_scale() {
+        // Update the UI labels to reflect the slider movement immediately
+        update_status_info();
+
+        // Create and send time scale control request
+        auto request = std::make_shared<jamc::srv::TimeScale::Request>();
+        request->scale = static_cast<double>(_speed_control->value()) / 100.0;
+        
+        RCLCPP_INFO(this->get_logger(), "Sending TimeScale request: %f", request->scale);
+
+        // Check service availability before sending request to avoid blocking the UI
+        if (!time_scale_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "TimeScale service is not available.");
+            return;
+        }
+
+        time_scale_client->async_send_request(request,
+            [this](rclcpp::Client<jamc::srv::TimeScale>::SharedFuture future) {
+                try {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "TimeScale updated successfully");
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "TimeScale service call failed: %s", e.what());
+                }
+            });
     }
 }

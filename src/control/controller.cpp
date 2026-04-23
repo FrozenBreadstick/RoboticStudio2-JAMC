@@ -1,20 +1,25 @@
 #include "control/controller.h"
 
-
 /**
  * @brief Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano. Exposes various services for control.
  * 
  * @details This class contains the following ROS2 I/O
  * - **Services**
- *  - '-/MIPI_Controller/load' (jamc/srv/Load): Takes a string which should be the filepath to a .mipi file to be loaded, and an integer that is the index of the instrument to play.
- *  - '-/MIPI_Controller/time_scale' (jamc/srv/TimeScale): Take a float between -1 and 1 used to scale the speed that the robot plays at (Negative numbers cause the robot to play in reverse)
- *  - '-/MIPI_Controller/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the current track
+ *  - '-/MIPI/load' (jamc/srv/Load): Takes a string which should be the filepath to a .mipi file to be loaded, and an integer that is the index of the instrument to play
+ *  - '-/MIPI/time_scale' (jamc/srv/TimeScale): Take a float between 0 and 1 used to scale the speed of playback
+ *  - '-/MIPI/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the playback
+ *  - '-/MIPI/direction' (jamc/srv/Func): Takes an empty, this is a trigger service used to toggle the direction of playback
  */
-Control::Controller::Controller() : Node("MIPI_Controller")
+Control::Controller::Controller() : Node("MIPI_Controller"), connor()
 {
     RCLCPP_INFO(this->get_logger(), "Controller node has been started.");
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/servo_node/delta_twist_cmds", 10);
     debug_target_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/debug_target", 10, std::bind(&Controller::debug_target_callback, this, std::placeholders::_1));
+
+    load_service_ = this->create_service<jamc::srv::Load>("/MIPI/load", std::bind(&Controller::load_callback, this, std::placeholders::_1, std::placeholders::_2));
+    time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
+    play_pause_service_ = this->create_service<jamc::srv::Func>("/MIPI/play_pause", std::bind(&Controller::play_pause_callback, this, std::placeholders::_1, std::placeholders::_2));
+    play_direction_service_ = this->create_service<jamc::srv::Func>("/MIPI/direction", std::bind(&Controller::play_direction_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 /**
@@ -119,4 +124,73 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
     if (std::abs(vec.y) < deadzone) vec.y = 0.0;
 
     activeTrackDebug(vec, true, true, false);
+}
+
+/**
+ * @brief Callback function for the Load Service, used to load .mipi files and select which instrument channel
+ * @param request The request from the service call, containing the filepath and instrument index
+ * @param response The response for the service call, containing a message
+ */
+void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::Request> request, std::shared_ptr<jamc::srv::Load::Response> response)
+{
+    RCLCPP_INFO(this->get_logger(), "Received load request: filepath=%s, instrument_index=%d", request->filepath.c_str(), request->index);
+    if (!connor.load_json_file(request->filepath)) {
+        response->message = "[ERROR] Failed to load file: " + request->filepath;
+        song_loaded_ = false;
+        return;
+    }
+    std::lock_guard<std::mutex> lock(song_mutex_); // Ensure thread-safe access to song data
+    play_ = false; //Reset play state when loading a new song
+    current_note_index_ = 0; //Reset note index when loading a new song
+    song_loaded_ = true; //Mark that a song has been loaded
+    song_ = connor.get_channel_notes()[request->index];
+    note_timings_ = connor.get_channel_note_timings()[request->index];
+    note_durations_ = connor.get_channel_note_durations()[request->index];
+    if (song_.empty() or song_.size() < 2) {
+        response->message = "[ERROR] Loaded file but no (or 1) note(s) found for instrument index: " + std::to_string(request->index);
+        song_loaded_ = false;
+        return;
+    }
+    response->message = "[SUCCESS] Loaded file: " + request->filepath + " with instrument index: " + std::to_string(request->index);
+}
+
+/**
+ * @brief Callback function for the TimeScale Service, used to set the time scaling factor for playback
+ * @param request The request from the service call, containing the time scale factor
+ * @param response The response for the service call, containing a message
+ */
+void Control::Controller::time_scale_callback(const std::shared_ptr<jamc::srv::TimeScale::Request> request, std::shared_ptr<jamc::srv::TimeScale::Response> response)
+{
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to time_scale_
+    RCLCPP_INFO(this->get_logger(), "Received time scale request: time_scale=%.2f", request->scale);
+    time_scale_ = request->scale;
+    response->message = "[SUCCESS] Set time scale to: " + std::to_string(request->scale);
+}
+
+/**
+ * @brief Callback function for the Play/Pause Service, used to toggle playback of the current track
+ * @param request The request from the service call, empty for this trigger service
+ * @param response The response for the service call, containing a message
+ */
+void Control::Controller::play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response)
+{
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to play_
+    (void)request; // Unused parameter
+    play_ = !play_;
+    RCLCPP_INFO(this->get_logger(), "Toggled play/pause. Now playing: %s", play_ ? "true" : "false");
+    response->message = std::string("[SUCCESS] Toggled play/pause. Now playing: ") + (play_ ? "true" : "false");
+}
+
+/**
+ * @brief Callback function for the Play Direction Service, used to toggle the direction of playback
+ * @param request The request from the service call, empty for this trigger service
+ * @param response The response for the service call, containing a message
+ */
+void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response)
+{   
+    std::lock_guard<std::mutex> lock(song_mutex_); //Ensure thread-safe access to direction_
+    (void)request; // Unused parameter
+    direction_ = !direction_;
+    RCLCPP_INFO(this->get_logger(), "Toggled play direction. Now playing: %s", direction_ ? "forward" : "backward");
+    response->message = std::string("[SUCCESS] Toggled play direction. Now playing: ") + (direction_ ? "forward" : "backward");
 }
