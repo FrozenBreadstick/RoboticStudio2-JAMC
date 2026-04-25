@@ -1,4 +1,5 @@
 #include "ui/ui_piano.h"
+#include <QList>
 
 namespace UI
 {
@@ -18,11 +19,10 @@ namespace UI
         processor = MidiProcessor();
 
         //Client Creations
-            playback_client = this->create_client<jamc::srv::Func>("playback_control");
-            direction_client = this->create_client<jamc::srv::Func>("playback_direction");
-            time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
-            channel_client = this->create_client<jamc::srv::Load>("channel_select");
-
+        playback_client = this->create_client<jamc::srv::Func>("playback_control");
+        direction_client = this->create_client<jamc::srv::Func>("playback_direction");
+        time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
+        channel_client = this->create_client<jamc::srv::Load>("channel_select");
 
         auto* main_layout = new QVBoxLayout(this);
         
@@ -36,29 +36,35 @@ namespace UI
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
 
-        auto* channel_layout = new QVBoxLayout();
+        // Channel Layout (Now dynamic)
+        _channel_layout = new QVBoxLayout(); 
         _channel_title = new QLabel("Channel Selector:", this);
-        _channel_select = new QRadioButton("Channel 1", this);
-        channel_layout->addWidget(_channel_title);
-        channel_layout->addWidget(_channel_select);
+        _channel_layout->addWidget(_channel_title);
 
+        _channel_group = new QButtonGroup(this);
+        connect(_channel_group, QOverload<int>::of(&QButtonGroup::idClicked), this, &PianoUI::send_channel_selection);
+
+        // Files Layout (Combobox is now for .mipi re-loading)
         auto* files_layout = new QVBoxLayout();
         _new_file_label = new QLabel("No File Selected", this);
         _new_file_button = new QPushButton("Select A MIDI File", this); 
         _old_file_button = new QComboBox(this);
+        connect(_old_file_button, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PianoUI::load_existing_mipi);
+
         files_layout->addWidget(_new_file_label);
         files_layout->addWidget(_new_file_button);
         files_layout->addWidget(_old_file_button);
 
+        // Speed Layout
         auto* speed_layout = new QVBoxLayout();
         speed_layout->addWidget(new QLabel("Speed", this), 0, Qt::AlignCenter);
         _speed_control = new QSlider(Qt::Vertical, this);
-        _speed_control->setRange(1, 100); // Set range from 1% to 100%
-        _speed_control->setValue(100);    // Default to 100% (full speed)
+        _speed_control->setRange(1, 100); 
+        _speed_control->setValue(100);    
         _speed_control->setMinimumHeight(100);
         speed_layout->addWidget(_speed_control, 0, Qt::AlignCenter);
 
-        config_layout->addLayout(channel_layout);
+        config_layout->addLayout(_channel_layout);
         config_layout->addLayout(files_layout);
         config_layout->addLayout(speed_layout);
         main_layout->addWidget(config_group);
@@ -103,98 +109,218 @@ namespace UI
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
 
         main_layout->addStretch(2);
-        update_status_info(); // Initialize text labels
+        
+        // Setup existing MIPI files in the dropdown
+        populate_mipi_combobox();
+        update_status_info();
     }
 
     PianoUI::~PianoUI() {}
 
-    void PianoUI::play_pause(){
-        is_playing = !is_playing;
-        _play_pause_button->setText(is_playing ? "▐▐" : "▶");
-            // Create and send playback control request
-            if (is_playing){
-                auto request = std::make_shared<jamc::srv::Func::Request>();
-                RCLCPP_INFO(this->get_logger(), "Sending PLAY request");
+    // --- NEW HELPER FUNCTIONS ---
 
-                //check service availability before sending request to avoid blocking the UI
-                if (!playback_client->service_is_ready()) {
-                    RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
-                    return;
-                }
-
-                playback_client->async_send_request(request, 
-                    [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
-                    auto response = future.get();
-                    RCLCPP_INFO(this->get_logger(), "Response: %s", response->message.c_str());
-                });
+    void PianoUI::force_pause_and_reset() {
+        if (is_playing) {
+            is_playing = false;
+            _play_pause_button->setText("▶");
+            
+            auto request = std::make_shared<jamc::srv::Func::Request>();
+            if (playback_client->service_is_ready()) {
+                RCLCPP_INFO(this->get_logger(), "Sending PAUSE request to reset playback");
+                playback_client->async_send_request(request);
             }
-            else {
-                auto request = std::make_shared<jamc::srv::Func::Request>();
-                RCLCPP_INFO(this->get_logger(), "Sending PAUSE request");
-                
-                //check service availability before sending request to avoid blocking the UI
-                if (!playback_client->service_is_ready()) {
-                    RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
-                    return;
-                }
-
-                playback_client->async_send_request(request, 
-                    [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
-                    auto response = future.get();
-                    RCLCPP_INFO(this->get_logger(), "Response: %s", response->message.c_str());
-                });
-            }
+        }
+        _track_slider->setValue(0);
     }
 
-    void PianoUI::open_midi_file() {
-        QString file_name = QFileDialog::getOpenFileName(this, "Select MIDI", QDir::homePath(), "MIDI Files (*.mid *.midi)");
-        if (!file_name.isEmpty()) {
-            _midi_file_path = file_name;
-            _new_file_label->setText(QFileInfo(file_name).fileName());
-            update_status_info(); // Trigger update on load
+    void PianoUI::populate_mipi_combobox() {
+        _old_file_button->blockSignals(true);
+        _old_file_button->clear();
+        _old_file_button->addItem("Load an existing .mipi file...");
+        
+        QDir mipi_dir(QDir::homePath() + "/mipi_files");
+        if (mipi_dir.exists()) {
+            QStringList files = mipi_dir.entryList(QStringList() << "*.mipi", QDir::Files);
+            for (const QString& f : files) {
+                _old_file_button->addItem(f);
+            }
+        }
+        _old_file_button->blockSignals(false);
+    }
+
+    void PianoUI::update_channel_radio_buttons() {
+        // Clear existing radio buttons
+        QList<QAbstractButton*> buttons = _channel_group->buttons();
+        for (QAbstractButton* btn : buttons) {
+            _channel_group->removeButton(btn);
+            _channel_layout->removeWidget(btn);
+            btn->deleteLater();
+        }
+
+        // Add new radio buttons based on loaded data
+        std::vector<std::string> instrument_list = processor.get_instrument_names();
+        for (size_t i = 0; i < instrument_list.size(); ++i) {
+            QRadioButton* rb = new QRadioButton(QString::fromStdString(instrument_list[i]), this);
+            _channel_layout->addWidget(rb);
+            _channel_group->addButton(rb, static_cast<int>(i)); 
+        }
+        
+        // Auto-check the first one
+        if (!instrument_list.empty()) {
+            _channel_group->button(0)->setChecked(true);
         }
     }
 
-    void PianoUI::set_direction_forward() {
-        if (current_dir == PlaybackDirection::Forward)
-            {return;} // Prevent redundant requests if already in desired state
+    // --- STANDARD SLOTS ---
 
-            // Create and send direction control request
-            auto request = std::make_shared<jamc::srv::Func::Request>();
-            RCLCPP_INFO(this->get_logger(), "Sending FORWARD direction request");
-            
-            //check service availability before sending request to avoid blocking the UI
-            if (!direction_client->service_is_ready()) {
-                RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
-                return;
+    void PianoUI::play_pause(){
+        is_playing = !is_playing;
+        _play_pause_button->setText(is_playing ? "▐▐" : "▶");
+        
+        auto request = std::make_shared<jamc::srv::Func::Request>();
+        RCLCPP_INFO(this->get_logger(), is_playing ? "Sending PLAY request" : "Sending PAUSE request");
+
+        if (!playback_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
+            return;
+        }
+
+        playback_client->async_send_request(request, 
+            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+            try {
+                auto response = future.get();
+                RCLCPP_INFO(this->get_logger(), "Response: %s", response->message.c_str());
+            } catch (const std::exception &e) {
+                RCLCPP_ERROR(this->get_logger(), "Playback service failed: %s", e.what());
             }
+        });
+    }
 
-            direction_client->async_send_request(request, 
-                [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+    void PianoUI::open_midi_file() {
+        QString file_name = QFileDialog::getOpenFileName(this, "Select MIDI File", QDir::homePath(), "MIDI Files (*.mid *.midi)");        
+        if (file_name.isEmpty()) return;
+
+        std::string std_midi_path = file_name.toStdString();
+        QString json_name = QFileInfo(file_name).baseName() + ".mipi";
+        std::string std_json_name = json_name.toStdString();
+
+        if (processor.processMidiFile(std_midi_path, std_json_name)) {
+            _midi_file_path = QDir::homePath() + "/mipi_files/" + json_name;
+            _new_file_label->setText(QFileInfo(file_name).fileName());
+
+            update_channel_radio_buttons();
+            populate_mipi_combobox(); 
+
+            _track_slider->setRange(0, static_cast<int>(processor.get_song_duration()));
+            update_status_info();
+            
+            if (!processor.get_channels().empty()) {
+                send_channel_selection(0);
+            }
+            RCLCPP_INFO(this->get_logger(), "File processed successfully: %s", std_json_name.c_str());
+        } else {
+            _new_file_label->setText("Error: Could not process MIDI");
+        }
+    }
+
+    void PianoUI::load_existing_mipi(int index) {
+        if (index <= 0) return; // Ignore the first prompt item
+
+        QString mipi_filename = _old_file_button->itemText(index);
+        
+        if (processor.load_json_file(mipi_filename.toStdString())) {
+            _midi_file_path = QDir::homePath() + "/mipi_files/" + mipi_filename;
+            _new_file_label->setText(mipi_filename);
+            
+            update_channel_radio_buttons();
+            
+            _track_slider->setRange(0, static_cast<int>(processor.get_song_duration()));
+            update_status_info();
+
+            if (!processor.get_channels().empty()) {
+                send_channel_selection(0);
+            }
+        } else {
+            RCLCPP_ERROR(this->get_logger(), "Failed to load .mipi file.");
+        }
+    }
+
+    void PianoUI::send_channel_selection(int button_id) {
+        if (button_id < 0 || _midi_file_path.isEmpty()) return;
+
+        // Force stop and reset track when changing channel/instrument
+        force_pause_and_reset();
+
+        std::vector<int> channels = processor.get_channels();
+        if (button_id >= static_cast<int>(channels.size())) return;
+        int selected_channel = channels.at(button_id);
+
+        auto request = std::make_shared<jamc::srv::Load::Request>();
+        
+        request->filepath = (QFileInfo(_midi_file_path).baseName() + ".mipi").toStdString();
+        request->index = selected_channel; 
+
+        RCLCPP_INFO(this->get_logger(), "Loading MIPI: %s on Channel: %d", 
+                    request->filepath.c_str(), selected_channel);
+
+        if (!channel_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "Channel selection service not ready.");
+            return;
+        }
+
+        channel_client->async_send_request(request, 
+            [this](rclcpp::Client<jamc::srv::Load>::SharedFuture future) {
+                try {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Load response received: %s", response->message.c_str());
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Load service call failed: %s", e.what());
+                }
+            });
+    }
+
+    void PianoUI::set_direction_forward() {
+        if (current_dir == PlaybackDirection::Forward) return;
+
+        auto request = std::make_shared<jamc::srv::Func::Request>();
+        RCLCPP_INFO(this->get_logger(), "Sending FORWARD direction request");
+        
+        if (!direction_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
+            return;
+        }
+
+        direction_client->async_send_request(request, 
+            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                try {
                     auto response = future.get();
                     RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
-                });
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Direction service failed: %s", e.what());
+                }
+            });
     }
 
     void PianoUI::set_direction_reverse() {
-        if (current_dir == PlaybackDirection::Reverse)
-            {return;} // Prevent redundant requests if already in desired state
+        if (current_dir == PlaybackDirection::Reverse) return;
 
-            // Create and send direction control request
-            auto request = std::make_shared<jamc::srv::Func::Request>();
-            RCLCPP_INFO(this->get_logger(), "Sending REVERSE direction request");
-            
-            //check service availability before sending request to avoid blocking the UI
-            if (!direction_client->service_is_ready()) {
-                RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
-                return;
-            }
+        auto request = std::make_shared<jamc::srv::Func::Request>();
+        RCLCPP_INFO(this->get_logger(), "Sending REVERSE direction request");
+        
+        if (!direction_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
+            return;
+        }
 
-            direction_client->async_send_request(request, 
-                [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+        direction_client->async_send_request(request, 
+            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                try {
                     auto response = future.get();
                     RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
-                });
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Direction service failed: %s", e.what());
+                }
+            });
     }
 
     void PianoUI::update_status_info() {
@@ -203,23 +329,19 @@ namespace UI
         int speed_percent = _speed_control->value();
         _speed_val->setText(QString("Speed: %1%").arg(speed_percent));
 
-        // Time Display
         _time_val->setText(QString("Time: %1 / %2")
             .arg(_track_slider->value())
             .arg(processor.get_song_duration()));
     }
 
     void PianoUI::send_time_scale() {
-        // Update the UI labels to reflect the slider movement immediately
         update_status_info();
 
-        // Create and send time scale control request
         auto request = std::make_shared<jamc::srv::TimeScale::Request>();
         request->scale = static_cast<double>(_speed_control->value()) / 100.0;
         
         RCLCPP_INFO(this->get_logger(), "Sending TimeScale request: %f", request->scale);
 
-        // Check service availability before sending request to avoid blocking the UI
         if (!time_scale_client->service_is_ready()) {
             RCLCPP_WARN(this->get_logger(), "TimeScale service is not available.");
             return;

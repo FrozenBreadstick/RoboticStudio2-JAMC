@@ -16,6 +16,7 @@
 #include <QDir>
 #include <QString>
 #include <QFileInfo>
+#include <QtWidgets/QButtonGroup>
 
 #include "jamc/srv/func.hpp"
 #include "jamc/srv/time_scale.hpp"
@@ -60,7 +61,14 @@ namespace UI
             QLabel* _speed_val;
             QLabel* _time_val;
 
+            // Layouts
+            QVBoxLayout* _channel_layout;
+            QButtonGroup* _channel_group;
+
             void update_status_info();
+            void force_pause_and_reset();
+            void populate_mipi_combobox();
+            void update_channel_radio_buttons();
 
             rclcpp::Client<jamc::srv::Func>::SharedPtr playback_client;
             rclcpp::Client<jamc::srv::Func>::SharedPtr direction_client;
@@ -75,6 +83,8 @@ namespace UI
             void set_direction_forward();
             void set_direction_reverse();
             void send_time_scale();
+            void send_channel_selection(int index);
+            void load_existing_mipi(int index);
     };
 };
 
