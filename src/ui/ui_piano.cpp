@@ -1,8 +1,19 @@
+/**
+ * @file ui_piano.cpp
+ * @brief Implementation of the PianoUI class, providing a graphical interface for MIDI playback control.
+ */
+
 #include "ui/ui_piano.h"
 #include <QList>
 
 namespace UI
 {
+    /**
+     * @brief Constructor for the PianoUI class.
+     * * Initializes the Qt application window, sets up the stylesheet, creates ROS 2 clients 
+     * for communication with the playback controller, and configures the dynamic UI layouts 
+     * and signal-slot connections.
+     */
     PianoUI::PianoUI() : QWidget(), Node("piano_ui") {
         this->setStyleSheet(
             "QWidget { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; }"
@@ -18,7 +29,7 @@ namespace UI
 
         processor = MidiProcessor();
 
-        //Client Creations
+        // Client Creations
         playback_client = this->create_client<jamc::srv::Func>("playback_control");
         direction_client = this->create_client<jamc::srv::Func>("playback_direction");
         time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
@@ -115,10 +126,18 @@ namespace UI
         update_status_info();
     }
 
+    /**
+     * @brief Destructor for the PianoUI class.
+     */
     PianoUI::~PianoUI() {}
 
     // --- NEW HELPER FUNCTIONS ---
 
+    /**
+     * @brief Forces playback to pause and resets the track slider to zero.
+     * * Updates the UI to reflect a paused state and sends an asynchronous ROS 2
+     * request to halt the robot playback safely.
+     */
     void PianoUI::force_pause_and_reset() {
         if (is_playing) {
             is_playing = false;
@@ -133,6 +152,10 @@ namespace UI
         _track_slider->setValue(0);
     }
 
+    /**
+     * @brief Scans the designated directory and populates the combo box with available .mipi files.
+     * * Signals are temporarily blocked to prevent accidental load triggers while populating.
+     */
     void PianoUI::populate_mipi_combobox() {
         _old_file_button->blockSignals(true);
         _old_file_button->clear();
@@ -148,6 +171,11 @@ namespace UI
         _old_file_button->blockSignals(false);
     }
 
+    /**
+     * @brief Dynamically updates the channel selection radio buttons.
+     * * Clears any existing radio buttons from the layout and generates new ones 
+     * based on the instrument list parsed from the loaded file.
+     */
     void PianoUI::update_channel_radio_buttons() {
         // Clear existing radio buttons
         QList<QAbstractButton*> buttons = _channel_group->buttons();
@@ -173,6 +201,11 @@ namespace UI
 
     // --- STANDARD SLOTS ---
 
+    /**
+     * @brief Toggles the playback state between play and pause.
+     * * Updates the play/pause button icon and sends the corresponding 
+     * func service request over ROS 2.
+     */
     void PianoUI::play_pause(){
         is_playing = !is_playing;
         _play_pause_button->setText(is_playing ? "▐▐" : "▶");
@@ -196,6 +229,11 @@ namespace UI
         });
     }
 
+    /**
+     * @brief Opens a file dialog to process a new MIDI file.
+     * * Converts a raw .mid file into a .mipi file format, updates the UI components,
+     * and automatically triggers a load for the first valid channel.
+     */
     void PianoUI::open_midi_file() {
         QString file_name = QFileDialog::getOpenFileName(this, "Select MIDI File", QDir::homePath(), "MIDI Files (*.mid *.midi)");        
         if (file_name.isEmpty()) return;
@@ -223,6 +261,10 @@ namespace UI
         }
     }
 
+    /**
+     * @brief Loads a previously converted .mipi file from the dropdown menu.
+     * * @param index The integer index of the item selected in the combo box.
+     */
     void PianoUI::load_existing_mipi(int index) {
         if (index <= 0) return; // Ignore the first prompt item
 
@@ -245,6 +287,12 @@ namespace UI
         }
     }
 
+    /**
+     * @brief Handles channel selection and sends a load request to the robot.
+     * * Retrieves the actual MIDI channel mapped to the clicked button, forces a UI pause/reset,
+     * and sends an asynchronous ROS 2 request with the file path and channel index.
+     * * @param button_id The internal ID of the triggered radio button within the button group.
+     */
     void PianoUI::send_channel_selection(int button_id) {
         if (button_id < 0 || _midi_file_path.isEmpty()) return;
 
@@ -279,6 +327,10 @@ namespace UI
             });
     }
 
+    /**
+     * @brief Sends a ROS 2 request to set playback direction to forward.
+     * * Ignored if the playback direction is already set to forward.
+     */
     void PianoUI::set_direction_forward() {
         if (current_dir == PlaybackDirection::Forward) return;
 
@@ -301,6 +353,10 @@ namespace UI
             });
     }
 
+    /**
+     * @brief Sends a ROS 2 request to set playback direction to reverse.
+     * * Ignored if the playback direction is already set to reverse.
+     */
     void PianoUI::set_direction_reverse() {
         if (current_dir == PlaybackDirection::Reverse) return;
 
@@ -323,6 +379,10 @@ namespace UI
             });
     }
 
+    /**
+     * @brief Updates visual UI strings detailing current system status.
+     * * Refreshes the file status, playback speed percentage, and current track time against total duration.
+     */
     void PianoUI::update_status_info() {
         _status_val->setText(_midi_file_path.isEmpty() ? "Status: No File" : "Status: Ready");
         
@@ -334,6 +394,10 @@ namespace UI
             .arg(processor.get_song_duration()));
     }
 
+    /**
+     * @brief Reads the speed slider value and sends a TimeScale service request.
+     * * Computes a double scale (0.01 to 1.0) and updates the status info display simultaneously.
+     */
     void PianoUI::send_time_scale() {
         update_status_info();
 
