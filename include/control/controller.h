@@ -14,6 +14,7 @@
 #include <geometry_msgs/msg/point.hpp>
 #include <chrono>
 #include <cmath>
+#include <optional>
 #include <geometry_msgs/msg/pose_array.hpp>
 
 using nlohmann::json;
@@ -25,6 +26,13 @@ namespace Control
         double x;
         double y;
         double z;
+    };
+
+    enum class STATE
+    {
+        WAITING,
+        PLAYING,
+        MOVING
     };
 
     class Controller : public rclcpp::Node
@@ -40,7 +48,10 @@ namespace Control
 
     private:
         //Variables & Helpers
+        STATE state_ = STATE::WAITING; //The current state of the controller, used to determine behavior in the control loop
         MidiProcessor connor;
+        std::mutex key_positions_mutex_; //Mutex to protect access to the key positions
+        geometry_msgs::msg::PoseArray key_positions_; //The positions of the keys on the piano, used for calculating target positions for the end effector
 
         std::mutex song_mutex_; //Mutex to protect access to the song data
         std::vector<int> song_; //The notes in the currently loaded channel of the currently loaded song
@@ -62,6 +73,8 @@ namespace Control
         //Subscribers
         rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr debug_target_sub_;
         void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
+        rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr key_positions_sub_;
+        void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
 
         //Services
         /**
@@ -81,6 +94,9 @@ namespace Control
 
         //Timers
         rclcpp::TimerBase::SharedPtr control_timer_;
+        void control_loop();
+        double calculate_z();
+        std::optional<vector3> calculate_velocity(int note);
 
     };
 }

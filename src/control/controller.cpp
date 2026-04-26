@@ -1,4 +1,6 @@
 #include "control/controller.h"
+using Control::vector3;
+using Control::STATE;
 
 /**
  * @brief Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano. Exposes various services for control.
@@ -20,6 +22,8 @@ Control::Controller::Controller() : Node("MIPI_Controller"), connor()
     time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
     play_pause_service_ = this->create_service<jamc::srv::Func>("/MIPI/play_pause", std::bind(&Controller::play_pause_callback, this, std::placeholders::_1, std::placeholders::_2));
     play_direction_service_ = this->create_service<jamc::srv::Func>("/MIPI/direction", std::bind(&Controller::play_direction_callback, this, std::placeholders::_1, std::placeholders::_2));
+
+    control_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::control_loop, this));
 }
 
 /**
@@ -127,6 +131,48 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 }
 
 /**
+ * @brief Velocity calculation for control loop
+ * @param note The MIDI note value for the current note being played
+ */
+std::optional<vector3> Control::Controller::calculate_velocity(int note)
+{
+    double scaling = 1; //Start small, controlled via parameter later
+    double z = calculate_z();
+    vector3 target;
+    {
+        std::lock_guard<std::mutex> lock(key_positions_mutex_);
+        if (key_positions_.poses.empty()) {
+            RCLCPP_WARN(this->get_logger(), "Key positions are empty, cannot calculate velocity.");
+            return vector3{0.0, 0.0, 0.0};
+        };
+        auto target_pose = key_positions_.poses[note];
+        target.x = target_pose.position.x;
+        target.y = target_pose.position.y;
+        target.z = z;
+    }
+
+    double max_val = std::max({std::abs(target.x), std::abs(target.y), std::abs(target.z)});
+    if (max_val > 1.0) {
+        target.x /= max_val;
+        target.y /= max_val;
+        target.z /= max_val;
+    }
+
+    // Apply scaling (velocity gain)
+    target.x *= scaling;
+    target.y *= scaling;
+    target.z *= scaling;
+
+    double deadzone = 0.05; //prevent jitter & abort when goal reached
+    if (std::abs(target.x) < deadzone)  target.x = 0.0;
+    if (std::abs(target.y) < deadzone)  target.y = 0.0;
+    if (std::abs(target.x) < deadzone && std::abs(target.y) < deadzone) {
+        return std::nullopt; //Goal reached, return empty optional
+    }
+    return target;
+}
+
+/**
  * @brief Callback function for the Load Service, used to load .mipi files and select which instrument channel
  * @param request The request from the service call, containing the filepath and instrument index
  * @param response The response for the service call, containing a message
@@ -193,4 +239,60 @@ void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::sr
     direction_ = !direction_;
     RCLCPP_INFO(this->get_logger(), "Toggled play direction. Now playing: %s", direction_ ? "forward" : "backward");
     response->message = std::string("[SUCCESS] Toggled play direction. Now playing: ") + (direction_ ? "forward" : "backward");
+}
+
+void Control::Controller::control_loop()
+{
+    int note = 0;
+    double duration = 0.0;
+    double timing = 0.0;
+
+    bool dir = true;
+    double time_scale = 1.0;
+    {
+        std::lock_guard<std::mutex> lock(song_mutex_);
+        if(!play_ || !song_loaded_) {
+            return; //If not playing or no song loaded, skip the control loop
+        }
+        if (current_note_index_ >= song_.size()) {
+            play_ = false; //Stop playback if we've reached the end of the song
+            current_note_index_ = 0; //Reset note index for next time
+            RCLCPP_INFO(this->get_logger(), "Reached end of song, stopping playback.");
+            return;
+        } else if (current_note_index_ < 0) {
+            play_ = false; //Stop playback if we've reached the beginning of the song in reverse
+            current_note_index_ = 0; //Reset note index for next time
+            RCLCPP_INFO(this->get_logger(), "Reached beginning of song, stopping playback.");
+            return;
+        }
+        note = song_[current_note_index_];
+        duration = note_durations_[current_note_index_];
+        timing = note_timings_[current_note_index_];
+        dir = direction_;
+        time_scale = time_scale_;
+    }
+
+    //Must calculate Z velocity at some stage, for now we just use zero
+    std::optional<vector3> target = calculate_velocity(note);
+    if(!target.has_value()) {
+        //increment to the next note after waiting period is done. Implement into state machine
+    }
+
+    switch(state_)
+    {
+        case STATE::WAITING:
+            // Handle waiting state
+            break;
+        case STATE::PLAYING:
+            // Handle playing state
+            break;
+        case STATE::MOVING:
+            // Handle moving state
+            break;
+    }
+}
+
+double Control::Controller::calculate_z()
+{
+    return 0;
 }
