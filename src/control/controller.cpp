@@ -252,7 +252,7 @@ void Control::Controller::control_loop()
 {
     int note = 0;
     double duration = 0.0;
-    double timing = 0.0;
+    long timing = 0;
 
     bool dir = true;
     double time_scale = 1.0;
@@ -281,6 +281,7 @@ void Control::Controller::control_loop()
         timing = static_cast<long>(note_timings_[current_note_index_]*1000);
         dir = direction_;
         time_scale = 1/time_scale_;
+        if(time_scale < 0.05) time_scale = 0.05;
     }
 
     //State machine to handle timing of notes. 
@@ -308,9 +309,9 @@ void Control::Controller::control_loop()
                 state_ = STATE::MOVING;
                 CONTROL_TIME = 0; //Reset control time for the moving state
                 sendStop();
-                return;
+            } else {
+                sendVector(target.value());            
             }
-            sendVector(target.value());
             break;
         }
         case STATE::MOVING: {
@@ -318,8 +319,9 @@ void Control::Controller::control_loop()
             if(!target.has_value()) {
                 sendStop();
                 state_ = STATE::WAITING; //Go to the waiting step once target position is reached
+            } else {
+                sendVector(target.value());
             }
-            sendVector(target.value());
             break;
         }
         default: {
