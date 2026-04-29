@@ -259,7 +259,7 @@ void Control::Controller::control_loop()
         if(!play_ || !song_loaded_) {
             return; //If not playing or no song loaded, skip the control loop
         }
-        if (current_note_index_ >= song_.size()) {
+        if(current_note_index_ >= static_cast<int>(song_.size())) {
             play_ = false; //Stop playback if we've reached the end of the song
             current_note_index_ = 0; //Reset note index for next time
             RCLCPP_INFO(this->get_logger(), "Reached end of song, stopping playback.");
