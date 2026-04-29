@@ -48,7 +48,7 @@ namespace Control
 
     private:
         //Variables & Helpers
-        STATE state_ = STATE::WAITING; //The current state of the controller, used to determine behavior in the control loop
+        STATE state_; //The current state of the controller, used to determine behavior in the control loop
         MidiProcessor connor;
         std::mutex key_positions_mutex_; //Mutex to protect access to the key positions
         geometry_msgs::msg::PoseArray key_positions_; //The positions of the keys on the piano, used for calculating target positions for the end effector

@@ -12,11 +12,12 @@ using Control::STATE;
  *  - '-/MIPI/play_pause' (jamc/srv/Func): Takes an empty, this is a trigger service used to play and pause the playback
  *  - '-/MIPI/direction' (jamc/srv/Func): Takes an empty, this is a trigger service used to toggle the direction of playback
  */
-Control::Controller::Controller() : Node("MIPI_Controller"), connor()
+Control::Controller::Controller() : Node("MIPI_Controller"), state_(STATE::WAITING), connor()
 {
     RCLCPP_INFO(this->get_logger(), "Controller node has been started.");
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/servo_node/delta_twist_cmds", 10);
     debug_target_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/debug_target", 10, std::bind(&Controller::debug_target_callback, this, std::placeholders::_1));
+    key_positions_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/key_positions", 10, std::bind(&Controller::key_positions_callback, this, std::placeholders::_1));
 
     load_service_ = this->create_service<jamc::srv::Load>("/MIPI/load", std::bind(&Controller::load_callback, this, std::placeholders::_1, std::placeholders::_2));
     time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
@@ -145,6 +146,10 @@ std::optional<vector3> Control::Controller::calculate_velocity(int note)
             RCLCPP_WARN(this->get_logger(), "Key positions are empty, cannot calculate velocity.");
             return vector3{0.0, 0.0, 0.0};
         };
+        if (note < 0 || note >= static_cast<int>(key_positions_.poses.size())) {
+            RCLCPP_WARN(this->get_logger(), "Note index %d is out of bounds for key positions. (Somehow?)", note);
+            return vector3{0.0, 0.0, 0.0};
+        }
         auto target_pose = key_positions_.poses[note];
         target.x = target_pose.position.x;
         target.y = target_pose.position.y;
@@ -189,7 +194,7 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
     play_ = false; //Reset play state when loading a new song
     current_note_index_ = 0; //Reset note index when loading a new song
     song_loaded_ = true; //Mark that a song has been loaded
-    song_ = connor.get_channel_notes()[request->index];
+    song_ = connor.get_keyboard_indexs()[request->index];
     note_timings_ = connor.get_channel_note_timings()[request->index];
     note_durations_ = connor.get_channel_note_durations()[request->index];
     if (song_.empty() or song_.size() < 2) {
@@ -276,23 +281,48 @@ void Control::Controller::control_loop()
     std::optional<vector3> target = calculate_velocity(note);
     if(!target.has_value()) {
         //increment to the next note after waiting period is done. Implement into state machine
+        {
+            std::lock_guard<std::mutex> lock(song_mutex_);
+            if(dir) {
+                current_note_index_++;
+            } else {
+                current_note_index_--;
+            }
+        }
+        return;
     }
+    sendVector(target.value());
 
-    switch(state_)
-    {
-        case STATE::WAITING:
-            // Handle waiting state
-            break;
-        case STATE::PLAYING:
-            // Handle playing state
-            break;
-        case STATE::MOVING:
-            // Handle moving state
-            break;
-    }
+    //State machine to handle timing of notes. 
+    // switch(state_)
+    // {
+    //     case STATE::WAITING:
+    //         // Handle waiting state
+    //         break;
+    //     case STATE::PLAYING:
+    //         // Handle playing state
+    //         break;
+    //     case STATE::MOVING:
+    //         // Handle moving state
+    //         break;
+    // }
 }
 
+/**
+ * @brief A helper method for calculating the target Z velocity (Scaled to meet a target height based on the X&Y magnitued)
+ * @param xy The magnitude of the vector in the x and y direction
+ */
 double Control::Controller::calculate_z()
 {
     return 0;
+}
+
+void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(key_positions_mutex_);
+    if(msg->poses.empty()) return;
+    if(msg->poses.size() < 37) { //FIND OUT WHAT ACTUAL NUMBER IS MEANT TO BE
+        RCLCPP_WARN(this->get_logger(), "Received key positions but size is less than 37. Received size: %zu", msg->poses.size());
+    }
+    key_positions_ = *msg;
 }
