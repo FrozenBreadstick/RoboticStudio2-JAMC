@@ -17,7 +17,7 @@
 #include <optional>
 #include <geometry_msgs/msg/pose_array.hpp>
 
-using nlohmann::json;
+using Clock = std::chrono::steady_clock;
 
 namespace Control
 {
@@ -32,8 +32,7 @@ namespace Control
     {
         WAITING,
         PLAYING,
-        MOVING,
-        PRESSING
+        MOVING
     };
 
     class Controller : public rclcpp::Node
@@ -49,6 +48,8 @@ namespace Control
 
     private:
         //Variables & Helpers
+        long CONTROL_TIME; //Variable for the control loop to use for timing
+        Clock::time_point LAST_CONTROL_TIME_POINT; //The last time the control loop ran, used to calculate delta time for timing the notes
         STATE state_; //The current state of the controller, used to determine behavior in the control loop
         MidiProcessor connor;
         std::mutex key_positions_mutex_; //Mutex to protect access to the key positions
@@ -98,6 +99,7 @@ namespace Control
         void control_loop();
         double calculate_z();
         std::optional<vector3> calculate_velocity(int note);
+        std::optional<vector3> play_note(double duration, double time);
 
     };
 }
