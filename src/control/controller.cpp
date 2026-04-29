@@ -305,6 +305,11 @@ void Control::Controller::control_loop()
     //     case STATE::MOVING:
     //         // Handle moving state
     //         break;
+    //     case STATE::PRESSING:
+    //         // Handle pressing state
+    //         break;
+    //     default:
+    //         RCLCPP_ERROR(this->get_logger(), "Unknown state!");
     // }
 }
 
@@ -314,6 +319,7 @@ void Control::Controller::control_loop()
  */
 double Control::Controller::calculate_z()
 {
+    // auto transform = tf_buffer_.lookupTransform("base_link", "tool0", tf2::TimePointZero); //Get the position of the end effector using TF
     return 0;
 }
 
@@ -326,3 +332,10 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
     }
     key_positions_ = *msg;
 }
+
+// TODO:
+/*
+- Initialisation sequences to bring robot from home to the starting position for playing (Can probably get target joint positions from testing and just stream velocities to move there on startup)
+- Implement state machine for handling note timings and transitions (Waiting, Moving, Pressing, etc)
+- Implement actual Z velocity control for pressing keys based on a target Z height, read current EE Z Height from TF. Bring to hover above key until not timing is expired (or if the move took longer than the note timing) (probably minus a constant from not timing so that it plays in time)
+*/

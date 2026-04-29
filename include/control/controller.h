@@ -32,7 +32,8 @@ namespace Control
     {
         WAITING,
         PLAYING,
-        MOVING
+        MOVING,
+        PRESSING
     };
 
     class Controller : public rclcpp::Node
