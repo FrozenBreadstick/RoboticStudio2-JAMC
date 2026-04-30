@@ -17,7 +17,7 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     RCLCPP_INFO(this->get_logger(), "Controller node has been started.");
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/servo_node/delta_twist_cmds", 10);
     debug_target_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/debug_target", 10, std::bind(&Controller::debug_target_callback, this, std::placeholders::_1));
-    key_positions_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/key_positions", 10, std::bind(&Controller::key_positions_callback, this, std::placeholders::_1));
+    key_positions_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/piano_keys", 10, std::bind(&Controller::key_positions_callback, this, std::placeholders::_1));
 
     load_service_ = this->create_service<jamc::srv::Load>("/MIPI/load", std::bind(&Controller::load_callback, this, std::placeholders::_1, std::placeholders::_2));
     time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
