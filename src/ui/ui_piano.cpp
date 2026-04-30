@@ -30,10 +30,10 @@ namespace UI
         processor = MidiProcessor();
 
         // Client Creations
-        playback_client = this->create_client<jamc::srv::Func>("playback_control");
-        direction_client = this->create_client<jamc::srv::Func>("playback_direction");
-        time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
-        channel_client = this->create_client<jamc::srv::Load>("channel_select");
+        playback_client = this->create_client<jamc::srv::Func>("/MIPI/play_pause");
+        direction_client = this->create_client<jamc::srv::Func>("/MIPI/direction");
+        time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
+        channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
 
         auto* main_layout = new QVBoxLayout(this);
         
