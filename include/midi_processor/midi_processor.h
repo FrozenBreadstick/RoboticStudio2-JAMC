@@ -269,6 +269,15 @@ class MidiProcessor
             bool save_midi_data(std::string file_name);
 
 
+            /*! @brief prints all data to the console
+             *
+             *  @return bool - returns true if the data was successfully printed
+             * 
+             *  @details This function is called wherever the user wants to test the data. It prints all stored the data to the console.
+             */
+            bool debug_print_data();
+
+
         // private variables ------------------------------------------------------------
 
             //!< MidiFile library

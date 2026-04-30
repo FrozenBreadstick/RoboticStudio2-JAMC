@@ -76,6 +76,11 @@
                 return false;
             }
 
+            // print data
+            if(!debug_print_data()) {
+                return false;
+            }
+
             return true;
         }
 
@@ -170,9 +175,6 @@
 
             // close file
             file.close();
-
-            // dump to terminal (for testing)
-            std::cout << j << std::endl;
 
             // get data from JSON object
             channels = j["channels"].get<std::vector<int>>();
@@ -575,9 +577,6 @@
             j["keyboard_values"] = keyboard_values;
             j["keyboard_indexs"] = keyboard_indexs;
 
-            // dump to terminal (for testing)
-            std::cout << j << std::endl;
-
             // create file path
             std::filesystem::path folder = std::filesystem::path(homeDir) / "mipi_files";
 
@@ -607,4 +606,86 @@
             j.clear();
 
             return true;
+        }
+
+
+        /*! @brief prints all data to the console
+         *
+         *  @return bool - returns true if the data was successfully printed
+         * 
+         *  @details This function is called wherever the user wants to test the data. It prints all stored the data to the console.
+         */
+        bool MidiProcessor::debug_print_data()
+        {
+
+            // get and print song duration
+            std::cout << "Song duration: " << fileDuration << std::endl;
+
+
+            std::cout << std::endl;
+
+            // get and print channels
+            std::cout << "Channels: " << std::endl;
+            for(size_t i = 0; i < channels.size(); i++) {
+                std::cout << channels.at(i) << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print instruments
+            std::cout << "Instruments: " << std::endl;
+            for(size_t i = 0; i < instruments.size(); i++) {
+                std::cout << instruments.at(i) << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print notes, durations, timings (by channel)
+            for(size_t i = 0; i < notes.size(); i++) {
+                std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+                std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
+
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+                    std::cout << notes.at(i).at(j) << " at time " << note_timeStamps.at(i).at(j) << " with duration " << note_durations.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print keyboard values, assigned keys(by channel)
+            for(size_t i = 0; i < keyboard_values.size(); i++) {
+                std::cout << "keyboard values: " << std::endl;
+
+                for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
+                    std::cout << keyboard_values.at(i).at(j) << std::endl;
+                }
+
+                std::cout << "Assigned keys: " << std::endl;
+                for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+                    std::cout << assigned_keys.at(i).at(j) << " at time " << note_timeStamps.at(i).at(j) << " with duration " << note_durations.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
+
+            std::cout << std::endl;
+
+            // get and print keyboard indexs
+            for(size_t i = 0; i < keyboard_indexs.size(); i++) {
+                std::cout << "keyboard indexs: " << std::endl;
+
+                for(size_t j = 0; j < keyboard_indexs.at(i).size(); j++) {
+                    std::cout << keyboard_indexs.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
         }
