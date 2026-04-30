@@ -104,6 +104,13 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 {
     RCLCPP_INFO(this->get_logger(), "Received debug target: (%.2f, %.2f, %.2f)", msg->x, msg->y, msg->z);
 
+    {
+        std::lock_guard<std::mutex> lock(song_mutex_);
+        if(!play_) {
+            return; //If not playing or no song loaded, skip the control loop
+        }
+    }
+
     double scaling = 4;
     vector3 vec;
 
