@@ -688,4 +688,6 @@
 
                 std::cout << std::endl;
             }
+
+            return true;
         }
