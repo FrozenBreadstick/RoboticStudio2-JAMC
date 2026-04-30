@@ -183,6 +183,7 @@
             fileDuration = j["song_duration"].get<double>();
             assigned_keys = j["assigned_keys"].get<std::vector<std::vector<int>>>();
             keyboard_values = j["keyboard_values"].get<std::vector<std::vector<int>>>();
+            keyboard_indexs = j["keyboard_indexs"].get<std::vector<std::vector<int>>>();
 
             std::cout << "Loaded midi data" << std::endl;
 
@@ -572,6 +573,7 @@
             j["song_duration"] = fileDuration;
             j["assigned_keys"] = assigned_keys;
             j["keyboard_values"] = keyboard_values;
+            j["keyboard_indexs"] = keyboard_indexs;
 
             // dump to terminal (for testing)
             std::cout << j << std::endl;
