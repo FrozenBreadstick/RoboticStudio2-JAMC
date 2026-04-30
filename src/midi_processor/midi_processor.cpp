@@ -668,6 +668,8 @@
                     std::cout << keyboard_values.at(i).at(j) << std::endl;
                 }
 
+                std::cout << std::endl;
+
                 std::cout << "Assigned keys: " << std::endl;
                 for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
                     std::cout << assigned_keys.at(i).at(j) << " at time " << note_timeStamps.at(i).at(j) << " with duration " << note_durations.at(i).at(j) << std::endl;
