@@ -258,6 +258,18 @@ class MidiProcessor
             bool assign_keys();
 
 
+            /*! @brief note duration trimming function
+             *
+             *  @version 1
+             *  @date 05/05/2026
+             * 
+             *  @return bool - returns true if the note duration trimming was successful and the "note_durations" vector is the same length as the "notes" vector.
+             * 
+             *  @details This function is called by the process_midi_file method. It checks the durations of each note and whether they overlap with the next and if so it trims it down such that the note ends just before the next note starts.
+             */
+            bool trim_note_durations();
+
+
             /*! @brief stores all data for current midi file in a storage file
              *
              *  @param[in] std::string - the name of the file the data will be saved to.
@@ -285,6 +297,12 @@ class MidiProcessor
 
             //!< home directory
             const char* homeDir = getenv("HOME");
+
+            //!< minimum note duration
+            const double min_note_duration = 0.08;
+
+            //!< maximum note gap
+            const double min_note_gap = 0.1;
 
             //!< current list of channels
             std::vector<int> channels;

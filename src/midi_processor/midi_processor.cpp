@@ -59,6 +59,11 @@
                 return false;
             }
 
+            // trim note durations
+            if(!trim_note_durations()) {
+                return false;
+            }
+
             // process song duration
             if(!process_song_duration()) {
                 return false;
@@ -553,6 +558,42 @@
             }
 
             return true;
+        }
+
+
+    // note duration trimming function ------------------------------------------------------
+        bool MidiProcessor::trim_note_durations()
+        {
+            // for each set of notes
+            for(size_t i = 0; i < notes.size(); i++) {
+
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+
+                    // get timestamp
+                    double this_note_timeStamp = note_timeStamps.at(i).at(j);
+
+                    // get duration
+                    double this_note_duration = note_durations.at(i).at(j);
+
+                    // get next timestamp
+                    if(j + 1 >= notes.at(i).size()) {
+                        break;
+                    }
+                    double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
+
+                    // check diff between timestamps
+                    double time_diff = next_note_timeStamp - this_note_timeStamp;
+
+                    // check if note_duration is longer than next_note_duration
+                    if(note_duration > time_diff) {
+
+                        // trim note_duration
+                        note_duration = time_diff - min_note_duration;
+
+                        note_durations.at(i).at(j) = note_duration;
+                    }
+                }
+            }
         }
 
 
