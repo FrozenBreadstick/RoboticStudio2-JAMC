@@ -242,7 +242,7 @@ namespace UI
         QString json_name = QFileInfo(file_name).baseName() + ".mipi";
         std::string std_json_name = json_name.toStdString();
 
-        if (processor.processMidiFile(std_midi_path, std_json_name)) {
+        if (processor.processMidiFile(std_midi_path, std_json_name) == 0) {
             _midi_file_path = QDir::homePath() + "/mipi_files/" + json_name;
             _new_file_label->setText(QFileInfo(file_name).fileName());
 

@@ -25,7 +25,7 @@
 // primary public functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
-        bool MidiProcessor::processMidiFile(std::string midi_file_path, std::string json_file_name)
+        int MidiProcessor::processMidiFile(std::string midi_file_path, std::string json_file_name)
         {
             // clear all variables
             channels.clear();
@@ -39,54 +39,56 @@
 
             // open file
             if(!open_file(midi_file_path)) {
-                return false;
+                return 1;
             }
+
+
 
             // process instruments and channels
             if(!process_instruments()) {
-                return false;
+                return 2;
             }
 
             // get notes
             for(size_t i = 0; i < channels.size(); i++) {
                 if(!process_channel_notes_with_timings(channels.at(i))) {
-                    return false;
+                    return 3;
                 }
             }
 
             // filter chords
             if(!filter_chords()) {
-                return false;
+                return 4;
             }
 
             // trim note durations
             if(!trim_note_durations()) {
-                return false;
+                return 5;
             }
 
             // process song duration
             if(!process_song_duration()) {
-                return false;
+                return 6;
             }
 
             // assign keys
             if(!assign_keys()) {
-                return false;
+                return 7;
             }
 
             //std::string file_name = "test_name.mipi";
 
             // save data
             if(!save_midi_data(json_file_name)) {
-                return false;
+                return 8;
             }
 
             // print data
             if(!debug_print_data()) {
-                return false;
+                return 9;
             }
 
-            return true;
+            return 0;
         }
 
     // get channels --------------------------------------------------------------
@@ -585,12 +587,12 @@
                     double time_diff = next_note_timeStamp - this_note_timeStamp;
 
                     // check if note_duration is longer than next_note_duration
-                    if(note_duration > time_diff) {
+                    if(this_note_duration > time_diff) {
 
                         // trim note_duration
-                        note_duration = time_diff - min_note_duration;
+                        this_note_duration = time_diff - min_note_duration;
 
-                        note_durations.at(i).at(j) = note_duration;
+                        note_durations.at(i).at(j) = this_note_duration;
                     }
                 }
             }

@@ -68,11 +68,11 @@ class MidiProcessor
              *  @param[in] std::string - midi_file_path The path to the midi file to be processed
              *  @param[in] std::string - json_file_name The name of the json file to be saved
              * 
-             *  @return bool - returns true if there were no issues processing or saving the data.
+             *  @return  int - returns 0 if there were no issues processing or saving the data.
              * 
              *  @details This function opens the provided midi file, fully processes it, and saves all the data to a mipi file which can be reloaded. It is not neccesary to load a mipi file that was just processed as processing populates the variables.
              */
-            bool processMidiFile(std::string midi_file_path, std::string json_file_name);
+            int processMidiFile(std::string midi_file_path, std::string json_file_name);
 
 
             /*! @brief gets all channels
@@ -299,10 +299,10 @@ class MidiProcessor
             const char* homeDir = getenv("HOME");
 
             //!< minimum note duration
-            const double min_note_duration = 0.08;
+            double min_note_duration = 0.08;
 
             //!< maximum note gap
-            const double min_note_gap = 0.1;
+            double min_note_gap = 0.1;
 
             //!< current list of channels
             std::vector<int> channels;
