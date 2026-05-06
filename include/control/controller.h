@@ -97,7 +97,7 @@ namespace Control
         //Timers
         rclcpp::TimerBase::SharedPtr control_timer_;
         void control_loop();
-        double calculate_z();
+        double calculate_z(double xy);
         std::optional<vector3> calculate_velocity(int note);
         std::optional<vector3> play_note(double duration, double time);
 
