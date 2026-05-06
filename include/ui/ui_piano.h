@@ -39,15 +39,14 @@ namespace UI
         private:
             // State tracking
             bool is_playing = false;
-            PlaybackDirection current_dir = PlaybackDirection::None;
+            PlaybackDirection current_dir = PlaybackDirection::Forward; // Default to Forward
             QString _midi_file_path;
 
             // UI Elements
             QLabel* _title;
             QSlider* _track_slider;
             QPushButton* _play_pause_button;
-            QPushButton* _forward_button;
-            QPushButton* _reverse_button;
+            QPushButton* _direction_button; // Single toggle button for direction
             QLabel* _channel_title;
             QRadioButton* _channel_select;
             QSlider* _speed_control;
@@ -80,6 +79,7 @@ namespace UI
         private slots:
             void play_pause();
             void open_midi_file();
+            void toggle_direction(); // New toggle slot
             void set_direction_forward();
             void set_direction_reverse();
             void send_time_scale();

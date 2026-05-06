@@ -104,6 +104,13 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 {
     RCLCPP_INFO(this->get_logger(), "Received debug target: (%.2f, %.2f, %.2f)", msg->x, msg->y, msg->z);
 
+    {
+        std::lock_guard<std::mutex> lock(song_mutex_);
+        if(!play_) {
+            return; //If not playing or no song loaded, skip the control loop
+        }
+    }
+
     double scaling = 4;
     vector3 vec;
 
@@ -190,15 +197,21 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
         song_loaded_ = false;
         return;
     }
+    int i = 0;
+    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     std::lock_guard<std::mutex> lock(song_mutex_); // Ensure thread-safe access to song data
     play_ = false; //Reset play state when loading a new song
     state_ = STATE::MOVING; //Set state to moving to move to the first note position when a new song is loaded
     CONTROL_TIME = 0.0; //Reset control time for next time
     current_note_index_ = 0; //Reset note index when loading a new song
     song_loaded_ = true; //Mark that a song has been loaded
+    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     song_ = connor.get_keyboard_indexs()[request->index];
+    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     note_timings_ = connor.get_channel_note_timings()[request->index];
+    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     note_durations_ = connor.get_channel_note_durations()[request->index];
+    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     if (song_.empty() or song_.size() < 2) {
         response->message = "[ERROR] Loaded file but no (or 1) note(s) found for instrument index: " + std::to_string(request->index);
         song_loaded_ = false;

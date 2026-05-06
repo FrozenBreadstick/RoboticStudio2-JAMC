@@ -30,10 +30,10 @@ namespace UI
         processor = MidiProcessor();
 
         // Client Creations
-        playback_client = this->create_client<jamc::srv::Func>("playback_control");
-        direction_client = this->create_client<jamc::srv::Func>("playback_direction");
-        time_scale_client = this->create_client<jamc::srv::TimeScale>("time_scale_control");
-        channel_client = this->create_client<jamc::srv::Load>("channel_select");
+        playback_client = this->create_client<jamc::srv::Func>("/MIPI/play_pause");
+        direction_client = this->create_client<jamc::srv::Func>("/MIPI/direction");
+        time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
+        channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
 
         auto* main_layout = new QVBoxLayout(this);
         
@@ -47,7 +47,7 @@ namespace UI
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
 
-        // Channel Layout (Now dynamic)
+        // Dynamic Channel Layout
         _channel_layout = new QVBoxLayout(); 
         _channel_title = new QLabel("Channel Selector:", this);
         _channel_layout->addWidget(_channel_title);
@@ -85,12 +85,10 @@ namespace UI
         auto* playback_layout = new QVBoxLayout(playback_group);
         
         auto* btn_layout = new QHBoxLayout();
-        _reverse_button = new QPushButton("⏪", this);
+        _direction_button = new QPushButton("⏩", this); // Single Direction Toggle
         _play_pause_button = new QPushButton("▶", this); 
-        _forward_button = new QPushButton("⏩", this);
-        btn_layout->addWidget(_reverse_button);
+        btn_layout->addWidget(_direction_button);
         btn_layout->addWidget(_play_pause_button);
-        btn_layout->addWidget(_forward_button);
 
         _track_slider = new QSlider(Qt::Horizontal, this);
         playback_layout->addLayout(btn_layout);
@@ -114,8 +112,7 @@ namespace UI
         // --- CONNECTIONS ---
         connect(_new_file_button, &QPushButton::clicked, this, &PianoUI::open_midi_file);
         connect(_play_pause_button, &QPushButton::clicked, this, &PianoUI::play_pause);
-        connect(_forward_button, &QPushButton::clicked, this, &PianoUI::set_direction_forward);
-        connect(_reverse_button, &QPushButton::clicked, this, &PianoUI::set_direction_reverse);
+        connect(_direction_button, &QPushButton::clicked, this, &PianoUI::toggle_direction); // Toggle Connection
         connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::send_time_scale);
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
 
@@ -136,7 +133,7 @@ namespace UI
     /**
      * @brief Forces playback to pause and resets the track slider to zero.
      * * Updates the UI to reflect a paused state and sends an asynchronous ROS 2
-     * request to halt the robot playback safely.
+     * request to halt the robot playback safely. Enforces forward playback direction.
      */
     void PianoUI::force_pause_and_reset() {
         if (is_playing) {
@@ -150,6 +147,9 @@ namespace UI
             }
         }
         _track_slider->setValue(0);
+        
+        // Always enforce forward direction upon reset
+        set_direction_forward();
     }
 
     /**
@@ -242,7 +242,7 @@ namespace UI
         QString json_name = QFileInfo(file_name).baseName() + ".mipi";
         std::string std_json_name = json_name.toStdString();
 
-        if (processor.processMidiFile(std_midi_path, std_json_name)) {
+        if (processor.processMidiFile(std_midi_path, std_json_name) == 0) {
             _midi_file_path = QDir::homePath() + "/mipi_files/" + json_name;
             _new_file_label->setText(QFileInfo(file_name).fileName());
 
@@ -328,11 +328,25 @@ namespace UI
     }
 
     /**
+     * @brief Toggles the playback direction between forward and reverse.
+     */
+    void PianoUI::toggle_direction() {
+        if (current_dir == PlaybackDirection::Forward) {
+            set_direction_reverse();
+        } else {
+            set_direction_forward();
+        }
+    }
+
+    /**
      * @brief Sends a ROS 2 request to set playback direction to forward.
      * * Ignored if the playback direction is already set to forward.
      */
     void PianoUI::set_direction_forward() {
         if (current_dir == PlaybackDirection::Forward) return;
+        
+        current_dir = PlaybackDirection::Forward;
+        _direction_button->setText("⏩");
 
         auto request = std::make_shared<jamc::srv::Func::Request>();
         RCLCPP_INFO(this->get_logger(), "Sending FORWARD direction request");
@@ -359,6 +373,9 @@ namespace UI
      */
     void PianoUI::set_direction_reverse() {
         if (current_dir == PlaybackDirection::Reverse) return;
+        
+        current_dir = PlaybackDirection::Reverse;
+        _direction_button->setText("⏪");
 
         auto request = std::make_shared<jamc::srv::Func::Request>();
         RCLCPP_INFO(this->get_logger(), "Sending REVERSE direction request");
