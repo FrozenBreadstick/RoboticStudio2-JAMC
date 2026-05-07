@@ -729,8 +729,6 @@
         bool MidiProcessor::trim_note_durations()
         {
 
-            std::cout << std::setprecision(15);
-
             // for each set of notes
             for(size_t i = 0; i < notes.size(); i++) {
 
@@ -749,12 +747,6 @@
                         // check diff between timestamps
                         double time_diff = next_note_timeStamp - this_note_timeStamp;
 
-
-
-                        if(j == 68) {
-                            std::cout << "note at 14s time diff = " << time_diff << ". old note duration = " << this_note_duration << std::endl;
-                        }
-
                         // check if note_duration is longer than next_note_duration
                         if(this_note_duration + min_note_duration_gap > time_diff) {
 
@@ -762,23 +754,11 @@
                             this_note_duration = this_note_duration * 1000;
                             time_diff = time_diff * 1000;
 
-                            if(j == 68) {
-                                std::cout << "values in ms: old duration - " << this_note_duration << ", time diff - " << time_diff;
-                            }
-
                             // trim note_duration
                             this_note_duration = time_diff - min_note_duration_gap;
 
-                            if(j == 68) {
-                                std::cout << ", new duration - " << this_note_duration << std::endl;
-                            }
-
                             // convert back to s
                             this_note_duration = this_note_duration / 1000;
-
-                            if(j == 68) {
-                                std::cout << "values in s: new duration - " << this_note_duration << std::endl;
-                            }
 
                             note_durations.at(i).at(j) = this_note_duration;
                         }
@@ -853,6 +833,9 @@
          */
         bool MidiProcessor::debug_print_data()
         {
+
+            // OPTIONAL: increase output precision
+            std::cout << std::setprecision(15);
 
             // get and print song duration
             std::cout << "Song duration: " << fileDuration << std::endl;
