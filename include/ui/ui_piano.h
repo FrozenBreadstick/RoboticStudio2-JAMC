@@ -22,6 +22,8 @@
 #include "jamc/srv/time_scale.hpp"
 #include "jamc/srv/load.hpp"
 
+#include <sensor_msgs/msg/image.hpp>
+
 #include "midi_processor/midi_processor.h"
 
 namespace UI
@@ -76,6 +78,13 @@ namespace UI
 
             MidiProcessor processor;
 
+            QLabel* _camera_view;
+            rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _camera_sub;
+
+            QPushButton* _debug_button;
+
+            void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+
         private slots:
             void play_pause();
             void open_midi_file();
@@ -85,6 +94,7 @@ namespace UI
             void send_time_scale();
             void send_channel_selection(int index);
             void load_existing_mipi(int index);
+            void send_debug_request();
     };
 };
 

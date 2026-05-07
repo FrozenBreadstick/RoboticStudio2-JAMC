@@ -12,6 +12,33 @@
             // create midi
             midi = MidiFile();
 
+            //!< current list of channels
+            channels = std::vector<int>();
+
+            //!< current list of instruments
+            instruments = std::vector<int>();
+
+            //!< current list of notes
+            notes = std::vector<std::vector<int>>();
+
+            //!< current list of note_timeStamps
+            note_timeStamps = std::vector<std::vector<double>>();
+
+            //!< current list of note_durations
+            note_durations = std::vector<std::vector<double>>();
+
+            //!< current song duration
+            fileDuration = 0;
+
+            //!< current list of assigned keys for each channel
+            assigned_keys = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard values for each channel
+            keyboard_values = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard indexs for each channel
+            keyboard_indexs = std::vector<std::vector<int>>();
+
         }
 
 
@@ -42,48 +69,52 @@
                 return 1;
             }
 
-
-
             // process instruments and channels
             if(!process_instruments()) {
                 return 2;
             }
 
             // get notes
-            for(size_t i = 0; i < channels.size(); i++) {
-                if(!process_channel_notes_with_timings(channels.at(i))) {
-                    return 3;
-                }
-            }
-
-            // filter chords
-            if(!filter_chords()) {
+            if(!process_channel_notes_with_timings()) {
                 return 4;
-            }
-
-            // trim note durations
-            if(!trim_note_durations()) {
-                return 5;
             }
 
             // process song duration
             if(!process_song_duration()) {
+                return 5;
+            }
+
+            // filter chords
+            if(!filter_chords()) {
                 return 6;
+            }
+
+            // filter trills
+            if(!filter_trills()) {
+                return 7;
+            }
+
+            // print data -------
+            if(!debug_print_data()) {
+                return 9;
+            }
+
+            // trim note durations
+            if(!trim_note_durations()) {
+                return 8;
             }
 
             // assign keys
             if(!assign_keys()) {
-                return 7;
+                return 10;
             }
-
-            //std::string file_name = "test_name.mipi";
 
             // save data
             if(!save_midi_data(json_file_name)) {
-                return 8;
+                return 11;
             }
 
-            // print data
+            // print data -------
             if(!debug_print_data()) {
                 return 9;
             }
@@ -295,37 +326,59 @@
 
 
     // process channel notes WITH timings ------------------------------------------
-        bool MidiProcessor::process_channel_notes_with_timings(int channel)
+        bool MidiProcessor::process_channel_notes_with_timings()
         {
+            //!< list of dud channels
+            std::vector<int> dud_channels;
 
-            std::vector<int> channel_notes;
-            std::vector<double> channel_note_durations;
-            std::vector<double> note_on_timeStamps;
+            // for each channel
+            for(size_t i = 0; i < channels.size(); i++) {
 
+                std::vector<int> channel_notes;
+                std::vector<double> channel_note_durations;
+                std::vector<double> note_on_timeStamps;
 
+                int channel = channels.at(i);
 
-            // get notes for specified channel
-            for(int i = 0; i < midi.getTrackCount(); i++) {
-                for(int j = 0; j < midi.getEventCount(i); j++) {
-                    MidiEvent& event = midi.getEvent(i, j);
-                    if(event.isNoteOn()) {
-                        if(event.getChannel() == channel) {
-                            channel_notes.push_back(event.getKeyNumber());
-                            channel_note_durations.push_back(event.getDurationInSeconds());
-                            note_on_timeStamps.push_back(midi.getTimeInSeconds(i, j));
+                // get notes for specified channel
+                for(int i = 0; i < midi.getTrackCount(); i++) {
+                    for(int j = 0; j < midi.getEventCount(i); j++) {
+                        MidiEvent& event = midi.getEvent(i, j);
+                        if(event.isNoteOn()) {
+                            if(event.getChannel() == channel) {
+                                channel_notes.push_back(event.getKeyNumber());
+                                channel_note_durations.push_back(event.getDurationInSeconds());
+                                note_on_timeStamps.push_back(midi.getTimeInSeconds(i, j));
+                            }
                         }
                     }
                 }
+
+                // if a channel has no notes remove it from the vectors of data else add to data
+                if(channel_notes.size() == 0) {
+                    // std::cout << "No notes found in channel " << channel << " index: " << i << std::endl;
+                    dud_channels.push_back(i);
+                }
+                else {
+                    notes.push_back(channel_notes);
+                    note_timeStamps.push_back(note_on_timeStamps);
+                    note_durations.push_back(channel_note_durations);
+                }
             }
 
-            if(channel_notes.size() == 0) {
-                std::cout << "No notes found" << std::endl;
+            // remove dud channels
+            for(int i = dud_channels.size() - 1; i >= 0; i--) {
+
+                channels.erase(channels.begin() + dud_channels.at(i));
+                instruments.erase(instruments.begin() + dud_channels.at(i));
+
+                // std::cout << "Removing dud channel: " << dud_channels.at(i) << std::endl;
+            }
+
+            if(channels.size() == 0) {
+                std::cout << "No channels found" << std::endl;
                 return false;
             }
-
-            notes.push_back(channel_notes);
-            note_timeStamps.push_back(note_on_timeStamps);
-            note_durations.push_back(channel_note_durations);
 
             return true;
         }
@@ -427,6 +480,58 @@
                     current_stamp = note_timeStamp;
                 }
 
+            }
+
+            return true;
+        }
+
+
+        // filters trills and staggered chords down to only the first note ----------------------------------
+        bool MidiProcessor::filter_trills()
+        {
+            // for each set of notes
+            for(size_t i = 0; i < notes.size(); i++) {
+
+                int length = notes.at(i).size();
+
+                // if there are more than 1 note in the channel, filter for trills
+                if(length > 1) {
+
+                    // for each timestamp starting at index 1
+                    int j = 1;
+                    
+                    while(j < length) {
+
+                        // get timestamps (current and last kept)
+                        double note_timeStamp = note_timeStamps.at(i).at(j);
+                        double last_kept_timeStamp = note_timeStamps.at(i).at(j - 1);
+                        
+                        // get diff and check if it is less than the min note gap
+                        double diff = note_timeStamp - last_kept_timeStamp;
+
+                        if(diff < min_note_gap) {
+                            
+                            // remove note from arrays
+                            notes.at(i).erase(notes.at(i).begin() + j);
+                            note_durations.at(i).erase(note_durations.at(i).begin() + j);
+                            note_timeStamps.at(i).erase(note_timeStamps.at(i).begin() + j);
+
+                            // error checking
+                            if(notes.at(i).size() != note_durations.at(i).size() || notes.at(i).size() != note_timeStamps.at(i).size()) {
+                                std::cout << "Error erasing notes" << std::endl;
+                                std::cout << "notes size: " << notes.at(i).size() << "notes duration size: " << note_durations.at(i).size() << "notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
+                            }
+
+                            // reduce length
+                            length--;
+                        }
+                        else {
+
+                            // increment j
+                            j++;
+                        }
+                    }
+                }
             }
 
             return true;
@@ -578,24 +683,25 @@
                     double this_note_duration = note_durations.at(i).at(j);
 
                     // get next timestamp
-                    if(j + 1 >= notes.at(i).size()) {
-                        break;
-                    }
-                    double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
+                    if((j + 1) < notes.at(i).size()) {
+                        double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
 
-                    // check diff between timestamps
-                    double time_diff = next_note_timeStamp - this_note_timeStamp;
+                        // check diff between timestamps
+                        double time_diff = next_note_timeStamp - this_note_timeStamp;
 
-                    // check if note_duration is longer than next_note_duration
-                    if(this_note_duration > time_diff) {
+                        // check if note_duration is longer than next_note_duration
+                        if(this_note_duration > time_diff) {
 
-                        // trim note_duration
-                        this_note_duration = time_diff - min_note_duration;
+                            // trim note_duration
+                            this_note_duration = time_diff - min_note_duration;
 
-                        note_durations.at(i).at(j) = this_note_duration;
+                            note_durations.at(i).at(j) = this_note_duration;
+                        }
                     }
                 }
             }
+
+            return true;
         }
 
 
