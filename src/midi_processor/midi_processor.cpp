@@ -12,6 +12,33 @@
             // create midi
             midi = MidiFile();
 
+            //!< current list of channels
+            channels = std::vector<int>();
+
+            //!< current list of instruments
+            instruments = std::vector<int>();
+
+            //!< current list of notes
+            notes = std::vector<std::vector<int>>();
+
+            //!< current list of note_timeStamps
+            note_timeStamps = std::vector<std::vector<double>>();
+
+            //!< current list of note_durations
+            note_durations = std::vector<std::vector<double>>();
+
+            //!< current song duration
+            fileDuration = 0;
+
+            //!< current list of assigned keys for each channel
+            assigned_keys = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard values for each channel
+            keyboard_values = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard indexs for each channel
+            keyboard_indexs = std::vector<std::vector<int>>();
+
         }
 
 
@@ -42,8 +69,6 @@
                 return 1;
             }
 
-
-
             // process instruments and channels
             if(!process_instruments()) {
                 return 2;
@@ -53,7 +78,6 @@
             if(!process_song_duration()) {
                 return 3;
             }
-
 
             // get notes
             for(size_t i = 0; i < channels.size(); i++) {
@@ -71,7 +95,6 @@
             if(!debug_print_data()) {
                 return 9;
             }
-
 
             // trim note durations
             if(!trim_note_durations()) {

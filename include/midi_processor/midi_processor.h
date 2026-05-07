@@ -301,7 +301,7 @@ class MidiProcessor
             //!< minimum note duration
             double min_note_duration = 0.08;
 
-            //!< maximum note gap
+            //!< minimum note gap
             double min_note_gap = 0.1;
 
             //!< current list of channels
