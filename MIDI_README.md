@@ -31,12 +31,12 @@ step 1: instantiate the class
 MidiProcessor midi;
 ```
 
-step 2: call the load method with the path to the midi file you want to load
+step 2: call the load method with the name of the mipi file you want to load
 
 ```bash
-path_to_midi_file = "path/to/midi/file.mipi";
+file_name = "file_name.mipi";
 
-midi.load(path_to_midi_file);
+midi.load(file_name);
 ```
 
 step 3: call the get method with the name of the midi data you want to get (all examples below)
@@ -68,6 +68,9 @@ midi.get_assigned_keys();
 
 // returns a std::vector<std::vector<int>> of all keyboard values for each channel
 midi.get_keyboard_values();
+
+// returns a std::vector<std::vector<int>> of all keyboard indexs for each channel
+midi.get_keyboard_indexs();
 ```
 
 note: the indexs for each vector are corresponding vectors of the same channel. For example, if a song has 2 channels, then index 0 for all vectors will be for the one channel and index 1 for all vectors will be for the next channel. This DOES NOT mean "midi channel 1" is in index position 0 or 1, all data relating to midi channel 1 will have the same index position in all vectors.
