@@ -19,6 +19,8 @@ find_package(moveit_core REQUIRED)
 
 # general dependencies
 find_package(geometry_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 find_package(rclcpp REQUIRED)
 
@@ -100,6 +102,8 @@ ament_target_dependencies(controller
   moveit_ros_planning_interface
   moveit_core
   geometry_msgs
+  sensor_msgs
+  control_msgs
   tf2_ros
 )
 

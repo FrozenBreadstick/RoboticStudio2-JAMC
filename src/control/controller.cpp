@@ -25,6 +25,8 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     play_direction_service_ = this->create_service<jamc::srv::Func>("/MIPI/direction", std::bind(&Controller::play_direction_callback, this, std::placeholders::_1, std::placeholders::_2));
 
     control_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::control_loop, this));
+
+    startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Controller::startup, this));
 }
 
 /**
@@ -393,3 +395,85 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
 - Implement actual Z velocity control for pressing keys based on a target Z height, read current EE Z Height from TF. Bring to hover above key until not timing is expired (or if the move took longer than the note timing) (probably minus a constant from not timing so that it plays in time)
 - Target array position is Math::INF, Math::INF, Math::INF average the positions of keys in the direction we need to travel and travel that way until the target key is visible
 */
+
+void Control::Controller::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(joint_mutex_);
+    latest_joint_state_ = msg->position;
+}
+
+/**
+ * @brief The startup sequence that moves the robot into the starting position for playing
+ */
+void Control::Controller::startup() 
+{
+    //Define constants
+    double scaling = 2; //Scaling factor for velocity
+    double tolerance = 0.05;
+    //                                       base, shoulder, elbow, wrist1, wrist2, wrist3
+    //                                          90,   -75,  100,  -115,   -90,  0
+    std::vector<double> target_joint_state = {1.57, -1.309, 1.75, -2.01, -1.57, 0}; //Find actual target joint state for startup
+    std::vector<std::string> joint_names_ = {
+    "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint"
+    };
+    
+    double max_error = 0.0;
+    
+    //Get current joint state
+    std::vector<double> current;
+    {
+        std::lock_guard<std::mutex> lock(joint_mutex_);
+        current = latest_joint_state_;
+    }
+
+    if(current.empty() || current.size() != target_joint_state.size()) return;
+    
+    //Calculate Error
+    std::vector<double> error;
+    for (size_t i = 0; i < target_joint_state.size(); i++) {
+        error.push_back(target_joint_state[i] - current[i]);
+    }
+
+    for (const auto& e : error) {
+        max_error = std::max(max_error, std::abs(e));
+    }
+
+    //Break if done
+    if (max_error < tolerance)
+    {
+        sendStop();
+        startup_timer_->cancel(); //Cancel the startup timer so this only runs once
+        return;
+    }
+
+    control_msgs::msg::JointJog cmd;
+    cmd.header.stamp = this->now();
+
+    cmd.joint_names = joint_names_;
+
+    cmd.velocities.resize(error.size());
+
+    for (size_t i = 0; i < error.size(); i++)
+    {
+        cmd.velocities[i] = scaling * error[i];
+
+        //safety clamp (important for UR)
+        cmd.velocities[i] = std::clamp(cmd.velocities[i], -1.0, 1.0);
+    }
+
+    cmd.duration = 0.1;  // Servo timeout protection
+
+    joint_traj_streaming_pub_->publish(cmd);
+
+}
+
+void Control::Controller::shutdown() 
+{
+    RCLCPP_INFO(this->get_logger(), "Running shutdown sequence...");
+    
+}

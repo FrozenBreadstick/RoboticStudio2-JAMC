@@ -16,6 +16,8 @@
 #include <cmath>
 #include <optional>
 #include <geometry_msgs/msg/pose_array.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
+#include <control_msgs/msg/joint_jog.hpp>
 
 using Clock = std::chrono::steady_clock;
 
@@ -66,17 +68,29 @@ namespace Control
         int current_note_index_ = 0; //The index of the current note being played in the song
         bool song_loaded_ = false; //Whether a song has been loaded or not
 
+        std::mutex joint_mutex_; //Mutex to protect access to the latest joint state
+        std::vector<double> latest_joint_state_; //The latest joint state of the robot
+
         //Methods
         void sendTwistMsg(double x, double y, double z, double angular_x = 0.0, double angular_y = 0.0, double angular_z = 0.0);
 
+        //Startup & Shutdown
+        rclcpp::TimerBase::SharedPtr startup_timer_;
+        void startup();
+        void shutdown();
+
         //Publishers
         rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
+        rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_traj_streaming_pub_;
 
         //Subscribers
         rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr debug_target_sub_;
         void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
         rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr key_positions_sub_;
         void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
+
+        rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+        void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
 
         //Services
         /**
@@ -94,13 +108,12 @@ namespace Control
         void play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
         void play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
 
-        //Timers
+        //Control Loop
         rclcpp::TimerBase::SharedPtr control_timer_;
         void control_loop();
         double calculate_z(double xy);
         std::optional<vector3> calculate_velocity(int note);
         std::optional<vector3> play_note(double duration, double time);
-
     };
 }
 
