@@ -32,109 +32,16 @@ int test_process() {
 
     // twinkle twinkle little star
     // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid";
-    // mary had a little lamb
+    // pokemon
     std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/Driftveil_City_(Pokémon B1W1).mid";
+    // mary had a little lamb
+    // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid";
 
     // open file
     int error = midi.processMidiFile(midi_file_path, "test_name.mipi"); 
     if(error != 0) {
         std::cout << "Error opening midi file: " << error << std::endl;
         return 0;
-    }
-
-    // declare variables
-    std::vector<int> channels;
-    std::vector<int> instruments;
-    std::vector<std::vector<int>> notes;
-    std::vector<std::vector<double>> durations;
-    std::vector<std::vector<double>> timings;
-    double duration;
-    std::vector<std::vector<int>> assigned_keys;
-    std::vector<std::vector<int>> keyboard_values;
-    std::vector<std::vector<int>> keyboard_indexs;
-
-    // get and print song duration
-    duration = midi.get_song_duration();
-    std::cout << "Song duration: " << duration << std::endl;
-
-
-    std::cout << std::endl;
-
-
-    // get and print channels
-    channels = midi.get_channels();
-
-    std::cout << "Channels: " << std::endl;
-    for(size_t i = 0; i < channels.size(); i++) {
-        std::cout << channels[i] << std::endl;
-    }
-
-
-    std::cout << std::endl;
-
-
-    // get and print instruments
-    instruments = midi.get_instruments();
-    std::cout << "Instruments: " << std::endl;
-    for(size_t i = 0; i < instruments.size(); i++) {
-        std::cout << instruments[i] << std::endl;
-    }
-
-
-    std::cout << std::endl;
-
-
-    // get and print notes, durations, timings (by channel)
-    notes = midi.get_channel_notes();
-    durations = midi.get_channel_note_durations();
-    timings = midi.get_channel_note_timings();
-
-    for(size_t i = 0; i < notes.size(); i++) {
-        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
-        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
-
-        for(size_t j = 0; j < notes.at(i).size(); j++) {
-            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-    }
-
-
-    std::cout << std::endl;
-
-
-    // get and print keyboard values, assigned keys(by channel)
-    keyboard_values = midi.get_keyboard_values();
-    assigned_keys = midi.get_assigned_keys();
-    
-    for(size_t i = 0; i < keyboard_values.size(); i++) {
-        std::cout << "keyboard values: " << std::endl;
-
-        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
-            std::cout << keyboard_values.at(i).at(j) << std::endl;
-        }
-
-        std::cout << "Assigned keys: " << std::endl;
-        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
-            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-
-         std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-
-    // get and print keyboard indexs
-
-    keyboard_indexs = midi.get_keyboard_indexs();
-
-    for(size_t i = 0; i < keyboard_indexs.size(); i++) {
-        std::cout << "keyboard indexs: " << std::endl;
-
-        for(size_t j = 0; j < keyboard_indexs.at(i).size(); j++) {
-            std::cout << keyboard_indexs.at(i).at(j) << std::endl;
-        }
-
-         std::cout << std::endl;
     }
 
     return 0;
@@ -179,55 +86,6 @@ int test_save_and_load_mipi_data() {
         return 0;
     }
 
-    // get the data 
-    std::vector<int> channels = midi.get_channels();
-    std::vector<int> instruments = midi.get_instruments();
-    std::vector<std::vector<int>> notes = midi.get_channel_notes();
-    std::vector<std::vector<double>> durations = midi.get_channel_note_durations();
-    std::vector<std::vector<double>> timings = midi.get_channel_note_timings();
-    double duration = midi.get_song_duration();
-    std::vector<std::vector<int>> assigned_keys = midi.get_assigned_keys();
-    std::vector<std::vector<int>> keyboard_values = midi.get_keyboard_values();
-
-
-
-    // print the data for file 1
-    std::cout << "Channels: " << std::endl;
-    for(size_t i = 0; i < channels.size(); i++) {
-        std::cout << channels[i] << std::endl;
-    }
-
-    std::cout << "Instruments: " << std::endl;
-    for(size_t i = 0; i < instruments.size(); i++) {
-        std::cout << instruments[i] << std::endl;
-    }
-
-    std::cout << "Notes: " << std::endl;
-    for(size_t i = 0; i < notes.size(); i++) {
-        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
-        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
-
-        for(size_t j = 0; j < notes.at(i).size(); j++) {
-            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-    }
-
-    for(size_t i = 0; i < keyboard_values.size(); i++) {
-        std::cout << "keyboard values: " << std::endl;
-
-        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
-            std::cout << keyboard_values.at(i).at(j) << std::endl;
-        }
-
-        std::cout << "Assigned keys: " << std::endl;
-        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
-            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-
-         std::cout << std::endl;
-    }
-
-
     std::cout << std::endl;
     std::cout << std::endl;
 
@@ -238,54 +96,6 @@ int test_save_and_load_mipi_data() {
         return 0;
     }
 
-    // get the data 
-    channels = midi.get_channels();
-    instruments = midi.get_instruments();
-    notes = midi.get_channel_notes();
-    durations = midi.get_channel_note_durations();
-    timings = midi.get_channel_note_timings();
-    duration = midi.get_song_duration();
-    assigned_keys = midi.get_assigned_keys();
-    keyboard_values = midi.get_keyboard_values();
-
-
-    // print the data for file 2
-    std::cout << "Channels: " << std::endl;
-    for(size_t i = 0; i < channels.size(); i++) {
-        std::cout << channels[i] << std::endl;
-    }
-
-    std::cout << "Instruments: " << std::endl;
-    for(size_t i = 0; i < instruments.size(); i++) {
-        std::cout << instruments[i] << std::endl;
-    }
-
-    std::cout << "Notes: " << std::endl;
-    for(size_t i = 0; i < notes.size(); i++) {
-        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
-        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
-
-        for(size_t j = 0; j < notes.at(i).size(); j++) {
-            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-    }
-
-    for(size_t i = 0; i < keyboard_values.size(); i++) {
-        std::cout << "keyboard values: " << std::endl;
-
-        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
-            std::cout << keyboard_values.at(i).at(j) << std::endl;
-        }
-
-        std::cout << "Assigned keys: " << std::endl;
-        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
-            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-
-         std::cout << std::endl;
-    }
-
-
     std::cout << std::endl;
     std::cout << std::endl;
 
@@ -293,53 +103,6 @@ int test_save_and_load_mipi_data() {
 
     std::cout << "Loading midi data for file 1" << std::endl;
     midi.load_json_file("mary.mipi");
-
-    // get the data 
-    channels = midi.get_channels();
-    instruments = midi.get_instruments();
-    notes = midi.get_channel_notes();
-    durations = midi.get_channel_note_durations();
-    timings = midi.get_channel_note_timings();
-    duration = midi.get_song_duration();
-    assigned_keys = midi.get_assigned_keys();
-    keyboard_values = midi.get_keyboard_values();
-
-
-    // print the data for file 1
-    std::cout << "Channels: " << std::endl;
-    for(size_t i = 0; i < channels.size(); i++) {
-        std::cout << channels[i] << std::endl;
-    }
-
-    std::cout << "Instruments: " << std::endl;
-    for(size_t i = 0; i < instruments.size(); i++) {
-        std::cout << instruments[i] << std::endl;
-    }
-
-    std::cout << "Notes: " << std::endl;
-    for(size_t i = 0; i < notes.size(); i++) {
-        std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
-        std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
-
-        for(size_t j = 0; j < notes.at(i).size(); j++) {
-            std::cout << notes.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-    }
-
-    for(size_t i = 0; i < keyboard_values.size(); i++) {
-        std::cout << "keyboard values: " << std::endl;
-
-        for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
-            std::cout << keyboard_values.at(i).at(j) << std::endl;
-        }
-
-        std::cout << "Assigned keys: " << std::endl;
-        for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
-            std::cout << assigned_keys.at(i).at(j) << " at time " << timings.at(i).at(j) << " with duration " << durations.at(i).at(j) << std::endl;
-        }
-
-         std::cout << std::endl;
-    }
 
     return 0;
 }

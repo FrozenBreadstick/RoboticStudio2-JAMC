@@ -49,25 +49,32 @@
                 return 2;
             }
 
+            // process song duration
+            if(!process_song_duration()) {
+                return 3;
+            }
+
+
             // get notes
             for(size_t i = 0; i < channels.size(); i++) {
                 if(!process_channel_notes_with_timings(channels.at(i))) {
-                    return 3;
+                    return 4;
                 }
             }
 
             // filter chords
             if(!filter_chords()) {
-                return 4;
-            }
-
-            // trim note durations
-            if(!trim_note_durations()) {
                 return 5;
             }
 
-            // process song duration
-            if(!process_song_duration()) {
+            // print data
+            if(!debug_print_data()) {
+                return 9;
+            }
+
+
+            // trim note durations
+            if(!trim_note_durations()) {
                 return 6;
             }
 
@@ -75,8 +82,6 @@
             if(!assign_keys()) {
                 return 7;
             }
-
-            //std::string file_name = "test_name.mipi";
 
             // save data
             if(!save_midi_data(json_file_name)) {
@@ -578,24 +583,25 @@
                     double this_note_duration = note_durations.at(i).at(j);
 
                     // get next timestamp
-                    if(j + 1 >= notes.at(i).size()) {
-                        break;
-                    }
-                    double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
+                    if((j + 1) < notes.at(i).size()) {
+                        double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
 
-                    // check diff between timestamps
-                    double time_diff = next_note_timeStamp - this_note_timeStamp;
+                        // check diff between timestamps
+                        double time_diff = next_note_timeStamp - this_note_timeStamp;
 
-                    // check if note_duration is longer than next_note_duration
-                    if(this_note_duration > time_diff) {
+                        // check if note_duration is longer than next_note_duration
+                        if(this_note_duration > time_diff) {
 
-                        // trim note_duration
-                        this_note_duration = time_diff - min_note_duration;
+                            // trim note_duration
+                            this_note_duration = time_diff - min_note_duration;
 
-                        note_durations.at(i).at(j) = this_note_duration;
+                            note_durations.at(i).at(j) = this_note_duration;
+                        }
                     }
                 }
             }
+
+            return true;
         }
 
 
