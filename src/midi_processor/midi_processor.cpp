@@ -74,11 +74,6 @@
                 return 2;
             }
 
-            // print data
-            if(!debug_print_data()) {
-                return 9;
-            }
-
             // get notes
             if(!process_channel_notes_with_timings()) {
                 return 4;
@@ -86,35 +81,40 @@
 
             // process song duration
             if(!process_song_duration()) {
-                return 3;
+                return 5;
             }
 
             // filter chords
             if(!filter_chords()) {
-                return 5;
+                return 6;
             }
 
-            // // print data
-            // if(!debug_print_data()) {
-            //     return 9;
-            // }
+            // filter trills
+            if(!filter_trills()) {
+                return 7;
+            }
+
+            // print data -------
+            if(!debug_print_data()) {
+                return 9;
+            }
 
             // trim note durations
             if(!trim_note_durations()) {
-                return 6;
+                return 8;
             }
 
             // assign keys
             if(!assign_keys()) {
-                return 7;
+                return 10;
             }
 
             // save data
             if(!save_midi_data(json_file_name)) {
-                return 8;
+                return 11;
             }
 
-            // print data
+            // print data -------
             if(!debug_print_data()) {
                 return 9;
             }
@@ -480,6 +480,58 @@
                     current_stamp = note_timeStamp;
                 }
 
+            }
+
+            return true;
+        }
+
+
+        // filters trills and staggered chords down to only the first note ----------------------------------
+        bool MidiProcessor::filter_trills()
+        {
+            // for each set of notes
+            for(size_t i = 0; i < notes.size(); i++) {
+
+                int length = notes.at(i).size();
+
+                // if there are more than 1 note in the channel, filter for trills
+                if(length > 1) {
+
+                    // for each timestamp starting at index 1
+                    int j = 1;
+                    
+                    while(j < length) {
+
+                        // get timestamps (current and last kept)
+                        double note_timeStamp = note_timeStamps.at(i).at(j);
+                        double last_kept_timeStamp = note_timeStamps.at(i).at(j - 1);
+                        
+                        // get diff and check if it is less than the min note gap
+                        double diff = note_timeStamp - last_kept_timeStamp;
+
+                        if(diff < min_note_gap) {
+                            
+                            // remove note from arrays
+                            notes.at(i).erase(notes.at(i).begin() + j);
+                            note_durations.at(i).erase(note_durations.at(i).begin() + j);
+                            note_timeStamps.at(i).erase(note_timeStamps.at(i).begin() + j);
+
+                            // error checking
+                            if(notes.at(i).size() != note_durations.at(i).size() || notes.at(i).size() != note_timeStamps.at(i).size()) {
+                                std::cout << "Error erasing notes" << std::endl;
+                                std::cout << "notes size: " << notes.at(i).size() << "notes duration size: " << note_durations.at(i).size() << "notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
+                            }
+
+                            // reduce length
+                            length--;
+                        }
+                        else {
+
+                            // increment j
+                            j++;
+                        }
+                    }
+                }
             }
 
             return true;
