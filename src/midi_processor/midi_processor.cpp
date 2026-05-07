@@ -74,16 +74,19 @@
                 return 2;
             }
 
-            // process song duration
-            if(!process_song_duration()) {
-                return 3;
+            // print data
+            if(!debug_print_data()) {
+                return 9;
             }
 
             // get notes
-            for(size_t i = 0; i < channels.size(); i++) {
-                if(!process_channel_notes_with_timings(channels.at(i))) {
-                    return 4;
-                }
+            if(!process_channel_notes_with_timings()) {
+                return 4;
+            }
+
+            // process song duration
+            if(!process_song_duration()) {
+                return 3;
             }
 
             // filter chords
@@ -91,10 +94,10 @@
                 return 5;
             }
 
-            // print data
-            if(!debug_print_data()) {
-                return 9;
-            }
+            // // print data
+            // if(!debug_print_data()) {
+            //     return 9;
+            // }
 
             // trim note durations
             if(!trim_note_durations()) {
@@ -323,37 +326,59 @@
 
 
     // process channel notes WITH timings ------------------------------------------
-        bool MidiProcessor::process_channel_notes_with_timings(int channel)
+        bool MidiProcessor::process_channel_notes_with_timings()
         {
+            //!< list of dud channels
+            std::vector<int> dud_channels;
 
-            std::vector<int> channel_notes;
-            std::vector<double> channel_note_durations;
-            std::vector<double> note_on_timeStamps;
+            // for each channel
+            for(size_t i = 0; i < channels.size(); i++) {
 
+                std::vector<int> channel_notes;
+                std::vector<double> channel_note_durations;
+                std::vector<double> note_on_timeStamps;
 
+                int channel = channels.at(i);
 
-            // get notes for specified channel
-            for(int i = 0; i < midi.getTrackCount(); i++) {
-                for(int j = 0; j < midi.getEventCount(i); j++) {
-                    MidiEvent& event = midi.getEvent(i, j);
-                    if(event.isNoteOn()) {
-                        if(event.getChannel() == channel) {
-                            channel_notes.push_back(event.getKeyNumber());
-                            channel_note_durations.push_back(event.getDurationInSeconds());
-                            note_on_timeStamps.push_back(midi.getTimeInSeconds(i, j));
+                // get notes for specified channel
+                for(int i = 0; i < midi.getTrackCount(); i++) {
+                    for(int j = 0; j < midi.getEventCount(i); j++) {
+                        MidiEvent& event = midi.getEvent(i, j);
+                        if(event.isNoteOn()) {
+                            if(event.getChannel() == channel) {
+                                channel_notes.push_back(event.getKeyNumber());
+                                channel_note_durations.push_back(event.getDurationInSeconds());
+                                note_on_timeStamps.push_back(midi.getTimeInSeconds(i, j));
+                            }
                         }
                     }
                 }
+
+                // if a channel has no notes remove it from the vectors of data else add to data
+                if(channel_notes.size() == 0) {
+                    // std::cout << "No notes found in channel " << channel << " index: " << i << std::endl;
+                    dud_channels.push_back(i);
+                }
+                else {
+                    notes.push_back(channel_notes);
+                    note_timeStamps.push_back(note_on_timeStamps);
+                    note_durations.push_back(channel_note_durations);
+                }
             }
 
-            if(channel_notes.size() == 0) {
-                std::cout << "No notes found" << std::endl;
+            // remove dud channels
+            for(int i = dud_channels.size() - 1; i >= 0; i--) {
+
+                channels.erase(channels.begin() + dud_channels.at(i));
+                instruments.erase(instruments.begin() + dud_channels.at(i));
+
+                // std::cout << "Removing dud channel: " << dud_channels.at(i) << std::endl;
+            }
+
+            if(channels.size() == 0) {
+                std::cout << "No channels found" << std::endl;
                 return false;
             }
-
-            notes.push_back(channel_notes);
-            note_timeStamps.push_back(note_on_timeStamps);
-            note_durations.push_back(channel_note_durations);
 
             return true;
         }

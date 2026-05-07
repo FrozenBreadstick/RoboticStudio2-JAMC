@@ -202,8 +202,6 @@ class MidiProcessor
 
 
             /*! @brief processes and stores all notes that correspond to a specific channel
-             *
-             *  @param[in] int - the channel number of the notes that are to be processed and stored
              * 
              *  @return bool - returns true if there were no errors while extracting channel notes  
              * 
@@ -214,15 +212,13 @@ class MidiProcessor
             bool process_channel_notes(int channel);
 
 
-            /*! @brief processes and stores all notes and their timings that correspond to a specific channel  
-             *
-             *  @param[in] int - the channel number of the note timestamps that are to be processed and stored.
+            /*! @brief processes and stores all notes and their timings and remove dud channels 
              * 
              *  @return bool - returns true if there were no errors while extracting channel notes
              *  
              *  @details This function is called by the process_midi_file method. It processes the notes along with their timestamps and durations (in seconds) for 1 channel at a time as specified by the input parameter, storing them into the notes, note_timestamps, and note_durations vectors respectively
              */ 
-            bool process_channel_notes_with_timings(int channel);
+            bool process_channel_notes_with_timings();
 
 
             /*! @brief filters chords down to only the root note
