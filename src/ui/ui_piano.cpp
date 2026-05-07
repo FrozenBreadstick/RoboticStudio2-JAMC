@@ -35,6 +35,10 @@ namespace UI
         time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
         channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
 
+        //Camera Subscription
+        _camera_sub = this->create_subscription<sensor_msgs::msg::Image>
+        ("/camera/camera/color/image_raw", 10, std::bind(&PianoUI::image_callback, this, std::placeholders::_1));
+
         auto* main_layout = new QVBoxLayout(this);
         
         _title = new QLabel("MIDI To UR3", this);
@@ -42,6 +46,13 @@ namespace UI
         _title->setAlignment(Qt::AlignCenter);
         main_layout->addWidget(_title);
         main_layout->addStretch(1);
+
+        // --- CAMERA VISULAISATION GROUP ---
+        _camera_view = new QLabel("Waiting for camera feed...", this);
+        _camera_view->setFixedSize(400, 300);
+        _camera_view->setAlignment(Qt::AlignCenter);
+        _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
+        main_layout->addWidget(_camera_view, 0, Qt::AlignCenter);
 
         // --- CONFIGURATION GROUP ---
         auto* config_group = new QGroupBox("Configuration", this);
@@ -65,6 +76,10 @@ namespace UI
         files_layout->addWidget(_new_file_label);
         files_layout->addWidget(_new_file_button);
         files_layout->addWidget(_old_file_button);
+
+        // DEBUG BUTTON INITIALIZATION
+        _debug_button = new QPushButton("🐛", this);
+
 
         // Speed Layout
         auto* speed_layout = new QVBoxLayout();
@@ -115,6 +130,7 @@ namespace UI
         connect(_direction_button, &QPushButton::clicked, this, &PianoUI::toggle_direction); // Toggle Connection
         connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::send_time_scale);
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
+        connect(_debug_button, &QPushButton::clicked, this, &PianoUI::send_debug_request);
 
         main_layout->addStretch(2);
         
@@ -128,7 +144,42 @@ namespace UI
      */
     PianoUI::~PianoUI() {}
 
-    // --- NEW HELPER FUNCTIONS ---
+    /**
+     * @brief Callback function for incoming camera image messages.
+     * * Converts the ROS 2 image message to a QPixmap and updates the camera view label in the UI.
+     * * @param msg The shared pointer to the incoming sensor_msgs::msg::Image message.
+     */
+    void PianoUI::image_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
+        QImage img(&msg->data[0], msg->width, msg->height, QImage::Format_RGB888);
+        QPixmap pixmap = QPixmap::fromImage(img).scaled(_camera_view->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QMetaObject::invokeMethod(_camera_view, [this, pixmap]() {
+            _camera_view->setPixmap(pixmap);
+        }, Qt::QueuedConnection);
+    }
+
+    /**
+    * @brief Sends a debug request to the ROS 2 backend.
+    * * This function is intended for development and testing purposes, allowing the user to trigger a predefined debug action on the robot.
+    */
+    void PianoUI::send_debug_request() {
+        auto request = std::make_shared<jamc::srv::Func::Request>();
+        RCLCPP_INFO(this->get_logger(), "Sending DEBUG request");
+
+        if (!playback_client->service_is_ready()) {
+            RCLCPP_WARN(this->get_logger(), "Playback service is not available for debug.");
+            return;
+        }
+
+        playback_client->async_send_request(request, 
+            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
+                try {
+                    auto response = future.get();
+                    RCLCPP_INFO(this->get_logger(), "Debug response received: %s", response->message.c_str());
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Debug service call failed: %s", e.what());
+                }
+            });
+    }
 
     /**
      * @brief Forces playback to pause and resets the track slider to zero.
@@ -242,7 +293,7 @@ namespace UI
         QString json_name = QFileInfo(file_name).baseName() + ".mipi";
         std::string std_json_name = json_name.toStdString();
 
-        if (processor.processMidiFile(std_midi_path, std_json_name)) {
+        if (processor.processMidiFile(std_midi_path, std_json_name) == 0) {
             _midi_file_path = QDir::homePath() + "/mipi_files/" + json_name;
             _new_file_label->setText(QFileInfo(file_name).fileName());
 

@@ -29,6 +29,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(CMAKE_AUTOMOC ON) #For QT to process macros like Q_OBJECT
 
+#camera subscription dependencies
+find_package(sensor_msgs REQUIRED)
+
 # custom messages
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -123,6 +126,7 @@ target_link_libraries(ui
 )
 ament_target_dependencies(ui
   rclcpp
+  sensor_msgs
 )
 
 #install executables to lib
