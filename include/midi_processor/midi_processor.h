@@ -68,11 +68,11 @@ class MidiProcessor
              *  @param[in] std::string - midi_file_path The path to the midi file to be processed
              *  @param[in] std::string - json_file_name The name of the json file to be saved
              * 
-             *  @return bool - returns true if there were no issues processing or saving the data.
+             *  @return  int - returns 0 if there were no issues processing or saving the data.
              * 
              *  @details This function opens the provided midi file, fully processes it, and saves all the data to a mipi file which can be reloaded. It is not neccesary to load a mipi file that was just processed as processing populates the variables.
              */
-            bool processMidiFile(std::string midi_file_path, std::string json_file_name);
+            int processMidiFile(std::string midi_file_path, std::string json_file_name);
 
 
             /*! @brief gets all channels
@@ -258,6 +258,18 @@ class MidiProcessor
             bool assign_keys();
 
 
+            /*! @brief note duration trimming function
+             *
+             *  @version 1
+             *  @date 05/05/2026
+             * 
+             *  @return bool - returns true if the note duration trimming was successful and the "note_durations" vector is the same length as the "notes" vector.
+             * 
+             *  @details This function is called by the process_midi_file method. It checks the durations of each note and whether they overlap with the next and if so it trims it down such that the note ends just before the next note starts.
+             */
+            bool trim_note_durations();
+
+
             /*! @brief stores all data for current midi file in a storage file
              *
              *  @param[in] std::string - the name of the file the data will be saved to.
@@ -269,6 +281,15 @@ class MidiProcessor
             bool save_midi_data(std::string file_name);
 
 
+            /*! @brief prints all data to the console
+             *
+             *  @return bool - returns true if the data was successfully printed
+             * 
+             *  @details This function is called wherever the user wants to test the data. It prints all stored the data to the console.
+             */
+            bool debug_print_data();
+
+
         // private variables ------------------------------------------------------------
 
             //!< MidiFile library
@@ -276,6 +297,12 @@ class MidiProcessor
 
             //!< home directory
             const char* homeDir = getenv("HOME");
+
+            //!< minimum note duration
+            double min_note_duration = 0.08;
+
+            //!< minimum note gap
+            double min_note_gap = 0.1;
 
             //!< current list of channels
             std::vector<int> channels;

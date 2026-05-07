@@ -1,0 +1,3 @@
+# TO DO
+1. Be able to find the coloured dots that correspond to the C keys (Work with connor to assign fixed array positions to them, figure out the array positions of other keys based on their offset to the visible C key/keys)
+2. Key position array, always publish 37 keys, but non visible key positions are just (Math::INF, Math::INF, Math::INF)

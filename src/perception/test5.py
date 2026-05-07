@@ -16,14 +16,14 @@ import torch
 from ultralytics import YOLO
 
 
-YOLO_IMG_SIZE  = 640    # Full YOLO resolution 
-YOLO_SKIP      = 1      # Run YOLO every frame 
-YOLO_HALF      = True  
+YOLO_IMG_SIZE  = 640    # Full YOLO resolution
+YOLO_SKIP      = 1      # Run YOLO every frame
+YOLO_HALF      = True
 DISPLAY_SCALE  = 1.0    # Full resolution preview
 
 #                      ( X offset,  Y offset )
-WHITE_KEY_OFFSET = (0, 30 )
-BLACK_KEY_OFFSET = (0, 10)  
+WHITE_KEY_OFFSET = (0, 30)
+BLACK_KEY_OFFSET = (0, 10)
 
 
 
@@ -45,7 +45,7 @@ class AprilTagPianoDetector(Node):
             qos
         )
 
-        self.publisher_tag  = self.create_publisher(Point,  '/debug_target', 10)
+        self.publisher_tag  = self.create_publisher(Point,     '/debug_target', 10)
         self.publisher_keys = self.create_publisher(PoseArray, '/piano_keys',   10)
 
         if not torch.cuda.is_available():
@@ -58,7 +58,7 @@ class AprilTagPianoDetector(Node):
         self.yolo_model = YOLO('src/perception/best.pt')
         self.yolo_model.to(self.device)
         if YOLO_HALF and self.device == 'cuda':
-            self.yolo_model.model.half()   
+            self.yolo_model.model.half()
         gpu_name = torch.cuda.get_device_name(0) if self.device == 'cuda' else 'N/A'
         self.get_logger().info(
             f"YOLO device : {self.device.upper()}  ({gpu_name})\n"
@@ -70,7 +70,7 @@ class AprilTagPianoDetector(Node):
         self.bridge = CvBridge()
 
         self._frame_count  = 0
-        self.ordered_keys  = []    
+        self.ordered_keys  = []
 
         self._fps_t0    = None
         self._fps_count = 0
@@ -102,12 +102,23 @@ class AprilTagPianoDetector(Node):
             self.ordered_keys = self._detect_piano_keys(bgr)
             self._publish_keys()
 
-
         display = bgr.copy()
         self._draw_piano_keys(display, self.ordered_keys)
 
         gray    = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
         results = self.tag_detector.detect(gray)
+
+        # ── Frame centre marker (drawn once, behind all tag lines) ────────────
+        frame_cx = int(center_x)
+        frame_cy = int(center_y)
+        cv2.drawMarker(
+            display, (frame_cx, frame_cy),
+            color=(0, 255, 255),
+            markerType=cv2.MARKER_CROSS,
+            markerSize=20,
+            thickness=2
+        )
+        # ──────────────────────────────────────────────────────────────────────
 
         for r in results:
             (ptA, ptB, ptC, ptD) = r.corners
@@ -125,6 +136,26 @@ class AprilTagPianoDetector(Node):
             cv2.circle(display, (cX, cY), 5, (255, 0, 0), -1)
             cv2.putText(display, f"TAG {r.tag_id}", (cX, cY - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+            # ── Line from frame centre → tag centre ───────────────────────────
+            cv2.line(display, (frame_cx, frame_cy), (cX, cY), (0, 255, 255), 2)
+
+            # Distance in pixels
+            dx   = cX - frame_cx
+            dy   = cY - frame_cy
+            dist = (dx ** 2 + dy ** 2) ** 0.5
+
+            # Place the label at the midpoint of the line, offset slightly so
+            # it does not sit directly on top of the line itself.
+            label_x = (frame_cx + cX) // 2 + 8
+            label_y = (frame_cy + cY) // 2 - 8
+            cv2.putText(
+                display,
+                f"{dist:.1f}px",
+                (label_x, label_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2
+            )
+            # ──────────────────────────────────────────────────────────────────
 
             offset_x = (cX - center_x) / center_x
             offset_y = -((cY - center_y) / center_y)
@@ -151,9 +182,9 @@ class AprilTagPianoDetector(Node):
         self._fps_count += 1
         elapsed = now - self._fps_t0
         if elapsed >= 1.0:
-            self._fps    = self._fps_count / elapsed
+            self._fps       = self._fps_count / elapsed
             self._fps_count = 0
-            self._fps_t0 = now
+            self._fps_t0    = now
 
         cv2.putText(display, f"FPS: {self._fps:.1f}",
                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
@@ -186,10 +217,9 @@ class AprilTagPianoDetector(Node):
         for result in yolo_results:
             names  = result.names
             boxes  = result.boxes
-            masks  = result.masks   
+            masks  = result.masks
 
             if masks is None:
-               
                 for box in boxes:
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     conf  = float(box.conf[0])
@@ -211,8 +241,7 @@ class AprilTagPianoDetector(Node):
                 label = names.get(int(box.cls[0]), str(int(box.cls[0])))
                 off_x, off_y = WHITE_KEY_OFFSET if label == "key_B" else BLACK_KEY_OFFSET
 
-
-                contour = mask.astype(np.float32)   
+                contour = mask.astype(np.float32)
                 if len(contour) >= 3:
                     M = cv2.moments(contour)
                     if M["m00"] != 0:
@@ -238,7 +267,6 @@ class AprilTagPianoDetector(Node):
         return [{"key_index": i, **k} for i, k in enumerate(raw_keys)]
 
     def _draw_piano_keys(self, bgr_image: np.ndarray, keys: list) -> None:
-
         overlay = bgr_image.copy()
         for k in keys:
             contour = k["contour"]
@@ -247,15 +275,14 @@ class AprilTagPianoDetector(Node):
                 continue
             pts = np.array(contour, dtype=np.int32).reshape((-1, 1, 2))
             if label == "key_B":
-                fill = (0, 200, 200)        
+                fill = (0, 200, 200)
             elif label == "key_W":
-                fill = (180, 0, 180)        
+                fill = (180, 0, 180)
             else:
                 fill = (0, 160, 200)
             cv2.fillPoly(overlay, [pts], fill)
         cv2.addWeighted(overlay, 0.30, bgr_image, 0.70, 0, bgr_image)
 
-        
         for k in keys:
             contour = k["contour"]
             label   = k["label"]
@@ -266,23 +293,21 @@ class AprilTagPianoDetector(Node):
             y1      = int(k["bbox"][1])
 
             if label == "key_B":
-                colour = (0, 255, 255)     
+                colour = (0, 255, 255)
             elif label == "key_W":
-                colour = (255, 0, 255)     
+                colour = (255, 0, 255)
             else:
                 colour = (0, 215, 255)
 
-           
             if contour:
                 pts = np.array(contour, dtype=np.int32).reshape((-1, 1, 2))
                 cv2.polylines(bgr_image, [pts], isClosed=True, color=colour, thickness=2)
 
-           
             arm = 8
             cv2.line(bgr_image, (mx - arm, my), (mx + arm, my), colour, 2)
             cv2.line(bgr_image, (mx, my - arm), (mx, my + arm), colour, 2)
             cv2.circle(bgr_image, (mx, my), 3, (255, 255, 255), -1)
-            
+
             cv2.putText(bgr_image, f"({mx},{my})",
                         (mx - 22, my + 18),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.35, colour, 1)
@@ -295,17 +320,14 @@ class AprilTagPianoDetector(Node):
                         (x1 + 2, y1 + 18),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.42, colour, 1)
 
- 
     def _publish_keys(self) -> None:
         msg = PoseArray()
-        
         for k in self.ordered_keys:
             pose = Pose()
             pose.position.x = round(k["mid_x"], 1)
             pose.position.y = round(k["mid_y"], 1)
             pose.position.z = 0.0
             msg.poses.append(pose)
-
         self.publisher_keys.publish(msg)
 
     def _find_nearest_key(self, px: float, py: float) -> dict | None:
@@ -315,6 +337,7 @@ class AprilTagPianoDetector(Node):
             self.ordered_keys,
             key=lambda k: (k["mid_x"] - px) ** 2 + (k["mid_y"] - py) ** 2
         )
+
 
 def main(args=None):
     rclpy.init(args=args)

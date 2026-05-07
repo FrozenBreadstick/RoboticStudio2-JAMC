@@ -12,6 +12,33 @@
             // create midi
             midi = MidiFile();
 
+            //!< current list of channels
+            channels = std::vector<int>();
+
+            //!< current list of instruments
+            instruments = std::vector<int>();
+
+            //!< current list of notes
+            notes = std::vector<std::vector<int>>();
+
+            //!< current list of note_timeStamps
+            note_timeStamps = std::vector<std::vector<double>>();
+
+            //!< current list of note_durations
+            note_durations = std::vector<std::vector<double>>();
+
+            //!< current song duration
+            fileDuration = 0;
+
+            //!< current list of assigned keys for each channel
+            assigned_keys = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard values for each channel
+            keyboard_values = std::vector<std::vector<int>>();
+
+            //!< current list of keyboard indexs for each channel
+            keyboard_indexs = std::vector<std::vector<int>>();
+
         }
 
 
@@ -25,7 +52,7 @@
 // primary public functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // processes a midi file by saving all instruments (and their channels) to a vector and all notes belonging to a channel to a vector
-        bool MidiProcessor::processMidiFile(std::string midi_file_path, std::string json_file_name)
+        int MidiProcessor::processMidiFile(std::string midi_file_path, std::string json_file_name)
         {
             // clear all variables
             channels.clear();
@@ -39,44 +66,57 @@
 
             // open file
             if(!open_file(midi_file_path)) {
-                return false;
+                return 1;
             }
 
             // process instruments and channels
             if(!process_instruments()) {
-                return false;
+                return 2;
+            }
+
+            // process song duration
+            if(!process_song_duration()) {
+                return 3;
             }
 
             // get notes
             for(size_t i = 0; i < channels.size(); i++) {
                 if(!process_channel_notes_with_timings(channels.at(i))) {
-                    return false;
+                    return 4;
                 }
             }
 
             // filter chords
             if(!filter_chords()) {
-                return false;
+                return 5;
             }
 
-            // process song duration
-            if(!process_song_duration()) {
-                return false;
+            // print data
+            if(!debug_print_data()) {
+                return 9;
+            }
+
+            // trim note durations
+            if(!trim_note_durations()) {
+                return 6;
             }
 
             // assign keys
             if(!assign_keys()) {
-                return false;
+                return 7;
             }
-
-            //std::string file_name = "test_name.mipi";
 
             // save data
             if(!save_midi_data(json_file_name)) {
-                return false;
+                return 8;
             }
 
-            return true;
+            // print data
+            if(!debug_print_data()) {
+                return 9;
+            }
+
+            return 0;
         }
 
     // get channels --------------------------------------------------------------
@@ -170,9 +210,6 @@
 
             // close file
             file.close();
-
-            // dump to terminal (for testing)
-            std::cout << j << std::endl;
 
             // get data from JSON object
             channels = j["channels"].get<std::vector<int>>();
@@ -554,6 +591,43 @@
         }
 
 
+    // note duration trimming function ------------------------------------------------------
+        bool MidiProcessor::trim_note_durations()
+        {
+            // for each set of notes
+            for(size_t i = 0; i < notes.size(); i++) {
+
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+
+                    // get timestamp
+                    double this_note_timeStamp = note_timeStamps.at(i).at(j);
+
+                    // get duration
+                    double this_note_duration = note_durations.at(i).at(j);
+
+                    // get next timestamp
+                    if((j + 1) < notes.at(i).size()) {
+                        double next_note_timeStamp = note_timeStamps.at(i).at(j + 1);
+
+                        // check diff between timestamps
+                        double time_diff = next_note_timeStamp - this_note_timeStamp;
+
+                        // check if note_duration is longer than next_note_duration
+                        if(this_note_duration > time_diff) {
+
+                            // trim note_duration
+                            this_note_duration = time_diff - min_note_duration;
+
+                            note_durations.at(i).at(j) = this_note_duration;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
 
     // stores all data for current midi file in a storage file --------------------
         bool MidiProcessor::save_midi_data(std::string file_name)
@@ -574,9 +648,6 @@
             j["assigned_keys"] = assigned_keys;
             j["keyboard_values"] = keyboard_values;
             j["keyboard_indexs"] = keyboard_indexs;
-
-            // dump to terminal (for testing)
-            std::cout << j << std::endl;
 
             // create file path
             std::filesystem::path folder = std::filesystem::path(homeDir) / "mipi_files";
@@ -605,6 +676,92 @@
 
             // clear json object for next file
             j.clear();
+
+            return true;
+        }
+
+
+        /*! @brief prints all data to the console
+         *
+         *  @return bool - returns true if the data was successfully printed
+         * 
+         *  @details This function is called wherever the user wants to test the data. It prints all stored the data to the console.
+         */
+        bool MidiProcessor::debug_print_data()
+        {
+
+            // get and print song duration
+            std::cout << "Song duration: " << fileDuration << std::endl;
+
+
+            std::cout << std::endl;
+
+            // get and print channels
+            std::cout << "Channels: " << std::endl;
+            for(size_t i = 0; i < channels.size(); i++) {
+                std::cout << channels.at(i) << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print instruments
+            std::cout << "Instruments: " << std::endl;
+            for(size_t i = 0; i < instruments.size(); i++) {
+                std::cout << instruments.at(i) << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print notes, durations, timings (by channel)
+            for(size_t i = 0; i < notes.size(); i++) {
+                std::cout << "Notes for channel " << channels.at(i) << ": " << std::endl;
+                std::cout << "Number of notes: " << notes.at(i).size() << std::endl;
+
+                for(size_t j = 0; j < notes.at(i).size(); j++) {
+                    std::cout << notes.at(i).at(j) << " at time " << note_timeStamps.at(i).at(j) << " with duration " << note_durations.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
+
+
+            std::cout << std::endl;
+
+
+            // get and print keyboard values, assigned keys(by channel)
+            for(size_t i = 0; i < keyboard_values.size(); i++) {
+                std::cout << "keyboard values: " << std::endl;
+
+                for(size_t j = 0; j < keyboard_values.at(i).size(); j++) {
+                    std::cout << keyboard_values.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+
+                std::cout << "Assigned keys: " << std::endl;
+                for(size_t j = 0; j < assigned_keys.at(i).size(); j++) {
+                    std::cout << assigned_keys.at(i).at(j) << " at time " << note_timeStamps.at(i).at(j) << " with duration " << note_durations.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
+
+            std::cout << std::endl;
+
+            // get and print keyboard indexs
+            for(size_t i = 0; i < keyboard_indexs.size(); i++) {
+                std::cout << "keyboard indexs: " << std::endl;
+
+                for(size_t j = 0; j < keyboard_indexs.at(i).size(); j++) {
+                    std::cout << keyboard_indexs.at(i).at(j) << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
 
             return true;
         }

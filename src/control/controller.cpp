@@ -104,6 +104,13 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 {
     RCLCPP_INFO(this->get_logger(), "Received debug target: (%.2f, %.2f, %.2f)", msg->x, msg->y, msg->z);
 
+    {
+        std::lock_guard<std::mutex> lock(song_mutex_);
+        if(!play_) {
+            return; //If not playing or no song loaded, skip the control loop
+        }
+    }
+
     double scaling = 4;
     vector3 vec;
 
@@ -138,7 +145,7 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 std::optional<vector3> Control::Controller::calculate_velocity(int note)
 {
     double scaling = 1; //Start small, controlled via parameter later
-    double z = calculate_z();
+    double z = calculate_z(1.0);
     vector3 target;
     {
         std::lock_guard<std::mutex> lock(key_positions_mutex_);
@@ -359,7 +366,7 @@ std::optional<vector3> Control::Controller::play_note(double duration, double ti
  * @brief A helper method for calculating the target Z velocity (Scaled to meet a target height based on the X&Y magnitued)
  * @param xy The magnitude of the vector in the x and y direction
  */
-double Control::Controller::calculate_z()
+double Control::Controller::calculate_z(double xy)
 {
     // auto transform = tf_buffer_.lookupTransform("base_link", "tool0", tf2::TimePointZero); //Get the position of the end effector using TF
     //OR If we can get Z height from Ayberks april tags, that would work too and might be more accurate
@@ -382,6 +389,7 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
     Topic: /servo_server/delta_joint_cmds (I believe)
     Message type: control_msgs::msg::JointJog (I think)
     Velocity in rad/s
-- Implement state machine for handling note timings and transitions (Waiting, Moving, Pressing, etc)
+
 - Implement actual Z velocity control for pressing keys based on a target Z height, read current EE Z Height from TF. Bring to hover above key until not timing is expired (or if the move took longer than the note timing) (probably minus a constant from not timing so that it plays in time)
+- Target array position is Math::INF, Math::INF, Math::INF average the positions of keys in the direction we need to travel and travel that way until the target key is visible
 */
