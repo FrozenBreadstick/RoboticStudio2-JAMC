@@ -245,6 +245,19 @@ class MidiProcessor
             bool filter_trills();
 
 
+
+            /*! @brief filters overlapping notes down to only the first note
+             *
+             *  @version 1
+             *  @date 07/05/2026
+             *
+             *  @return bool - returns true if the overlapping note filtering algorithm was successful and the "notes", "note_timeStamps", and "note_durations" vectors remain the same length
+             * 
+             *  @details This function is called by the process_midi_file method. It removes notes that are played entirely within the duration of another note. The affected vectors are the "notes", "note_timeStamps", and "note_durations" vectors.
+             */ 
+            bool filter_overlapping_notes();
+
+
             /*! @brief process song duration
              *
              *  @return bool - returns true if the song duration was successfully extracted
@@ -307,7 +320,7 @@ class MidiProcessor
             const char* homeDir = getenv("HOME");
 
             //!< minimum note duration
-            double min_note_duration_gap = 0.05;
+            double min_note_duration_gap = 50;
 
             //!< minimum note gap
             double min_note_gap = 0.08;

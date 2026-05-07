@@ -94,14 +94,14 @@
                 return 7;
             }
 
-            // print data -------
-            if(!debug_print_data()) {
-                return 9;
+            // filter overlapping notes
+            if(!filter_overlapping_notes()) {
+                return 8;
             }
 
             // trim note durations
             if(!trim_note_durations()) {
-                return 8;
+                return 9;
             }
 
             // assign keys
@@ -116,7 +116,7 @@
 
             // print data -------
             if(!debug_print_data()) {
-                return 9;
+                return -1;
             }
 
             return 0;
@@ -332,13 +332,13 @@
             std::vector<int> dud_channels;
 
             // for each channel
-            for(size_t i = 0; i < channels.size(); i++) {
+            for(size_t k = 0; k < channels.size(); k++) {
 
                 std::vector<int> channel_notes;
                 std::vector<double> channel_note_durations;
                 std::vector<double> note_on_timeStamps;
 
-                int channel = channels.at(i);
+                int channel = channels.at(k);
 
                 // get notes for specified channel
                 for(int i = 0; i < midi.getTrackCount(); i++) {
@@ -357,7 +357,7 @@
                 // if a channel has no notes remove it from the vectors of data else add to data
                 if(channel_notes.size() == 0) {
                     // std::cout << "No notes found in channel " << channel << " index: " << i << std::endl;
-                    dud_channels.push_back(i);
+                    dud_channels.push_back(k);
                 }
                 else {
                     notes.push_back(channel_notes);
@@ -538,6 +538,63 @@
         }
 
 
+    // filters overlapping notes down to only the first note ----------------------------------
+        bool MidiProcessor::filter_overlapping_notes()
+        {
+            // for each set of notes
+            for(size_t i = 0; i < notes.size(); i++) {
+
+                int length = notes.at(i).size();
+
+                // if there are more than 1 note in the channel, filter for trills
+                if(length > 1) {
+
+                    // for each timestamp starting at index 1
+                    int j = 1;
+                    
+                    while(j < length) {
+
+                        // get current and past timestamp and duration
+                        double note_timeStamp = note_timeStamps.at(i).at(j);
+                        double last_kept_timeStamp = note_timeStamps.at(i).at(j - 1);
+
+                        double note_duration = note_durations.at(i).at(j);
+                        double last_kept_duration = note_durations.at(i).at(j - 1);
+                        
+                        // calc note end times
+                        double current_end_time = note_timeStamp + note_duration;
+                        double last_kept_end_time = last_kept_timeStamp + last_kept_duration;
+
+                        // check if note is within the bounds of the last kept note
+                        if(current_end_time <= last_kept_end_time) {
+                            
+                            // remove note from arrays
+                            notes.at(i).erase(notes.at(i).begin() + j);
+                            note_durations.at(i).erase(note_durations.at(i).begin() + j);
+                            note_timeStamps.at(i).erase(note_timeStamps.at(i).begin() + j);
+
+                            // error checking
+                            if(notes.at(i).size() != note_durations.at(i).size() || notes.at(i).size() != note_timeStamps.at(i).size()) {
+                                std::cout << "Error erasing notes" << std::endl;
+                                std::cout << "notes size: " << notes.at(i).size() << "notes duration size: " << note_durations.at(i).size() << "notes time stamp size: " << note_timeStamps.at(i).size() << std::endl;
+                            }
+
+                            // reduce length
+                            length--;
+                        }
+                        else {
+
+                            // increment j
+                            j++;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
     // process song duration ------------------------------------------------------
         bool MidiProcessor::process_song_duration()
         {
@@ -671,6 +728,9 @@
     // note duration trimming function ------------------------------------------------------
         bool MidiProcessor::trim_note_durations()
         {
+
+            std::cout << std::setprecision(15);
+
             // for each set of notes
             for(size_t i = 0; i < notes.size(); i++) {
 
@@ -689,11 +749,36 @@
                         // check diff between timestamps
                         double time_diff = next_note_timeStamp - this_note_timeStamp;
 
+
+
+                        if(j == 68) {
+                            std::cout << "note at 14s time diff = " << time_diff << ". old note duration = " << this_note_duration << std::endl;
+                        }
+
                         // check if note_duration is longer than next_note_duration
-                        if(this_note_duration > time_diff) {
+                        if(this_note_duration + min_note_duration_gap > time_diff) {
+
+                            // convert to ms temporarilty to avoid rounding errors
+                            this_note_duration = this_note_duration * 1000;
+                            time_diff = time_diff * 1000;
+
+                            if(j == 68) {
+                                std::cout << "values in ms: old duration - " << this_note_duration << ", time diff - " << time_diff;
+                            }
 
                             // trim note_duration
                             this_note_duration = time_diff - min_note_duration_gap;
+
+                            if(j == 68) {
+                                std::cout << ", new duration - " << this_note_duration << std::endl;
+                            }
+
+                            // convert back to s
+                            this_note_duration = this_note_duration / 1000;
+
+                            if(j == 68) {
+                                std::cout << "values in s: new duration - " << this_note_duration << std::endl;
+                            }
 
                             note_durations.at(i).at(j) = this_note_duration;
                         }
@@ -703,6 +788,8 @@
 
             return true;
         }
+
+    
 
 
 
