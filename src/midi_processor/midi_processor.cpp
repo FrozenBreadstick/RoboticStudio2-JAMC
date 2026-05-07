@@ -693,7 +693,7 @@
                         if(this_note_duration > time_diff) {
 
                             // trim note_duration
-                            this_note_duration = time_diff - min_note_duration;
+                            this_note_duration = time_diff - min_note_duration_gap;
 
                             note_durations.at(i).at(j) = this_note_duration;
                         }
