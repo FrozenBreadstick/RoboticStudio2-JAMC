@@ -9,10 +9,15 @@
 namespace UI
 {
     /**
-     * @brief Constructor for the PianoUI class.
-     * * Initializes the Qt application window, sets up the stylesheet, creates ROS 2 clients 
-     * for communication with the playback controller, and configures the dynamic UI layouts 
-     * and signal-slot connections.
+     * @brief Hybrid Qt-ROS2 Class for managing the User Interface of the MIDI-to-UR3 system. 
+     * * @details This class inherits from QWidget and rclcpp::Node. It contains the following ROS2 I/O:
+     * - **Service Clients**
+     * - `/MIPI/play_pause` (jamc/srv/Func): Triggers a play/pause state change on the robot.
+     * - `/MIPI/direction` (jamc/srv/Func): Toggles the playback direction (Forward/Reverse).
+     * - `/MIPI/time_scale` (jamc/srv/TimeScale): Sends a float (0.01 to 1.0) to scale robot velocity.
+     * - `/MIPI/load` (jamc/srv/Load): Sends the filepath and instrument index to the controller.
+     * - **Subscriptions**
+     * - `/camera/camera/color/image_raw` (sensor_msgs/msg/Image): Receives live feed for UI visualization.
      */
     PianoUI::PianoUI() : QWidget(), Node("piano_ui") {
         this->setStyleSheet(
@@ -35,7 +40,7 @@ namespace UI
         time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
         channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
 
-        //Camera Subscription
+        // Camera Subscription
         _camera_sub = this->create_subscription<sensor_msgs::msg::Image>
         ("/camera/camera/color/image_raw", 10, std::bind(&PianoUI::image_callback, this, std::placeholders::_1));
 
@@ -47,7 +52,7 @@ namespace UI
         main_layout->addWidget(_title);
         main_layout->addStretch(1);
 
-        // --- CAMERA VISULAISATION GROUP ---
+        // --- CAMERA VISUALISATION GROUP ---
         _camera_view = new QLabel("Waiting for camera feed...", this);
         _camera_view->setFixedSize(400, 300);
         _camera_view->setAlignment(Qt::AlignCenter);
@@ -58,7 +63,6 @@ namespace UI
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
 
-        // Dynamic Channel Layout
         _channel_layout = new QVBoxLayout(); 
         _channel_title = new QLabel("Channel Selector:", this);
         _channel_layout->addWidget(_channel_title);
@@ -66,7 +70,6 @@ namespace UI
         _channel_group = new QButtonGroup(this);
         connect(_channel_group, QOverload<int>::of(&QButtonGroup::idClicked), this, &PianoUI::send_channel_selection);
 
-        // Files Layout (Combobox is now for .mipi re-loading)
         auto* files_layout = new QVBoxLayout();
         _new_file_label = new QLabel("No File Selected", this);
         _new_file_button = new QPushButton("Select A MIDI File", this); 
@@ -77,11 +80,8 @@ namespace UI
         files_layout->addWidget(_new_file_button);
         files_layout->addWidget(_old_file_button);
 
-        // DEBUG BUTTON INITIALIZATION
         _debug_button = new QPushButton("🐛", this);
 
-
-        // Speed Layout
         auto* speed_layout = new QVBoxLayout();
         speed_layout->addWidget(new QLabel("Speed", this), 0, Qt::AlignCenter);
         _speed_control = new QSlider(Qt::Vertical, this);
@@ -100,7 +100,7 @@ namespace UI
         auto* playback_layout = new QVBoxLayout(playback_group);
         
         auto* btn_layout = new QHBoxLayout();
-        _direction_button = new QPushButton("⏩", this); // Single Direction Toggle
+        _direction_button = new QPushButton("⏩", this); 
         _play_pause_button = new QPushButton("▶", this); 
         btn_layout->addWidget(_direction_button);
         btn_layout->addWidget(_play_pause_button);
@@ -127,27 +127,26 @@ namespace UI
         // --- CONNECTIONS ---
         connect(_new_file_button, &QPushButton::clicked, this, &PianoUI::open_midi_file);
         connect(_play_pause_button, &QPushButton::clicked, this, &PianoUI::play_pause);
-        connect(_direction_button, &QPushButton::clicked, this, &PianoUI::toggle_direction); // Toggle Connection
+        connect(_direction_button, &QPushButton::clicked, this, &PianoUI::toggle_direction); 
         connect(_speed_control, &QSlider::valueChanged, this, &PianoUI::send_time_scale);
         connect(_track_slider, &QSlider::valueChanged, this, &PianoUI::update_status_info);
         connect(_debug_button, &QPushButton::clicked, this, &PianoUI::send_debug_request);
 
         main_layout->addStretch(2);
         
-        // Setup existing MIPI files in the dropdown
         populate_mipi_combobox();
         update_status_info();
     }
 
     /**
-     * @brief Destructor for the PianoUI class.
+     * @brief Standard Destructor for PianoUI Class.
      */
     PianoUI::~PianoUI() {}
 
     /**
-     * @brief Callback function for incoming camera image messages.
-     * * Converts the ROS 2 image message to a QPixmap and updates the camera view label in the UI.
-     * * @param msg The shared pointer to the incoming sensor_msgs::msg::Image message.
+     * @brief Callback function for processing incoming ROS 2 image messages.
+     * @param msg A shared pointer to the incoming sensor_msgs::msg::Image.
+     * @note This uses QMetaObject::invokeMethod to ensure the UI update happens on the main thread, avoiding thread collisions with the ROS executor.
      */
     void PianoUI::image_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
         QImage img(&msg->data[0], msg->width, msg->height, QImage::Format_RGB888);
@@ -158,9 +157,8 @@ namespace UI
     }
 
     /**
-    * @brief Sends a debug request to the ROS 2 backend.
-    * * This function is intended for development and testing purposes, allowing the user to trigger a predefined debug action on the robot.
-    */
+     * @brief Sends a trigger request to the debug service for development testing.
+     */
     void PianoUI::send_debug_request() {
         auto request = std::make_shared<jamc::srv::Func::Request>();
         RCLCPP_INFO(this->get_logger(), "Sending DEBUG request");
@@ -182,9 +180,8 @@ namespace UI
     }
 
     /**
-     * @brief Forces playback to pause and resets the track slider to zero.
-     * * Updates the UI to reflect a paused state and sends an asynchronous ROS 2
-     * request to halt the robot playback safely. Enforces forward playback direction.
+     * @brief Immediate helper method to halt UI playback tracking and reset visual sliders.
+     * @details Sends a PAUSE request to the robot and resets the track slider to zero. Always enforces a Forward direction state.
      */
     void PianoUI::force_pause_and_reset() {
         if (is_playing) {
@@ -198,14 +195,12 @@ namespace UI
             }
         }
         _track_slider->setValue(0);
-        
-        // Always enforce forward direction upon reset
         set_direction_forward();
     }
 
     /**
-     * @brief Scans the designated directory and populates the combo box with available .mipi files.
-     * * Signals are temporarily blocked to prevent accidental load triggers while populating.
+     * @brief Scans the ~/mipi_files directory to refresh the dropdown list.
+     * @note Blocks signals during execution to prevent recursive load triggers.
      */
     void PianoUI::populate_mipi_combobox() {
         _old_file_button->blockSignals(true);
@@ -223,12 +218,9 @@ namespace UI
     }
 
     /**
-     * @brief Dynamically updates the channel selection radio buttons.
-     * * Clears any existing radio buttons from the layout and generates new ones 
-     * based on the instrument list parsed from the loaded file.
+     * @brief Rebuilds the radio button group based on the currently loaded MIDI processor data.
      */
     void PianoUI::update_channel_radio_buttons() {
-        // Clear existing radio buttons
         QList<QAbstractButton*> buttons = _channel_group->buttons();
         for (QAbstractButton* btn : buttons) {
             _channel_group->removeButton(btn);
@@ -236,7 +228,6 @@ namespace UI
             btn->deleteLater();
         }
 
-        // Add new radio buttons based on loaded data
         std::vector<std::string> instrument_list = processor.get_instrument_names();
         for (size_t i = 0; i < instrument_list.size(); ++i) {
             QRadioButton* rb = new QRadioButton(QString::fromStdString(instrument_list[i]), this);
@@ -244,30 +235,20 @@ namespace UI
             _channel_group->addButton(rb, static_cast<int>(i)); 
         }
         
-        // Auto-check the first one
         if (!instrument_list.empty()) {
             _channel_group->button(0)->setChecked(true);
         }
     }
 
-    // --- STANDARD SLOTS ---
-
     /**
-     * @brief Toggles the playback state between play and pause.
-     * * Updates the play/pause button icon and sends the corresponding 
-     * func service request over ROS 2.
+     * @brief Toggles the playback state and notifies the /MIPI/play_pause service.
      */
     void PianoUI::play_pause(){
         is_playing = !is_playing;
         _play_pause_button->setText(is_playing ? "▐▐" : "▶");
         
         auto request = std::make_shared<jamc::srv::Func::Request>();
-        RCLCPP_INFO(this->get_logger(), is_playing ? "Sending PLAY request" : "Sending PAUSE request");
-
-        if (!playback_client->service_is_ready()) {
-            RCLCPP_WARN(this->get_logger(), "Playback service is not available.");
-            return;
-        }
+        if (!playback_client->service_is_ready()) return;
 
         playback_client->async_send_request(request, 
             [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
@@ -281,9 +262,8 @@ namespace UI
     }
 
     /**
-     * @brief Opens a file dialog to process a new MIDI file.
-     * * Converts a raw .mid file into a .mipi file format, updates the UI components,
-     * and automatically triggers a load for the first valid channel.
+     * @brief UI Slot for opening a file dialog to process a raw .mid file.
+     * @details Converts the file to .mipi and automatically selects the first available channel for loading.
      */
     void PianoUI::open_midi_file() {
         QString file_name = QFileDialog::getOpenFileName(this, "Select MIDI File", QDir::homePath(), "MIDI Files (*.mid *.midi)");        
@@ -299,55 +279,40 @@ namespace UI
 
             update_channel_radio_buttons();
             populate_mipi_combobox(); 
-
             _track_slider->setRange(0, static_cast<int>(processor.get_song_duration()));
             update_status_info();
             
-            if (!processor.get_channels().empty()) {
-                send_channel_selection(0);
-            }
-            RCLCPP_INFO(this->get_logger(), "File processed successfully: %s", std_json_name.c_str());
-        } else {
-            _new_file_label->setText("Error: Could not process MIDI");
+            if (!processor.get_channels().empty()) send_channel_selection(0);
         }
     }
 
     /**
-     * @brief Loads a previously converted .mipi file from the dropdown menu.
-     * * @param index The integer index of the item selected in the combo box.
+     * @brief UI Slot for loading a file selected from the dropdown menu.
+     * @param index The index of the selected file in the QComboBox.
      */
     void PianoUI::load_existing_mipi(int index) {
-        if (index <= 0) return; // Ignore the first prompt item
+        if (index <= 0) return;
 
         QString mipi_filename = _old_file_button->itemText(index);
-        
         if (processor.load_json_file(mipi_filename.toStdString())) {
             _midi_file_path = QDir::homePath() + "/mipi_files/" + mipi_filename;
             _new_file_label->setText(mipi_filename);
-            
             update_channel_radio_buttons();
-            
             _track_slider->setRange(0, static_cast<int>(processor.get_song_duration()));
             update_status_info();
 
-            if (!processor.get_channels().empty()) {
-                send_channel_selection(0);
-            }
-        } else {
-            RCLCPP_ERROR(this->get_logger(), "Failed to load .mipi file.");
+            if (!processor.get_channels().empty()) send_channel_selection(0);
         }
     }
 
     /**
-     * @brief Handles channel selection and sends a load request to the robot.
-     * * Retrieves the actual MIDI channel mapped to the clicked button, forces a UI pause/reset,
-     * and sends an asynchronous ROS 2 request with the file path and channel index.
-     * * @param button_id The internal ID of the triggered radio button within the button group.
+     * @brief Sends a load request to the robot controller for a specific instrument channel.
+     * @param button_id The ID of the radio button corresponding to the instrument index.
+     * @details Clears the current playback state before sending the new file data to the robot.
      */
     void PianoUI::send_channel_selection(int button_id) {
         if (button_id < 0 || _midi_file_path.isEmpty()) return;
 
-        // Force stop and reset track when changing channel/instrument
         force_pause_and_reset();
 
         std::vector<int> channels = processor.get_channels();
@@ -355,17 +320,10 @@ namespace UI
         int selected_channel = channels.at(button_id);
 
         auto request = std::make_shared<jamc::srv::Load::Request>();
-        
         request->filepath = (QFileInfo(_midi_file_path).baseName() + ".mipi").toStdString();
         request->index = selected_channel; 
 
-        RCLCPP_INFO(this->get_logger(), "Loading MIPI: %s on Channel: %d", 
-                    request->filepath.c_str(), selected_channel);
-
-        if (!channel_client->service_is_ready()) {
-            RCLCPP_WARN(this->get_logger(), "Channel selection service not ready.");
-            return;
-        }
+        if (!channel_client->service_is_ready()) return;
 
         channel_client->async_send_request(request, 
             [this](rclcpp::Client<jamc::srv::Load>::SharedFuture future) {
@@ -379,114 +337,58 @@ namespace UI
     }
 
     /**
-     * @brief Toggles the playback direction between forward and reverse.
+     * @brief Toggles between Forward and Reverse playback logic.
      */
     void PianoUI::toggle_direction() {
-        if (current_dir == PlaybackDirection::Forward) {
-            set_direction_reverse();
-        } else {
-            set_direction_forward();
-        }
+        if (current_dir == PlaybackDirection::Forward) set_direction_reverse();
+        else set_direction_forward();
     }
 
     /**
-     * @brief Sends a ROS 2 request to set playback direction to forward.
-     * * Ignored if the playback direction is already set to forward.
+     * @brief Explicitly sets playback direction to Forward via the /MIPI/direction service.
      */
     void PianoUI::set_direction_forward() {
         if (current_dir == PlaybackDirection::Forward) return;
-        
         current_dir = PlaybackDirection::Forward;
         _direction_button->setText("⏩");
 
         auto request = std::make_shared<jamc::srv::Func::Request>();
-        RCLCPP_INFO(this->get_logger(), "Sending FORWARD direction request");
-        
-        if (!direction_client->service_is_ready()) {
-            RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
-            return;
-        }
-
-        direction_client->async_send_request(request, 
-            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
-                try {
-                    auto response = future.get();
-                    RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "Direction service failed: %s", e.what());
-                }
-            });
+        if (!direction_client->service_is_ready()) return;
+        direction_client->async_send_request(request);
     }
 
     /**
-     * @brief Sends a ROS 2 request to set playback direction to reverse.
-     * * Ignored if the playback direction is already set to reverse.
+     * @brief Explicitly sets playback direction to Reverse via the /MIPI/direction service.
      */
     void PianoUI::set_direction_reverse() {
         if (current_dir == PlaybackDirection::Reverse) return;
-        
         current_dir = PlaybackDirection::Reverse;
         _direction_button->setText("⏪");
 
         auto request = std::make_shared<jamc::srv::Func::Request>();
-        RCLCPP_INFO(this->get_logger(), "Sending REVERSE direction request");
-        
-        if (!direction_client->service_is_ready()) {
-            RCLCPP_WARN(this->get_logger(), "Direction service is not available.");
-            return;
-        }
-
-        direction_client->async_send_request(request, 
-            [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
-                try {
-                    auto response = future.get();
-                    RCLCPP_INFO(this->get_logger(), "Direction response received: %s", response->message.c_str());
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "Direction service failed: %s", e.what());
-                }
-            });
+        if (!direction_client->service_is_ready()) return;
+        direction_client->async_send_request(request);
     }
 
     /**
-     * @brief Updates visual UI strings detailing current system status.
-     * * Refreshes the file status, playback speed percentage, and current track time against total duration.
+     * @brief Refreshes all status labels in the UI with the latest system state information.
      */
     void PianoUI::update_status_info() {
         _status_val->setText(_midi_file_path.isEmpty() ? "Status: No File" : "Status: Ready");
-        
         int speed_percent = _speed_control->value();
         _speed_val->setText(QString("Speed: %1%").arg(speed_percent));
-
-        _time_val->setText(QString("Time: %1 / %2")
-            .arg(_track_slider->value())
-            .arg(processor.get_song_duration()));
+        _time_val->setText(QString("Time: %1 / %2").arg(_track_slider->value()).arg(processor.get_song_duration()));
     }
 
     /**
-     * @brief Reads the speed slider value and sends a TimeScale service request.
-     * * Computes a double scale (0.01 to 1.0) and updates the status info display simultaneously.
+     * @brief Transmits the current speed slider value as a time scale factor (0.01-1.0) to the robot.
      */
     void PianoUI::send_time_scale() {
         update_status_info();
-
         auto request = std::make_shared<jamc::srv::TimeScale::Request>();
         request->scale = static_cast<double>(_speed_control->value()) / 100.0;
         
-        RCLCPP_INFO(this->get_logger(), "Sending TimeScale request: %f", request->scale);
-
-        if (!time_scale_client->service_is_ready()) {
-            RCLCPP_WARN(this->get_logger(), "TimeScale service is not available.");
-            return;
-        }
-
-        time_scale_client->async_send_request(request,
-            [this](rclcpp::Client<jamc::srv::TimeScale>::SharedFuture future) {
-                try {
-                    auto response = future.get();
-                    RCLCPP_INFO(this->get_logger(), "TimeScale updated successfully");
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "TimeScale service call failed: %s", e.what());
-                }
-            });
+        if (!time_scale_client->service_is_ready()) return;
+        time_scale_client->async_send_request(request);
     }
 }

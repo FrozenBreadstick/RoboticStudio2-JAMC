@@ -83,6 +83,11 @@ namespace UI
 
             QPushButton* _debug_button;
 
+            /**
+            * @brief ROS 2 Subscriber callback for camera feed.
+            * @param msg Shared pointer to the image message.
+            * @note Uses QMetaObject::invokeMethod to ensure thread-safety when updating the UI thread from the ROS executor thread.
+            */
             void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
 
         private slots:
@@ -92,6 +97,13 @@ namespace UI
             void set_direction_forward();
             void set_direction_reverse();
             void send_time_scale();
+            
+            /**
+            * @brief Transmits the selected MIDI channel to the robot controller.
+            * @param button_id The ID of the clicked radio button (mapped to MIDI channel).
+            * @pre A .mipi file must be loaded.
+            * @post Resets playback to ensure the robot starts the new channel from a safe state.
+            */
             void send_channel_selection(int index);
             void load_existing_mipi(int index);
             void send_debug_request();
