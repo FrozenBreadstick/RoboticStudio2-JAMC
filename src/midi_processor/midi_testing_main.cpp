@@ -36,6 +36,8 @@ int test_process() {
     std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/Driftveil_City_(Pokémon B1W1).mid";
     // mary had a little lamb
     // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid";
+    // rick roll
+    // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/Never-Gonna-Give-You-Up-3.mid";
 
     // open file
     int error = midi.processMidiFile(midi_file_path, "test_name.mipi"); 

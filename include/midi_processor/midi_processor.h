@@ -202,8 +202,6 @@ class MidiProcessor
 
 
             /*! @brief processes and stores all notes that correspond to a specific channel
-             *
-             *  @param[in] int - the channel number of the notes that are to be processed and stored
              * 
              *  @return bool - returns true if there were no errors while extracting channel notes  
              * 
@@ -214,15 +212,13 @@ class MidiProcessor
             bool process_channel_notes(int channel);
 
 
-            /*! @brief processes and stores all notes and their timings that correspond to a specific channel  
-             *
-             *  @param[in] int - the channel number of the note timestamps that are to be processed and stored.
+            /*! @brief processes and stores all notes and their timings and remove dud channels 
              * 
              *  @return bool - returns true if there were no errors while extracting channel notes
              *  
-             *  @details This function is called by the process_midi_file method. It processes the notes along with their timestamps and durations (in seconds) for 1 channel at a time as specified by the input parameter, storing them into the notes, note_timestamps, and note_durations vectors respectively
+             *  @details This function is called by the process_midi_file method. It processes the notes along with their timestamps and durations (in seconds) for, storing them into the notes, note_timestamps, and note_durations vectors respectively. It then removes any channels with no notes
              */ 
-            bool process_channel_notes_with_timings(int channel);
+            bool process_channel_notes_with_timings();
 
 
             /*! @brief filters chords down to only the root note
@@ -235,6 +231,31 @@ class MidiProcessor
              *  @details This function is called by the process_midi_file method. It removes overlapping timestamps and keeps either the highest or the lowest note on that time stamp depending on the instrument type (e.g. piano = high note, guitar = low note). The affected vectors are the "notes", "note_timeStamps", and "note_durations" vectors.
              */ 
             bool filter_chords();
+
+
+            /*! @brief filters trills and staggered chords down to only the first note
+             *
+             *  @version 1
+             *  @date 07/05/2026
+             *
+             *  @return bool - returns true if the trill filtering algorithm was successful and the "notes", "note_timeStamps", and "note_durations" vectors remain the same length
+             * 
+             *  @details This function is called by the process_midi_file method. It removes trills and staggered chords and keeps either the first note played. The affected vectors are the "notes", "note_timeStamps", and "note_durations" vectors.
+             */ 
+            bool filter_trills();
+
+
+
+            /*! @brief filters overlapping notes down to only the first note
+             *
+             *  @version 1
+             *  @date 07/05/2026
+             *
+             *  @return bool - returns true if the overlapping note filtering algorithm was successful and the "notes", "note_timeStamps", and "note_durations" vectors remain the same length
+             * 
+             *  @details This function is called by the process_midi_file method. It removes notes that are played entirely within the duration of another note. The affected vectors are the "notes", "note_timeStamps", and "note_durations" vectors.
+             */ 
+            bool filter_overlapping_notes();
 
 
             /*! @brief process song duration
@@ -299,10 +320,10 @@ class MidiProcessor
             const char* homeDir = getenv("HOME");
 
             //!< minimum note duration
-            double min_note_duration = 0.08;
+            double min_note_duration_gap = 50;
 
             //!< minimum note gap
-            double min_note_gap = 0.1;
+            double min_note_gap = 0.08;
 
             //!< current list of channels
             std::vector<int> channels;

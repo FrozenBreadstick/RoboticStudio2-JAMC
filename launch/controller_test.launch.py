@@ -13,4 +13,3 @@ def generate_launch_description():
     ld.add_action(sample_node)
 
     return ld
-
