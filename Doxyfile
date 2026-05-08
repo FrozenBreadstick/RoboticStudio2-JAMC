@@ -120,7 +120,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 
 # Make sure INPUT includes your mainpage.dox and the src directory
-INPUT                  = mainpage.dox src
+INPUT                  = mainpage.dox src include midi_files mipi_files UI_README.md UR_README.md MIDI_README.md AI_README.md
 
 # Make sure FILE_PATTERNS covers your C++ and Doxygen files
 FILE_PATTERNS          = *.c \
@@ -212,7 +212,7 @@ QHG_LOCATION           =
 GENERATE_ECLIPSEHELP   = NO
 ECLIPSE_DOC_ID         = org.doxygen.Project
 DISABLE_INDEX          = NO
-GENERATE_TREEVIEW      = NO
+GENERATE_TREEVIEW      = YES
 ENUM_VALUES_PER_LINE   = 4
 TREEVIEW_WIDTH         = 250
 EXT_LINKS_IN_WINDOW    = NO
@@ -292,7 +292,7 @@ DOCBOOK_PROGRAMLISTING = NO
 GENERATE_AUTOGEN_DEF   = NO
 #---------------------------------------------------------------------------
 # Configuration options related to the Perl module output
-#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------F
 GENERATE_PERLMOD       = NO
 PERLMOD_LATEX          = NO
 PERLMOD_PRETTY         = YES
@@ -331,15 +331,15 @@ DOT_FONTPATH           =
 CLASS_GRAPH            = YES
 COLLABORATION_GRAPH    = YES
 GROUP_GRAPHS           = YES
-UML_LOOK               = NO
+UML_LOOK               = YES
 UML_LIMIT_NUM_FIELDS   = 10
 DOT_UML_DETAILS        = NO
 DOT_WRAP_THRESHOLD     = 17
 TEMPLATE_RELATIONS     = NO
 INCLUDE_GRAPH          = YES
 INCLUDED_BY_GRAPH      = YES
-CALL_GRAPH             = NO
-CALLER_GRAPH           = NO
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
 GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = png

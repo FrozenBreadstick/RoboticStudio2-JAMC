@@ -1,3 +1,4 @@
+MIDI_README.md
 # HOW TO USE THE MIDI PROCESSOR CLASS
 
 see midi_testing_main.cpp for an example of how to use the class for processing
