@@ -313,44 +313,44 @@ class MidiProcessor
 
         // private variables ------------------------------------------------------------
 
-            //!< MidiFile library
-            MidiFile midi; 
+            
+            MidiFile midi; //!< MidiFile library
 
-            //!< home directory
-            const char* homeDir = getenv("HOME");
+            
+            const char* homeDir = getenv("HOME"); //!< home directory
 
-            //!< minimum note duration
-            double min_note_duration_gap = 50;
+            
+            double min_note_duration_gap = 50; //!< minimum note duration
 
-            //!< minimum note gap
-            double min_note_gap = 0.08;
+            
+            double min_note_gap = 0.08; //!< minimum note gap
 
-            //!< current list of channels
-            std::vector<int> channels;
+           
+            std::vector<int> channels; //!< current list of channels
 
-            //!< current list of instruments
-            std::vector<int> instruments;
+           
+            std::vector<int> instruments; //!< current list of instruments
 
-            //!< current list of notes
-            std::vector<std::vector<int>> notes;
+           
+            std::vector<std::vector<int>> notes; //!< current list of notes
 
-            //!< current list of note_timeStamps
-            std::vector<std::vector<double>> note_timeStamps;
+           
+            std::vector<std::vector<double>> note_timeStamps; //!< current list of note_timeStamps
 
-            //!< current list of note_durations
-            std::vector<std::vector<double>> note_durations;
+           
+            std::vector<std::vector<double>> note_durations; //!< current list of note_durations
 
-            //!< current song duration
-            double fileDuration;
+           
+            double fileDuration; //!< current song duration
 
-            //!< current list of assigned keys for each channel
-            std::vector<std::vector<int>> assigned_keys;
+           
+            std::vector<std::vector<int>> assigned_keys; //!< current list of assigned keys for each channel
 
-            //!< current list of keyboard values for each channel
-            std::vector<std::vector<int>> keyboard_values;
+           
+            std::vector<std::vector<int>> keyboard_values; //!< current list of keyboard values for each channel
 
-            //!< current list of keyboard indexs for each channel
-            std::vector<std::vector<int>> keyboard_indexs;
+           
+            std::vector<std::vector<int>> keyboard_indexs; //!< current list of keyboard indexs for each channel
     
 };
 

@@ -19,7 +19,7 @@
  * - **Assigned Keys**: A vector of all assigned keys in the midi file, where each assigned key is a vector of the assigned key and the note timing 
  * - **Keyboard Values**: A vector of all keyboard values in the midi file, where each keyboard value is a vector of the keyboard value and the note timing
  * 
- * @todo Add more documentation, make getter for vector of vectors of ints that stores index positions of notes in the keyboard values vectors
+ * @todo Improve filters
  */
 
 
