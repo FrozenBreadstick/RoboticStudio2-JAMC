@@ -7,8 +7,8 @@ DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "MIPI - Physical Interface for MIDI Files"
 PROJECT_NUMBER         =
 PROJECT_BRIEF          =
-PROJECT_LOGO           =
-OUTPUT_DIRECTORY       =
+PROJECT_LOGO           = images/Piano.jpg
+OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = NO
 OUTPUT_LANGUAGE        = English
@@ -120,7 +120,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 
 # Make sure INPUT includes your mainpage.dox and the src directory
-INPUT                  = mainpage.dox src include midi_files mipi_files UI_README.md UR_README.md MIDI_README.md AI_README.md
+INPUT                  = mainpage.dox src include midi_files mipi_files UI_README.md UR_README.md MIDI_README.md AI_README.md README.md images
 
 # Make sure FILE_PATTERNS covers your C++ and Doxygen files
 FILE_PATTERNS          = *.c \
@@ -144,7 +144,7 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
-IMAGE_PATH             =
+IMAGE_PATH             = images
 INPUT_FILTER           =
 FILTER_PATTERNS        =
 FILTER_SOURCE_FILES    = NO
@@ -175,7 +175,7 @@ IGNORE_PREFIX          =
 # Configuration options related to the HTML output
 #---------------------------------------------------------------------------
 GENERATE_HTML          = YES
-HTML_OUTPUT            = html
+HTML_OUTPUT            = docs
 HTML_FILE_EXTENSION    = .html
 HTML_HEADER            =
 HTML_FOOTER            =
@@ -235,7 +235,7 @@ EXTRA_SEARCH_MAPPINGS  =
 #---------------------------------------------------------------------------
 # Configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO
 LATEX_OUTPUT           = latex
 LATEX_CMD_NAME         =
 MAKEINDEX_CMD_NAME     = makeindex

@@ -6,7 +6,6 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnShutdown
 
-
 def create_ur_driver(): # Launch the UR_Driver
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -42,7 +41,7 @@ def start_moveit():  # Launch MoveIt
 
     #Delay startup until UR driver is initialized
     return TimerAction(
-        period=6.0,
+        period=10.0,
         actions=[moveit_launch]
     )
 
@@ -65,12 +64,9 @@ def switch_to_servo_controller():
 
     # Delay to ensure controllers are available
     return TimerAction(
-        period=12.0,
+        period=40.0,
         actions=[switch_cmd]
     )
-
-from launch.actions import ExecuteProcess, TimerAction
-
 
 def start_servo():
 
@@ -87,7 +83,7 @@ def start_servo():
     )
 
     return TimerAction(
-        period=18.0,
+        period=45.0,
         actions=[servo_cmd]
     )
 
@@ -121,7 +117,7 @@ def make_controller():
         )
     
     return TimerAction(
-        period=24.0,
+        period=50.0,
         actions=[controller]
     )
 
