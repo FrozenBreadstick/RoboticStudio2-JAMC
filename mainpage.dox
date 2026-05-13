@@ -3,6 +3,7 @@
 @b MIPI
 
 This package implements 3 standalone nodes that work together to control a UR3e to play the piano.
+\image html images/ur3e.jpg
 
 @section main_overview Main Page Overview
 RoboticsStudio2-JAMC Repository
@@ -71,9 +72,11 @@ The Controller class in the Control namespace is responsible for all direct ROS2
 It exposes no public members to be interacted with and as such must be controlled via its various ROS2 Interfaces (See Usage Guide above).
 
 \subsubsection Behaviour
-On Startup, the class will attempt to read the robots joint states and stream  
+Before Starting the node, it assumes that you have followed the Intallation, Physical Robot Setup and Software Setup sections defined in the Usage Guide.
+Without all that infrastructure running, the Node will be unable to function.
+When spinning the node into the ROS2 environment, the following will happen:
+1. 
 
-Describe what it does with images, diagrams, code snippets, etc
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
@@ -91,7 +94,7 @@ Acknowledgements of External Library Usage:
 @section code_behaviour Code Behaviour and Usage
 
 @subsection build_method Build Instructions
-To build the package please refer to *@ref README.md "UI"**
+To build the package please refer to *@ref README.md "BUILD"**
 
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
 
