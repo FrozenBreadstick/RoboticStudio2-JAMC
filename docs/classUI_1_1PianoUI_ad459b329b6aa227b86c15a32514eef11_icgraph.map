@@ -1,0 +1,4 @@
+<map id="UI::PianoUI::open_midi_file" name="UI::PianoUI::open_midi_file">
+<area shape="rect" id="node1" title="UI Slot for opening a file dialog to process a raw .mid file." alt="" coords="205,5,403,32"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,5,157,32"/>
+</map>

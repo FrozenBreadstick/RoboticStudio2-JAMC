@@ -1,0 +1,4 @@
+<map id="Control::Controller::time_scale_callback" name="Control::Controller::time_scale_callback">
+<area shape="rect" id="node1" title="Callback function for the TimeScale Service, used to set the time scaling factor for playback." alt="" coords="195,5,357,47"/>
+<area shape="rect" id="node2" href="$classControl_1_1Controller.html#a113e4dc04ccbcfa2f54b056970c1a0f8" title="Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano..." alt="" coords="5,5,147,47"/>
+</map>

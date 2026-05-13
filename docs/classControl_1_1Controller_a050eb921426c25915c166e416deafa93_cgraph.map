@@ -1,0 +1,4 @@
+<map id="Control::Controller::time_scale_callback" name="Control::Controller::time_scale_callback">
+<area shape="rect" id="node1" title="Callback function for the TimeScale Service, used to set the time scaling factor for playback." alt="" coords="5,5,168,47"/>
+<area shape="rect" id="node2" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="216,13,295,39"/>
+</map>

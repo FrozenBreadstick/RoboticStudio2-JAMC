@@ -1,0 +1,5 @@
+<map id="include/ui/ui_piano.h" name="include/ui/ui_piano.h">
+<area shape="rect" id="node1" title=" " alt="" coords="80,5,236,32"/>
+<area shape="rect" id="node2" href="$ui__main_8cpp.html" title=" " alt="" coords="5,80,145,107"/>
+<area shape="rect" id="node3" href="$ui__piano_8cpp.html" title="Implementation of the PianoUI class, providing a graphical interface for MIDI playback control." alt="" coords="169,80,312,107"/>
+</map>

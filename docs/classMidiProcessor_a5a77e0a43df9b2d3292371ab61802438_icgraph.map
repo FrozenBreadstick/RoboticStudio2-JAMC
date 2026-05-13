@@ -1,0 +1,9 @@
+<map id="MidiProcessor::processMidiFile" name="MidiProcessor::processMidiFile">
+<area shape="rect" id="node1" title="processes a midi file by saving all instruments (and their channels) to a set of vectors" alt="" coords="451,93,673,120"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#ad459b329b6aa227b86c15a32514eef11" title="UI Slot for opening a file dialog to process a raw .mid file." alt="" coords="205,5,403,32"/>
+<area shape="rect" id="node4" href="$midi__testing__main_8cpp.html#a030119a376a3957635c001c838ba99bc" title=" " alt="" coords="227,57,381,98"/>
+<area shape="rect" id="node5" href="$midi__testing__main_8cpp.html#a1c1882900a01ec3f765fbf8a34109b3a" title=" " alt="" coords="252,123,356,149"/>
+<area shape="rect" id="node7" href="$midi__testing__main_8cpp.html#a956c96ab04d391719b04bd374721d2ef" title=" " alt="" coords="229,174,379,215"/>
+<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,5,157,32"/>
+<area shape="rect" id="node6" href="$midi__testing__main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title=" " alt="" coords="54,123,109,149"/>
+</map>

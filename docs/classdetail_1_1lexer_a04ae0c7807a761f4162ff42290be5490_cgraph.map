@@ -1,0 +1,5 @@
+<map id="detail::lexer::skip_bom" name="detail::lexer::skip_bom">
+<area shape="rect" id="node1" title="skip the UTF&#45;8 byte order mark" alt="" coords="5,31,176,57"/>
+<area shape="rect" id="node2" href="$classdetail_1_1lexer.html#a558196cb9fc24015d009969c9df8707b" title=" " alt="" coords="232,5,360,32"/>
+<area shape="rect" id="node3" href="$classdetail_1_1lexer.html#af15c2d2e743728d99bb6d749a03e5555" title="unget current character (read it again on next get)" alt="" coords="224,56,368,83"/>
+</map>

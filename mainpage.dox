@@ -11,6 +11,7 @@ RoboticsStudio2-JAMC
  
 @subsection ui_section UI - Human 2 Robot Interaction
 **@ref UI_README.md "UI"** - Usage Guide
+
 The **PianoUI** serves as the primary interaction layer for the JAMC system. It is implemented 
 as a dual-inheritance **Hybrid Node**, combining the event-driven nature of **Qt 5/6** * with the distributed messaging of **ROS 2 Humble**.
 
@@ -60,14 +61,23 @@ comes to a safe halt before new MIDI data is loaded into the controller.
 
 @subsection midi_section MIDI Processing - For parsing and converting midi files to a readable format by our system
 **@ref MIDI_README.md "MIDI Processing"** - Usage Guide
+
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection controller_section Controller - Control Engine for UR3e Piano Playing
 **@ref UR_README.md "Controller"** - Usage Guide
+
+The Controller class in the Control namespace is responsible for all direct ROS2 interaction with the robots UR_DRIVER and MoveIt Servo libraries.
+It exposes no public members to be interacted with and as such must be controlled via its various ROS2 Interfaces (See Usage Guide above).
+
+\subsubsection Behaviour
+ 
+
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
+
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection external_section External Libraries - JSON, MIDI Parsing, etc

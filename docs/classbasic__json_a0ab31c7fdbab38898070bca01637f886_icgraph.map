@@ -1,0 +1,11 @@
+<map id="basic_json::get" name="basic_json::get">
+<area shape="rect" id="node1" title="get a (pointer) value (explicit)" alt="" coords="721,107,840,133"/>
+<area shape="rect" id="node2" href="$classbasic__json.html#aed9761fba9571455a96309f7ba647757" title=" " alt="" coords="493,5,659,32"/>
+<area shape="rect" id="node3" href="$classbasic__json.html#a8680ff0784c185b6898839a98de88486" title=" " alt="" coords="494,56,658,83"/>
+<area shape="rect" id="node4" href="$classbasic__json.html#ae8c5fdb783d4f97a9062ab41809ec0c6" title=" " alt="" coords="479,107,673,133"/>
+<area shape="rect" id="node5" href="$classbasic__json.html#ad915ce03b8ec612764bb67d09e658a0d" title=" " alt="" coords="487,157,665,184"/>
+<area shape="rect" id="node6" href="$classMidiProcessor.html#a0e2fa1086435adae40a3448f6d0351b7" title="load JSON file" alt="" coords="501,209,651,250"/>
+<area shape="rect" id="node7" href="$classUI_1_1PianoUI.html#a5f7b1af72eff1426258405b969f961c9" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="205,187,431,213"/>
+<area shape="rect" id="node9" href="$midi__testing__main_8cpp.html#a956c96ab04d391719b04bd374721d2ef" title=" " alt="" coords="243,238,393,279"/>
+<area shape="rect" id="node8" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,187,157,213"/>
+</map>

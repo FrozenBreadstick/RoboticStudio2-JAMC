@@ -1,0 +1,24 @@
+<map id="UI::PianoUI::PianoUI" name="UI::PianoUI::PianoUI">
+<area shape="rect" id="node1" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,467,157,494"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a487bf3a8e1df3efc655bc4cd92ec9c22" title="ROS 2 Subscriber callback for camera feed." alt="" coords="247,56,389,97"/>
+<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a5f7b1af72eff1426258405b969f961c9" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="205,362,431,389"/>
+<area shape="rect" id="node8" href="$classUI_1_1PianoUI.html#ad4030634513c0dd4fbe644f329b1f619" title="Transmits the selected MIDI channel to the robot controller." alt="" coords="495,187,685,228"/>
+<area shape="rect" id="node14" href="$classUI_1_1PianoUI.html#aad52238a3191b13004a98eb99ee76f4f" title="Refreshes all status labels in the UI with the latest system state information." alt="" coords="517,573,663,615"/>
+<area shape="rect" id="node15" href="$classUI_1_1PianoUI.html#ad459b329b6aa227b86c15a32514eef11" title="UI Slot for opening a file dialog to process a raw .mid file." alt="" coords="219,438,417,465"/>
+<area shape="rect" id="node16" href="$classUI_1_1PianoUI.html#a98104abc0877efbb135ef73b964ea960" title="Scans the ~/mipi_files directory to refresh the dropdown list." alt="" coords="511,639,669,680"/>
+<area shape="rect" id="node18" href="$classUI_1_1PianoUI.html#a3d36a2912adc88ddc40bb4674ba23919" title="Toggles the playback state and notifies the /MIPI/play_pause service." alt="" coords="230,657,406,683"/>
+<area shape="rect" id="node19" href="$classUI_1_1PianoUI.html#a58d6a4c0c9e44289ece7039e59e21cd6" title="Sends a trigger request to the debug service for development testing." alt="" coords="228,708,408,749"/>
+<area shape="rect" id="node20" href="$classUI_1_1PianoUI.html#a636088798ed1bf4b91ea22e8669ca5b5" title="Transmits the current speed slider value as a time scale factor (0.01&#45;1.0) to the robot." alt="" coords="233,489,403,531"/>
+<area shape="rect" id="node21" href="$classUI_1_1PianoUI.html#a12d5f48136218b59ead5c2527c953e84" title="Toggles between Forward and Reverse playback logic." alt="" coords="247,121,389,163"/>
+<area shape="rect" id="node4" href="$classMidiProcessor.html#a550aa8bbeeeb761fa0e6b7c8f901054c" title="gets all channels" alt="" coords="753,245,896,287"/>
+<area shape="rect" id="node5" href="$classMidiProcessor.html#a6f2546fd52282fd38b37de541b0bd418" title="gets the song duration" alt="" coords="753,515,896,556"/>
+<area shape="rect" id="node6" href="$classMidiProcessor.html#a0e2fa1086435adae40a3448f6d0351b7" title="load JSON file" alt="" coords="515,121,665,163"/>
+<area shape="rect" id="node11" href="$classUI_1_1PianoUI.html#a80b419cca1851cb483fd672f86b7b8a9" title="Rebuilds the radio button group based on the currently loaded MIDI processor data." alt="" coords="502,355,678,396"/>
+<area shape="rect" id="node7" href="$classbasic__json.html#a0ab31c7fdbab38898070bca01637f886" title="get a (pointer) value (explicit)" alt="" coords="765,129,884,155"/>
+<area shape="rect" id="node9" href="$classUI_1_1PianoUI.html#a0a2015e2044e8def7723bdad8d70cf23" title="Immediate helper method to halt UI playback tracking and reset visual sliders." alt="" coords="755,180,894,221"/>
+<area shape="rect" id="node10" href="$classUI_1_1PianoUI.html#a4530f8a855b8d38773f2f5757609a6f9" title="Explicitly sets playback direction to Forward via the /MIPI/direction service." alt="" coords="948,89,1135,131"/>
+<area shape="rect" id="node12" href="$classMidiProcessor.html#aec39db699b10085041a2f08fd55158fe" title="gets all instrument names and their channels" alt="" coords="749,355,900,396"/>
+<area shape="rect" id="node13" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="1002,362,1081,389"/>
+<area shape="rect" id="node17" href="$classMidiProcessor.html#a5a77e0a43df9b2d3292371ab61802438" title="processes a midi file by saving all instruments (and their channels) to a set of vectors" alt="" coords="479,471,701,498"/>
+<area shape="rect" id="node22" href="$classUI_1_1PianoUI.html#a328739be427acccb55512b29a886ac61" title="Explicitly sets playback direction to Reverse via the /MIPI/direction service." alt="" coords="497,56,683,97"/>
+</map>

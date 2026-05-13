@@ -1,0 +1,3 @@
+<map id="Control::vector3" name="Control::vector3">
+<area shape="rect" id="node1" title="A struct for representing 3D vectors, used for velocity commands and target positions." alt="" coords="5,5,132,112"/>
+</map>

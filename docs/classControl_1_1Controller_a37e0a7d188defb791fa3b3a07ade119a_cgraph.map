@@ -1,0 +1,4 @@
+<map id="Control::Controller::load_callback" name="Control::Controller::load_callback">
+<area shape="rect" id="node1" title="Callback function for the Load Service, used to load .mipi files and select which instrument channel." alt="" coords="5,5,147,47"/>
+<area shape="rect" id="node2" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="195,13,273,39"/>
+</map>

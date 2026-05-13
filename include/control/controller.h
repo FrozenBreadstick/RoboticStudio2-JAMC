@@ -78,12 +78,16 @@ namespace Control
 
         std::mutex joint_mutex_; //Mutex to protect access to the latest joint state
         std::vector<double> latest_joint_state_; //The latest joint state of the robot
+
+        rclcpp::TimerBase::SharedPtr control_timer_; //Timer for the control loop
+
+        rclcpp::TimerBase::SharedPtr startup_timer_; //Timer for the startup sequence
         ///@}
 
         //Methods
         /**
          * @name General Methods
-         * Methods used throughout the class for various purposes
+         * @brief Methods used throughout the class for various purposes
          */
         ///@{
         void sendTwistMsg(double x, double y, double z, double angular_x = 0.0, double angular_y = 0.0, double angular_z = 0.0);
@@ -95,10 +99,9 @@ namespace Control
         //Startup & Shutdown
         /**
          * @name Startup & Shutdown Sequence
-         * Functions and variables related to the startup and shutdown sequence of the controller
+         * @brief Functions related to the startup and shutdown sequence of the controller
          */
         ///@{
-        rclcpp::TimerBase::SharedPtr startup_timer_;
         void startup();
         void shutdown();
         ///@}
@@ -106,7 +109,7 @@ namespace Control
         //Publishers
         /**
          * @name Publishers
-         * All Publishers that the Controller Class uses
+         * @brief All Publishers that the Controller Class uses
          */
         ///@{
         rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
@@ -116,21 +119,29 @@ namespace Control
         //Subscribers
         /**
          * @name Subscribers
-         * All Subscribers that the Controller Class uses, along with their callback functions
+         * @brief All Subscribers that the Controller Class uses
          */
         ///@{
         rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr debug_target_sub_;
-        void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
         rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr key_positions_sub_;
-        void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+        ///@}
+
+        //Subscriber Callbacks
+        /**
+         * @name Subscriber Callbacks
+         * @brief All Subscriber callbacks that the Controller Class uses
+         */
+        ///@{
+        void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
+        void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
         void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
         ///@}
 
         //Services
         /**
-         * @name ROS2 Services
-         * Services that the Controller Class provides
+         * @name Services
+         * @brief Services that the Controller Class provides
          */
         ///@{
         rclcpp::Service<jamc::srv::Load>::SharedPtr load_service_;
@@ -139,18 +150,24 @@ namespace Control
         rclcpp::Service<jamc::srv::Func>::SharedPtr play_direction_service_;
         ///@}
 
+        //Service Callbacks
+        /**
+         * @name Service Callbacks
+         * @brief All Service callbacks that the Controller Class uses
+         */
+        ///@{
         void load_callback(const std::shared_ptr<jamc::srv::Load::Request> request, std::shared_ptr<jamc::srv::Load::Response> response);
         void time_scale_callback(const std::shared_ptr<jamc::srv::TimeScale::Request> request, std::shared_ptr<jamc::srv::TimeScale::Response> response);
         void play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
         void play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
+        ///@}
 
         //Control Loop
         /**
          * @name Control Loop
-         * Functions and variables related to the control loop of the controller
+         * @brief Functions related to the control loop of the controller
          */
         ///@{
-        rclcpp::TimerBase::SharedPtr control_timer_;
         void control_loop();
         double calculate_z(double xy);
         std::optional<vector3> calculate_velocity(int note);

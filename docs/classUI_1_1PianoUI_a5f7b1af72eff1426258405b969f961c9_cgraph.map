@@ -1,0 +1,14 @@
+<map id="UI::PianoUI::load_existing_mipi" name="UI::PianoUI::load_existing_mipi">
+<area shape="rect" id="node1" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="5,170,231,197"/>
+<area shape="rect" id="node2" href="$classMidiProcessor.html#a550aa8bbeeeb761fa0e6b7c8f901054c" title="gets all channels" alt="" coords="521,5,664,47"/>
+<area shape="rect" id="node3" href="$classMidiProcessor.html#a6f2546fd52282fd38b37de541b0bd418" title="gets the song duration" alt="" coords="521,221,664,263"/>
+<area shape="rect" id="node4" href="$classMidiProcessor.html#a0e2fa1086435adae40a3448f6d0351b7" title="load JSON file" alt="" coords="299,129,449,171"/>
+<area shape="rect" id="node6" href="$classUI_1_1PianoUI.html#ad4030634513c0dd4fbe644f329b1f619" title="Transmits the selected MIDI channel to the robot controller." alt="" coords="279,64,469,105"/>
+<area shape="rect" id="node9" href="$classUI_1_1PianoUI.html#a80b419cca1851cb483fd672f86b7b8a9" title="Rebuilds the radio button group based on the currently loaded MIDI processor data." alt="" coords="286,312,462,353"/>
+<area shape="rect" id="node12" href="$classUI_1_1PianoUI.html#aad52238a3191b13004a98eb99ee76f4f" title="Refreshes all status labels in the UI with the latest system state information." alt="" coords="301,195,447,236"/>
+<area shape="rect" id="node5" href="$classbasic__json.html#a0ab31c7fdbab38898070bca01637f886" title="get a (pointer) value (explicit)" alt="" coords="533,137,652,163"/>
+<area shape="rect" id="node7" href="$classUI_1_1PianoUI.html#a0a2015e2044e8def7723bdad8d70cf23" title="Immediate helper method to halt UI playback tracking and reset visual sliders." alt="" coords="523,71,662,112"/>
+<area shape="rect" id="node8" href="$classUI_1_1PianoUI.html#a4530f8a855b8d38773f2f5757609a6f9" title="Explicitly sets playback direction to Forward via the /MIPI/direction service." alt="" coords="716,71,903,112"/>
+<area shape="rect" id="node10" href="$classMidiProcessor.html#aec39db699b10085041a2f08fd55158fe" title="gets all instrument names and their channels" alt="" coords="517,312,668,353"/>
+<area shape="rect" id="node11" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="770,319,849,346"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="include/midi_processor/midiLibrary/include/Options.h" name="include/midi_processor/midiLibrary/include/Options.h">
+<area shape="rect" id="node1" title=" " alt="" coords="368,5,585,47"/>
+<area shape="rect" id="node2" href="$midi__processor_8h.html" title=" " alt="" coords="285,95,457,136"/>
+<area shape="rect" id="node11" href="$Options_8cpp.html" title=" " alt="" coords="481,95,685,136"/>
+<area shape="rect" id="node3" href="$midi__processor_8cpp.html" title=" " alt="" coords="5,184,156,225"/>
+<area shape="rect" id="node4" href="$midi__testing__main_8cpp.html" title=" " alt="" coords="180,184,355,225"/>
+<area shape="rect" id="node5" href="$controller_8h.html" title=" " alt="" coords="379,191,574,218"/>
+<area shape="rect" id="node8" href="$ui__piano_8h.html" title=" " alt="" coords="599,191,755,218"/>
+<area shape="rect" id="node6" href="$controller_8cpp.html" title=" " alt="" coords="199,281,381,307"/>
+<area shape="rect" id="node7" href="$controller__main_8cpp.html" title=" " alt="" coords="405,273,561,315"/>
+<area shape="rect" id="node9" href="$ui__main_8cpp.html" title=" " alt="" coords="599,281,739,307"/>
+<area shape="rect" id="node10" href="$ui__piano_8cpp.html" title="Implementation of the PianoUI class, providing a graphical interface for MIDI playback control." alt="" coords="763,281,905,307"/>
+</map>

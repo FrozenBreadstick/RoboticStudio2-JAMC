@@ -1,0 +1,6 @@
+<map id="MidiProcessor::load_json_file" name="MidiProcessor::load_json_file">
+<area shape="rect" id="node1" title="load JSON file" alt="" coords="479,27,628,69"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a5f7b1af72eff1426258405b969f961c9" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="205,5,431,32"/>
+<area shape="rect" id="node4" href="$midi__testing__main_8cpp.html#a956c96ab04d391719b04bd374721d2ef" title=" " alt="" coords="243,57,393,98"/>
+<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,5,157,32"/>
+</map>

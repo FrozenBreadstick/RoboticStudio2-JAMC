@@ -1,0 +1,6 @@
+<map id="UI::PianoUI::send_channel_selection" name="UI::PianoUI::send_channel_selection">
+<area shape="rect" id="node1" title="Transmits the selected MIDI channel to the robot controller." alt="" coords="5,39,196,80"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a0a2015e2044e8def7723bdad8d70cf23" title="Immediate helper method to halt UI playback tracking and reset visual sliders." alt="" coords="246,5,385,47"/>
+<area shape="rect" id="node4" href="$classMidiProcessor.html#a550aa8bbeeeb761fa0e6b7c8f901054c" title="gets all channels" alt="" coords="244,71,387,112"/>
+<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a4530f8a855b8d38773f2f5757609a6f9" title="Explicitly sets playback direction to Forward via the /MIPI/direction service." alt="" coords="435,5,621,47"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="MidiProcessor::get_channels" name="MidiProcessor::get_channels">
+<area shape="rect" id="node1" title="gets all channels" alt="" coords="717,49,860,90"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a5f7b1af72eff1426258405b969f961c9" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="205,5,431,32"/>
+<area shape="rect" id="node4" href="$classUI_1_1PianoUI.html#ad459b329b6aa227b86c15a32514eef11" title="UI Slot for opening a file dialog to process a raw .mid file." alt="" coords="219,107,417,133"/>
+<area shape="rect" id="node5" href="$classUI_1_1PianoUI.html#ad4030634513c0dd4fbe644f329b1f619" title="Transmits the selected MIDI channel to the robot controller." alt="" coords="479,49,669,90"/>
+<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,56,157,83"/>
+</map>

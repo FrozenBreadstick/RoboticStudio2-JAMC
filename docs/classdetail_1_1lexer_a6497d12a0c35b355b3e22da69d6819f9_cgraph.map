@@ -1,0 +1,16 @@
+<map id="detail::lexer::scan" name="detail::lexer::scan">
+<area shape="rect" id="node1" title=" " alt="" coords="5,190,143,217"/>
+<area shape="rect" id="node2" href="$classdetail_1_1lexer.html#a7182c4e7a87e32686cc06be2c31cbc5f" title="scan a comment" alt="" coords="207,212,345,253"/>
+<area shape="rect" id="node5" href="$classdetail_1_1lexer.html#abefd991e3a77297b30698495531f01df" title=" " alt="" coords="413,5,550,47"/>
+<area shape="rect" id="node6" href="$classdetail_1_1lexer.html#aab65133db39717a496764cb97fcf3f46" title="scan a number literal" alt="" coords="207,525,345,567"/>
+<area shape="rect" id="node10" href="$classdetail_1_1lexer.html#a13c79af5cade626e08f321ead26b83f9" title="scan a string literal" alt="" coords="207,357,345,399"/>
+<area shape="rect" id="node13" href="$classdetail_1_1lexer.html#a04ae0c7807a761f4162ff42290be5490" title="skip the UTF&#45;8 byte order mark" alt="" coords="191,161,361,187"/>
+<area shape="rect" id="node14" href="$classdetail_1_1lexer.html#a230468eb9130a7173e0636fc1fc5606b" title=" " alt="" coords="209,77,343,119"/>
+<area shape="rect" id="node3" href="$classdetail_1_1lexer.html#a558196cb9fc24015d009969c9df8707b" title=" " alt="" coords="603,223,731,250"/>
+<area shape="rect" id="node4" href="$classdetail_1_1lexer.html#af15c2d2e743728d99bb6d749a03e5555" title="unget current character (read it again on next get)" alt="" coords="409,223,553,250"/>
+<area shape="rect" id="node7" href="$classdetail_1_1lexer.html#ad59cacf0fdfe48d78b218e49da85797b" title="add a character to token_buffer" alt="" coords="601,457,732,483"/>
+<area shape="rect" id="node8" href="$classdetail_1_1lexer.html#a049f7268496ebdbb16573a5ef1bc96b7" title="reset token_buffer; current character is beginning of token" alt="" coords="411,507,551,534"/>
+<area shape="rect" id="node9" href="$classdetail_1_1lexer.html#a56bab6981f9c24f2195b192cdafbce11" title=" " alt="" coords="410,659,553,686"/>
+<area shape="rect" id="node11" href="$classdetail_1_1lexer.html#a10530239775d94248e99f235a3d144b3" title="get codepoint from 4 hex characters following \u" alt="" coords="417,325,545,367"/>
+<area shape="rect" id="node12" href="$classdetail_1_1lexer.html#a505c0c6842a668fc4e9f07dca49b91e9" title="check if the next byte(s) are inside a given range" alt="" coords="413,391,549,432"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="UI::PianoUI::force_pause_and_reset" name="UI::PianoUI::force_pause_and_reset">
+<area shape="rect" id="node1" title="Immediate helper method to halt UI playback tracking and reset visual sliders." alt="" coords="5,5,144,47"/>
+<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a4530f8a855b8d38773f2f5757609a6f9" title="Explicitly sets playback direction to Forward via the /MIPI/direction service." alt="" coords="192,5,379,47"/>
+</map>
