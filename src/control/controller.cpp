@@ -14,7 +14,7 @@ using Control::STATE;
  */
 Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LAST_CONTROL_TIME_POINT(Clock::now()), state_(STATE::WAITING), connor()
 {
-    RCLCPP_INFO(this->get_logger(), "Controller node has been started.");
+    RCLCPP_INFO(this->get_logger(), "Controller node has been started. Starting initilisation movement");
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/servo_node/delta_twist_cmds", 10);
     debug_target_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/debug_target", 10, std::bind(&Controller::debug_target_callback, this, std::placeholders::_1));
     key_positions_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/piano_keys", 10, std::bind(&Controller::key_positions_callback, this, std::placeholders::_1));
@@ -26,7 +26,9 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
 
     control_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::control_loop, this));
 
-    startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Controller::startup, this));
+    joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&Controller::joint_state_callback, this, std::placeholders::_1));
+    joint_traj_streaming_pub_ = this->create_publisher<control_msgs::msg::JointJog>("/servo_server/delta_joint_cmds", 10);
+    // startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::startup, this));
 }
 
 /**
@@ -141,7 +143,7 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
 }
 
 /**
- * @brief Velocity calculation for control loop
+ * @brief Velocity calculation for control loop. If the note is not visible, will travel in the parallel to the keyboard to find it
  * @param note The MIDI note value for the current note being played
  */
 std::optional<vector3> Control::Controller::calculate_velocity(int note)
@@ -163,6 +165,15 @@ std::optional<vector3> Control::Controller::calculate_velocity(int note)
         target.x = target_pose.position.x;
         target.y = target_pose.position.y;
         target.z = z;
+    }
+
+    // CALCULATE IF WE NEED TO SEEK OUT THE NOTE
+    if (key_positions_.poses[note].position.x == INFINITY || key_positions_.poses[note].position.y == INFINITY) {
+        //Move up the vector of notes towards the positive index
+    } else if (key_positions_.poses[note].position.x == -INFINITY || key_positions_.poses[note].position.y == -INFINITY) {
+        //Move down the vector of notes towards the negative index
+    } else {
+        //Note is visible, move towards it. As we do below.
     }
 
     double max_val = std::max({std::abs(target.x), std::abs(target.y), std::abs(target.z)});
@@ -263,6 +274,9 @@ void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::sr
     response->message = std::string("[SUCCESS] Toggled play direction. Now playing: ") + (direction_ ? "forward" : "backward");
 }
 
+/**
+ * @brief The main control loop that runs when the control node starts
+ */
 void Control::Controller::control_loop()
 {
     int note = 0;
@@ -375,6 +389,10 @@ double Control::Controller::calculate_z(double xy)
     return 0;
 }
 
+/**
+ * @brief Subscriber Callback that obtains the key positions from the 
+ * @param msg PoseArray containing the positions of the keys
+ */
 void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lock(key_positions_mutex_);
@@ -396,6 +414,10 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
 - Target array position is Math::INF, Math::INF, Math::INF average the positions of keys in the direction we need to travel and travel that way until the target key is visible
 */
 
+/**
+ * @brief Subscriber Callback that obtains the joint state of the robot
+ * @param msg JointState object that contains the robots joint state
+ */
 void Control::Controller::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lock(joint_mutex_);
@@ -409,7 +431,7 @@ void Control::Controller::startup()
 {
     //Define constants
     double scaling = 2; //Scaling factor for velocity
-    double tolerance = 0.05;
+    double tolerance = 0.1;
     //                                       base, shoulder, elbow, wrist1, wrist2, wrist3
     //                                          90,   -75,  100,  -115,   -90,  0
     std::vector<double> target_joint_state = {1.57, -1.309, 1.75, -2.01, -1.57, 0}; //Find actual target joint state for startup
@@ -466,12 +488,15 @@ void Control::Controller::startup()
         cmd.velocities[i] = std::clamp(cmd.velocities[i], -1.0, 1.0);
     }
 
-    cmd.duration = 0.1;  // Servo timeout protection
+    cmd.duration = 0.4;  // Servo timeout protection
 
     joint_traj_streaming_pub_->publish(cmd);
 
 }
 
+/**
+ * @brief The shutdown sequence that moves the robot home
+ */
 void Control::Controller::shutdown() 
 {
     RCLCPP_INFO(this->get_logger(), "Running shutdown sequence...");

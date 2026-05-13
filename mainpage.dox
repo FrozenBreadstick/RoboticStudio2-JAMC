@@ -5,91 +5,85 @@
 This package implements 3 standalone nodes that work together to control a UR3e to play the piano.
 
 @section main_overview Main Page Overview
-
-The system is designed to:
-- 1
-
-The main components are:
-- **@ref UI_README.md "UI"** Which does this
-   - **@ref MIDI_README.md "MIDI Processing"** Which does this (Subsection of UI)
-- **@ref UR_README.md "Controller"** Which does this
-- **@ref AI_README.md "Perception"** Which does this
+RoboticsStudio2-JAMC
 
 @section node_descriptions Node and Library Descriptions
  
-  @subsection ui_section UI - Human 2 Robot Interaction
- 
-  The **PianoUI** serves as the primary interaction layer for the JAMC system. It is implemented 
-  as a dual-inheritance **Hybrid Node**, combining the event-driven nature of **Qt 5/6** * with the distributed messaging of **ROS 2 Humble**.
- 
-  \subsubsection ui_layout Layout & User Experience
-  The interface is designed with a high-contrast "Dark Mode" aesthetic (Visual Studio Code style) 
-  to ensure readability in lab environments. The layout is divided into four functional zones:
- 
-  - **Vision Module:** A centralized 400x300 viewport displaying the live UR3 camera feed.
-  - **Configuration Zone:** Includes a dynamic instrument/channel selector (generated at runtime), 
-  a MIDI file browser, and a speed/velocity slider.
-  - **Playback Controls:** Standard transport controls (Play/Pause, Direction Toggle) and a 
-  track progress slider.
-  - **Status Bar:** Real-time feedback on system readiness, current playback speed, and song time.
- 
-  \subsubsection ui_tech Technical Implementation
-  **Hybrid Execution Model**
-  The class inherits from `QWidget` and `rclcpp::Node`. To prevent the ROS 2 executor from 
-  blocking the Qt Main Thread (which would freeze the UI), the node is designed to handle 
-  asynchronous callbacks.
- 
-  **Thread-Safe Image Processing**
-  One of the most critical features of the UI is the `image_callback`. Incoming camera frames 
-  from the `/camera/camera/color/image_raw` topic are processed in the ROS background thread 
-  and safely handed over to the Qt thread:
-  - **Conversion:** Raw `sensor_msgs` data is mapped to `QImage::Format_RGB888`.
-  - **Transformation:** Images are scaled using `Qt::SmoothTransformation` to maintain visual quality.
-  - **Invocation:** The UI update is triggered via `QMetaObject::invokeMethod` using a `Qt::QueuedConnection`, 
-  ensuring the GUI remains responsive and thread-safe.
- 
-  **Dynamic Control Logic**
-  The UI maintains internal state machines for:
-  - **Playback State:** Tracks `is_playing` to toggle between ▶ (Play) and ▐▐ (Pause) icons.
-  - **Directionality:** Manages the toggle between Forward and Reverse trajectories.
-  - **Resource Management:** The `force_pause_and_reset()` method ensures that the robot 
-  comes to a safe halt before new MIDI data is loaded into the controller.
- 
-  \subsubsection ui_services ROS 2 Interface Mapping
-      | UI Element | ROS 2 Object | Interface Type |
-      | :--- | :--- | :--- |
-      | Camera View | `_camera_sub` | `sensor_msgs::msg::Image` |
-      | Play/Pause Button | `playback_client` | `jamc::srv::Func` |
-      | Foreard/Rewind Button | `playback client` | `jamc::SRC::Func` |
-      | Debug Button | `playback client` | `jamc::SRV::Func` |
-      | Speed Slider | `time_scale_client` | `jamc::srv::TimeScale` |
-      | File/Track Selector | `channel_client` | `jamc::srv::Load` |
+@subsection ui_section UI - Human 2 Robot Interaction
+**@ref UI_README.md "UI"** - Usage Guide
+The **PianoUI** serves as the primary interaction layer for the JAMC system. It is implemented 
+as a dual-inheritance **Hybrid Node**, combining the event-driven nature of **Qt 5/6** * with the distributed messaging of **ROS 2 Humble**.
+
+\subsubsection ui_layout Layout & User Experience
+The interface is designed with a high-contrast "Dark Mode" aesthetic (Visual Studio Code style) 
+to ensure readability in lab environments. The layout is divided into four functional zones:
+
+- **Vision Module:** A centralized 400x300 viewport displaying the live UR3 camera feed.
+- **Configuration Zone:** Includes a dynamic instrument/channel selector (generated at runtime), 
+a MIDI file browser, and a speed/velocity slider.
+- **Playback Controls:** Standard transport controls (Play/Pause, Direction Toggle) and a 
+track progress slider.
+- **Status Bar:** Real-time feedback on system readiness, current playback speed, and song time.
+
+\subsubsection ui_tech Technical Implementation
+**Hybrid Execution Model**
+The class inherits from `QWidget` and `rclcpp::Node`. To prevent the ROS 2 executor from 
+blocking the Qt Main Thread (which would freeze the UI), the node is designed to handle 
+asynchronous callbacks.
+
+**Thread-Safe Image Processing**
+One of the most critical features of the UI is the `image_callback`. Incoming camera frames 
+from the `/camera/camera/color/image_raw` topic are processed in the ROS background thread 
+and safely handed over to the Qt thread:
+- **Conversion:** Raw `sensor_msgs` data is mapped to `QImage::Format_RGB888`.
+- **Transformation:** Images are scaled using `Qt::SmoothTransformation` to maintain visual quality.
+- **Invocation:** The UI update is triggered via `QMetaObject::invokeMethod` using a `Qt::QueuedConnection`, 
+ensuring the GUI remains responsive and thread-safe.
+
+**Dynamic Control Logic**
+The UI maintains internal state machines for:
+- **Playback State:** Tracks `is_playing` to toggle between ▶ (Play) and ▐▐ (Pause) icons.
+- **Directionality:** Manages the toggle between Forward and Reverse trajectories.
+- **Resource Management:** The `force_pause_and_reset()` method ensures that the robot 
+comes to a safe halt before new MIDI data is loaded into the controller.
+
+\subsubsection ui_services ROS 2 Interface Mapping
+   | UI Element | ROS 2 Object | Interface Type |
+   | :--- | :--- | :--- |
+   | Camera View | `_camera_sub` | `sensor_msgs::msg::Image` |
+   | Play/Pause Button | `playback_client` | `jamc::srv::Func` |
+   | Foreard/Rewind Button | `playback client` | `jamc::SRC::Func` |
+   | Debug Button | `playback client` | `jamc::SRV::Func` |
+   | Speed Slider | `time_scale_client` | `jamc::srv::TimeScale` |
+   | File/Track Selector | `channel_client` | `jamc::srv::Load` |
 
 
 @subsection midi_section MIDI Processing - For parsing and converting midi files to a readable format by our system
-
+**@ref MIDI_README.md "MIDI Processing"** - Usage Guide
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection controller_section Controller - Control Engine for UR3e Piano Playing
-
+**@ref UR_README.md "Controller"** - Usage Guide
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
-
+**@ref AI_README.md "Perception"** - Usage Guide
 Describe what it does with images, diagrams, code snippets, etc
 
 @subsection external_section External Libraries - JSON, MIDI Parsing, etc
+Acknowledgements of External Library Usage:
+- **Qt 5/6**: Used for the UI implementation
+- **rclcpp**: The C++ client library for ROS 2
+- **OpenCV**: Utilized for image processing tasks in the perception module
+- **midifile**: A C++ library for parsing MIDI files
+- **nlohmann/json**: A popular C++ library for JSON parsing and serialisation
 
 @section code_behaviour Code Behaviour and Usage
 
+@subsection build_method Build Instructions
+To build the package please refer to *@ref README.md "UI"**
+
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
-
-The available launch files are:
-etc etc etc
-
-
-Build, And launch a launch file
-
 
 Refer to the source code for detailed topic and service names, and to adjust parameters as needed for your environment.
 

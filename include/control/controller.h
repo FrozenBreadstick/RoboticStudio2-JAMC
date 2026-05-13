@@ -23,6 +23,9 @@ using Clock = std::chrono::steady_clock;
 
 namespace Control
 {
+    /**
+     * @brief A struct for representing 3D vectors, used for velocity commands and target positions
+     */
     struct vector3
     {
         double x;
@@ -30,6 +33,12 @@ namespace Control
         double z;
     };
 
+    /**
+     * @brief An enum for representing the state of the controller, used to determine behavior in the control loop
+     * WAITING: Waiting for the next note to play, no velocity commands are sent
+     * PLAYING: Actively playing a note (Up and down z movement)
+     * MOVING: Moving to the target position for the next note
+     */
     enum class STATE
     {
         WAITING,
@@ -42,14 +51,13 @@ namespace Control
     public:
         Controller();
         ~Controller();
-
-        void sendVector(const vector3 &vec);
-        void sendStop();
-
-        int activeTrackDebug(vector3 target, bool x = false, bool y = false, bool z = false);
-
     private:
         //Variables & Helpers
+        /**
+         * @name Variables & Helpers
+         * Variables used by the class
+         */
+        ///@{
         long CONTROL_TIME; //Variable for the control loop to use for timing
         Clock::time_point LAST_CONTROL_TIME_POINT; //The last time the control loop ran, used to calculate delta time for timing the notes
         STATE state_; //The current state of the controller, used to determine behavior in the control loop
@@ -70,27 +78,54 @@ namespace Control
 
         std::mutex joint_mutex_; //Mutex to protect access to the latest joint state
         std::vector<double> latest_joint_state_; //The latest joint state of the robot
+        ///@}
 
         //Methods
+        /**
+         * @name General Methods
+         * Methods used throughout the class for various purposes
+         */
+        ///@{
         void sendTwistMsg(double x, double y, double z, double angular_x = 0.0, double angular_y = 0.0, double angular_z = 0.0);
+        void sendVector(const vector3 &vec);
+        void sendStop();
+        int activeTrackDebug(vector3 target, bool x = false, bool y = false, bool z = false);
+        ///@}
 
         //Startup & Shutdown
+        /**
+         * @name Startup & Shutdown Sequence
+         * Functions and variables related to the startup and shutdown sequence of the controller
+         */
+        ///@{
         rclcpp::TimerBase::SharedPtr startup_timer_;
         void startup();
         void shutdown();
+        ///@}
 
         //Publishers
+        /**
+         * @name Publishers
+         * All Publishers that the Controller Class uses
+         */
+        ///@{
         rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
         rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_traj_streaming_pub_;
+        ///@}
 
         //Subscribers
+        /**
+         * @name Subscribers
+         * All Subscribers that the Controller Class uses, along with their callback functions
+         */
+        ///@{
         rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr debug_target_sub_;
         void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
         rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr key_positions_sub_;
         void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
-
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
+        ///@}
 
         //Services
         /**
@@ -103,17 +138,24 @@ namespace Control
         rclcpp::Service<jamc::srv::Func>::SharedPtr play_pause_service_;
         rclcpp::Service<jamc::srv::Func>::SharedPtr play_direction_service_;
         ///@}
+
         void load_callback(const std::shared_ptr<jamc::srv::Load::Request> request, std::shared_ptr<jamc::srv::Load::Response> response);
         void time_scale_callback(const std::shared_ptr<jamc::srv::TimeScale::Request> request, std::shared_ptr<jamc::srv::TimeScale::Response> response);
         void play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
         void play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
 
         //Control Loop
+        /**
+         * @name Control Loop
+         * Functions and variables related to the control loop of the controller
+         */
+        ///@{
         rclcpp::TimerBase::SharedPtr control_timer_;
         void control_loop();
         double calculate_z(double xy);
         std::optional<vector3> calculate_velocity(int note);
         std::optional<vector3> play_note(double duration, double time);
+        ///@}
     };
 }
 
