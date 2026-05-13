@@ -2,6 +2,9 @@ README.md
 # RoboticStudio2-JAMC
 | Jono | Ayberk | Mattia | Connor |
 
+#### Documentation:
+[Click here for the documentation](https://frozenbreadstick.github.io/RoboticStudio2-JAMC/)
+
 1. Clone Project
 ```bash
 git clone https://github.com/FrozenBreadstick/RoboticStudio2-JAMC

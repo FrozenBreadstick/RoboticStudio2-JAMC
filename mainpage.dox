@@ -71,7 +71,7 @@ The Controller class in the Control namespace is responsible for all direct ROS2
 It exposes no public members to be interacted with and as such must be controlled via its various ROS2 Interfaces (See Usage Guide above).
 
 \subsubsection Behaviour
- 
+On Startup, the class will attempt to read the robots joint states and stream  
 
 Describe what it does with images, diagrams, code snippets, etc
 
