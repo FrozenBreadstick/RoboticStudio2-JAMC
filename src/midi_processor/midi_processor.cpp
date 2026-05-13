@@ -18,6 +18,7 @@
  * - **Song Duration**: The duration of the song in seconds
  * - **Assigned Keys**: A vector of all assigned keys in the midi file, where each assigned key is a vector of the assigned key and the note timing 
  * - **Keyboard Values**: A vector of all keyboard values in the midi file, where each keyboard value is a vector of the keyboard value and the note timing
+ * - **Keyboard Indexs**: A vector of all keyboard indexs in the midi file, where each keyboard index is a vector of the keyboard index and the note timing
  * 
  * @todo Improve filters
  */
