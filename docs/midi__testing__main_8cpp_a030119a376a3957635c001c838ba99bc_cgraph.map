@@ -1,6 +1,0 @@
-<map id="test_get_instrument_names" name="test_get_instrument_names">
-<area shape="rect" id="node1" title=" " alt="" coords="5,35,159,76"/>
-<area shape="rect" id="node2" href="$classMidiProcessor.html#aec39db699b10085041a2f08fd55158fe" title="gets all instrument names and their channels" alt="" coords="243,5,393,47"/>
-<area shape="rect" id="node4" href="$classMidiProcessor.html#a5a77e0a43df9b2d3292371ab61802438" title="processes a midi file by saving all instruments (and their channels) to a set of vectors" alt="" coords="207,71,429,98"/>
-<area shape="rect" id="node3" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="477,13,556,39"/>
-</map>

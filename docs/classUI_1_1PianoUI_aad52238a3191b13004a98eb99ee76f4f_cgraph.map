@@ -1,4 +1,0 @@
-<map id="UI::PianoUI::update_status_info" name="UI::PianoUI::update_status_info">
-<area shape="rect" id="node1" title="Refreshes all status labels in the UI with the latest system state information." alt="" coords="5,5,152,47"/>
-<area shape="rect" id="node2" href="$classMidiProcessor.html#a6f2546fd52282fd38b37de541b0bd418" title="gets the song duration" alt="" coords="200,5,343,47"/>
-</map>

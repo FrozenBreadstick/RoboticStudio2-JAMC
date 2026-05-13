@@ -1,4 +1,0 @@
-<map id="UI::PianoUI::send_time_scale" name="UI::PianoUI::send_time_scale">
-<area shape="rect" id="node1" title="Transmits the current speed slider value as a time scale factor (0.01&#45;1.0) to the robot." alt="" coords="205,5,376,47"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,13,157,39"/>
-</map>

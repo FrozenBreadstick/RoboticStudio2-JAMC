@@ -1,7 +1,0 @@
-<map id="detail::lexer::add" name="detail::lexer::add">
-<area shape="rect" id="node1" title="add a character to token_buffer" alt="" coords="560,71,691,98"/>
-<area shape="rect" id="node2" href="$classdetail_1_1lexer.html#a505c0c6842a668fc4e9f07dca49b91e9" title="check if the next byte(s) are inside a given range" alt="" coords="376,5,512,47"/>
-<area shape="rect" id="node3" href="$classdetail_1_1lexer.html#a13c79af5cade626e08f321ead26b83f9" title="scan a string literal" alt="" coords="191,49,328,91"/>
-<area shape="rect" id="node5" href="$classdetail_1_1lexer.html#aab65133db39717a496764cb97fcf3f46" title="scan a number literal" alt="" coords="191,115,328,156"/>
-<area shape="rect" id="node4" href="$classdetail_1_1lexer.html#a6497d12a0c35b355b3e22da69d6819f9" title=" " alt="" coords="5,90,143,117"/>
-</map>

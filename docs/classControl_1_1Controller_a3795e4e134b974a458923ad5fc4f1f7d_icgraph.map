@@ -1,4 +1,0 @@
-<map id="Control::Controller::control_loop" name="Control::Controller::control_loop">
-<area shape="rect" id="node1" title="The main control loop that runs when the control node starts." alt="" coords="195,5,336,47"/>
-<area shape="rect" id="node2" href="$classControl_1_1Controller.html#a113e4dc04ccbcfa2f54b056970c1a0f8" title="Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano..." alt="" coords="5,5,147,47"/>
-</map>

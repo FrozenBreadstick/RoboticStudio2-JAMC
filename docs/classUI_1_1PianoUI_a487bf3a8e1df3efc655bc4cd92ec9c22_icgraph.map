@@ -1,4 +1,0 @@
-<map id="UI::PianoUI::image_callback" name="UI::PianoUI::image_callback">
-<area shape="rect" id="node1" title="ROS 2 Subscriber callback for camera feed." alt="" coords="205,5,348,47"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,13,157,39"/>
-</map>

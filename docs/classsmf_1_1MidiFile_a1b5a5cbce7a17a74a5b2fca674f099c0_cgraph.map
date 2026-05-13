@@ -1,7 +1,0 @@
-<map id="smf::MidiFile::addSustainPedalOff" name="smf::MidiFile::addSustainPedalOff">
-<area shape="rect" id="node1" title=" " alt="" coords="5,5,191,47"/>
-<area shape="rect" id="node2" href="$classsmf_1_1MidiFile.html#a658d679d8ec085017e159521ccaeaae3" title=" " alt="" coords="239,13,443,39"/>
-<area shape="rect" id="node3" href="$classsmf_1_1MidiFile.html#aa10d5942e2a95f7ed36e881d2563dd36" title=" " alt="" coords="491,13,676,39"/>
-<area shape="rect" id="node4" href="$classsmf_1_1MidiFile.html#a8e973c7d7923e5480fce50bda69500f3" title=" " alt="" coords="724,13,925,39"/>
-<area shape="rect" id="node5" href="$classsmf_1_1MidiMessage.html#a3bc502d9f8fe08b9b44c52ed551f2d9c" title=" " alt="" coords="973,13,1221,39"/>
-</map>

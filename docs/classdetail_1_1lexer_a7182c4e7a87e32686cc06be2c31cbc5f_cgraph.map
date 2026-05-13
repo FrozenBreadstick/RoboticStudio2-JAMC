@@ -1,5 +1,0 @@
-<map id="detail::lexer::scan_comment" name="detail::lexer::scan_comment">
-<area shape="rect" id="node1" title="scan a comment" alt="" coords="5,23,143,65"/>
-<area shape="rect" id="node2" href="$classdetail_1_1lexer.html#a558196cb9fc24015d009969c9df8707b" title=" " alt="" coords="199,5,327,32"/>
-<area shape="rect" id="node3" href="$classdetail_1_1lexer.html#af15c2d2e743728d99bb6d749a03e5555" title="unget current character (read it again on next get)" alt="" coords="191,56,335,83"/>
-</map>

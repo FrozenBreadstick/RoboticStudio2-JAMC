@@ -1,8 +1,0 @@
-<map id="smf::MidiMessage::getKeyNumber" name="smf::MidiMessage::getKeyNumber">
-<area shape="rect" id="node1" title=" " alt="" coords="465,57,659,98"/>
-<area shape="rect" id="node2" href="$classsmf_1_1MidiMessage.html#ad47a7dcf2f3613d93f87799bc2c7694d" title=" " alt="" coords="196,5,417,32"/>
-<area shape="rect" id="node3" href="$classsmf_1_1MidiEventList.html#acf422d0e24ca85b908d96d0b62160af1" title=" " alt="" coords="233,57,380,98"/>
-<area shape="rect" id="node6" href="$classsmf_1_1MidiEventList.html#af881bbb379c492e595c09335a23b5537" title=" " alt="" coords="234,122,379,163"/>
-<area shape="rect" id="node4" href="$classsmf_1_1MidiEventList.html#aa53a3e98716ebf596aaa2556d32ba336" title=" " alt="" coords="5,23,148,65"/>
-<area shape="rect" id="node5" href="$classsmf_1_1MidiEventList.html#a33c353d1c944c865e08b623fb81f06b8" title=" " alt="" coords="5,89,148,130"/>
-</map>

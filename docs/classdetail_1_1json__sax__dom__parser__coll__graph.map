@@ -1,8 +1,0 @@
-<map id="detail::json_sax_dom_parser&lt; BasicJsonType, InputAdapterType &gt;" name="detail::json_sax_dom_parser&lt; BasicJsonType, InputAdapterType &gt;">
-<area shape="rect" id="node1" title="SAX implementation to create a JSON value from SAX events." alt="" coords="189,969,387,1296"/>
-<area shape="rect" id="node2" href="$classdetail_1_1lexer.html" title="lexical analysis" alt="" coords="193,316,383,907"/>
-<area shape="rect" id="node3" href="$classdetail_1_1lexer__base.html" title=" " alt="" coords="5,154,168,246"/>
-<area shape="rect" id="node4" href="$structdetail_1_1position__t.html" title="struct to capture the start position of the current token" alt="" coords="192,147,384,253"/>
-<area shape="rect" id="node5" href="$structdetail_1_1char__traits.html" title=" " alt="" coords="408,154,544,246"/>
-<area shape="rect" id="node6" title=" " alt="" coords="395,5,557,97"/>
-</map>

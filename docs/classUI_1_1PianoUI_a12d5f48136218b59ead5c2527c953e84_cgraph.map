@@ -1,5 +1,0 @@
-<map id="UI::PianoUI::toggle_direction" name="UI::PianoUI::toggle_direction">
-<area shape="rect" id="node1" title="Toggles between Forward and Reverse playback logic." alt="" coords="5,39,148,80"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a4530f8a855b8d38773f2f5757609a6f9" title="Explicitly sets playback direction to Forward via the /MIPI/direction service." alt="" coords="196,5,383,47"/>
-<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a328739be427acccb55512b29a886ac61" title="Explicitly sets playback direction to Reverse via the /MIPI/direction service." alt="" coords="196,71,383,112"/>
-</map>

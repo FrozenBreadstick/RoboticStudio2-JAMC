@@ -1,5 +1,0 @@
-<map id="UI::PianoUI::set_direction_reverse" name="UI::PianoUI::set_direction_reverse">
-<area shape="rect" id="node1" title="Explicitly sets playback direction to Reverse via the /MIPI/direction service." alt="" coords="396,5,583,47"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a12d5f48136218b59ead5c2527c953e84" title="Toggles between Forward and Reverse playback logic." alt="" coords="205,5,348,47"/>
-<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,13,157,39"/>
-</map>

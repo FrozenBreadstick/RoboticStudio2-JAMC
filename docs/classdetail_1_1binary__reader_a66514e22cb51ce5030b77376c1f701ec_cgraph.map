@@ -1,4 +1,0 @@
-<map id="detail::binary_reader::parse_bson_internal" name="detail::binary_reader::parse_bson_internal">
-<area shape="rect" id="node1" title="Reads in a BSON&#45;object and passes it to the SAX&#45;parser." alt="" coords="5,5,167,47"/>
-<area shape="rect" id="node2" href="$namespacedetail.html#a93d9378fbe8786072ec07745cbb4cc0b" title=" " alt="" coords="215,13,373,39"/>
-</map>

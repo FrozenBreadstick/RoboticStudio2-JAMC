@@ -1,7 +1,0 @@
-<map id="detail::parse_error::create" name="detail::parse_error::create">
-<area shape="rect" id="node1" title="create a parse error exception" alt="" coords="211,112,352,153"/>
-<area shape="rect" id="node2" href="$classjson__pointer.html#a2177a553764f3be9b0e565b922039d5d" title=" " alt="" coords="12,5,156,47"/>
-<area shape="rect" id="node3" href="$classdetail_1_1wide__string__input__adapter.html#a12c464bdf348096f8ac250fb8f415a42" title=" " alt="" coords="10,71,158,127"/>
-<area shape="rect" id="node4" href="$namespacedetail.html#aa7b34bd54868366a47c9adad778867bc" title=" " alt="" coords="5,151,163,178"/>
-<area shape="rect" id="node5" href="$classjson__pointer.html#a3c44d736e76ee2dea2a18fbc98591d86" title="split the string input to reference tokens" alt="" coords="15,202,153,229"/>
-</map>

@@ -1,8 +1,0 @@
-<map id="MidiProcessor::get_song_duration" name="MidiProcessor::get_song_duration">
-<area shape="rect" id="node1" title="gets the song duration" alt="" coords="673,45,816,86"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#a5f7b1af72eff1426258405b969f961c9" title="UI Slot for loading a file selected from the dropdown menu." alt="" coords="205,5,431,32"/>
-<area shape="rect" id="node4" href="$classUI_1_1PianoUI.html#ad459b329b6aa227b86c15a32514eef11" title="UI Slot for opening a file dialog to process a raw .mid file." alt="" coords="219,56,417,83"/>
-<area shape="rect" id="node5" href="$classUI_1_1PianoUI.html#aad52238a3191b13004a98eb99ee76f4f" title="Refreshes all status labels in the UI with the latest system state information." alt="" coords="479,103,625,145"/>
-<area shape="rect" id="node3" href="$classUI_1_1PianoUI.html#a8f53a393568edae9ca186560a9a71c4b" title="Hybrid Qt&#45;ROS2 Class for managing the User Interface of the MIDI&#45;to&#45;UR3 system." alt="" coords="5,81,157,108"/>
-<area shape="rect" id="node6" href="$classUI_1_1PianoUI.html#a636088798ed1bf4b91ea22e8669ca5b5" title="Transmits the current speed slider value as a time scale factor (0.01&#45;1.0) to the robot." alt="" coords="233,158,403,199"/>
-</map>

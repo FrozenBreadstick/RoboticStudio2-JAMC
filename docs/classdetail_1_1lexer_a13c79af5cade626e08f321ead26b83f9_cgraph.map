@@ -1,8 +1,0 @@
-<map id="detail::lexer::scan_string" name="detail::lexer::scan_string">
-<area shape="rect" id="node1" title="scan a string literal" alt="" coords="5,93,143,134"/>
-<area shape="rect" id="node2" href="$classdetail_1_1lexer.html#ad59cacf0fdfe48d78b218e49da85797b" title="add a character to token_buffer" alt="" coords="379,12,509,39"/>
-<area shape="rect" id="node3" href="$classdetail_1_1lexer.html#a558196cb9fc24015d009969c9df8707b" title=" " alt="" coords="380,100,508,127"/>
-<area shape="rect" id="node4" href="$classdetail_1_1lexer.html#a10530239775d94248e99f235a3d144b3" title="get codepoint from 4 hex characters following \u" alt="" coords="197,152,325,193"/>
-<area shape="rect" id="node5" href="$classdetail_1_1lexer.html#a505c0c6842a668fc4e9f07dca49b91e9" title="check if the next byte(s) are inside a given range" alt="" coords="193,34,329,76"/>
-<area shape="rect" id="node6" href="$classdetail_1_1lexer.html#a049f7268496ebdbb16573a5ef1bc96b7" title="reset token_buffer; current character is beginning of token" alt="" coords="191,218,331,244"/>
-</map>

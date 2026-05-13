@@ -1,7 +1,0 @@
-<map id="UI::PianoUI" name="UI::PianoUI">
-<area shape="rect" id="node1" title=" " alt="" coords="55,1576,264,2035"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,1157,84,1235"/>
-<area shape="rect" id="node3" title=" " alt="" coords="108,1157,211,1235"/>
-<area shape="rect" id="node4" href="$classMidiProcessor.html" title="Standalone Class for processing midi files and saving/loading mipi files. Contains various getters to..." alt="" coords="235,879,465,1513"/>
-<area shape="rect" id="node5" href="$classsmf_1_1MidiFile.html" title=" " alt="" coords="249,5,451,816"/>
-</map>

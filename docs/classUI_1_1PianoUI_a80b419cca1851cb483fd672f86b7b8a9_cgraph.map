@@ -1,5 +1,0 @@
-<map id="UI::PianoUI::update_channel_radio_buttons" name="UI::PianoUI::update_channel_radio_buttons">
-<area shape="rect" id="node1" title="Rebuilds the radio button group based on the currently loaded MIDI processor data." alt="" coords="5,5,181,47"/>
-<area shape="rect" id="node2" href="$classMidiProcessor.html#aec39db699b10085041a2f08fd55158fe" title="gets all instrument names and their channels" alt="" coords="229,5,380,47"/>
-<area shape="rect" id="node3" href="$json_8hpp.html#a5b9ca6dc52cf4226c68d67f895b2a1d4" title="user&#45;defined to_string function for JSON values" alt="" coords="428,13,507,39"/>
-</map>

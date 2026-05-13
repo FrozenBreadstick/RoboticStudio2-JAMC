@@ -1,5 +1,0 @@
-<map id="UI::PianoUI::send_time_scale" name="UI::PianoUI::send_time_scale">
-<area shape="rect" id="node1" title="Transmits the current speed slider value as a time scale factor (0.01&#45;1.0) to the robot." alt="" coords="5,5,176,47"/>
-<area shape="rect" id="node2" href="$classUI_1_1PianoUI.html#aad52238a3191b13004a98eb99ee76f4f" title="Refreshes all status labels in the UI with the latest system state information." alt="" coords="224,5,371,47"/>
-<area shape="rect" id="node3" href="$classMidiProcessor.html#a6f2546fd52282fd38b37de541b0bd418" title="gets the song duration" alt="" coords="419,5,561,47"/>
-</map>

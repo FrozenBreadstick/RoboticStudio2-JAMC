@@ -1,4 +1,0 @@
-<map id="Control::Controller::joint_state_callback" name="Control::Controller::joint_state_callback">
-<area shape="rect" id="node1" title="Subscriber Callback that obtains the joint state of the robot." alt="" coords="195,5,355,47"/>
-<area shape="rect" id="node2" href="$classControl_1_1Controller.html#a113e4dc04ccbcfa2f54b056970c1a0f8" title="Standalone Class for Controlling a UR3e. Typically reads data from .mipi files for plaback on a piano..." alt="" coords="5,5,147,47"/>
-</map>
