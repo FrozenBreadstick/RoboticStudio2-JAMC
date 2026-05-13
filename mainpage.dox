@@ -2,7 +2,7 @@
 
 @b MIPI
 
-This package implements 3 standalone nodes that work together to control a UR3e to play the piano.
+This package implements 3 standalone nodes that work together to control a UR3e to play the piano. Below is an overview of the nodes and their functionality, as well as some details on the code structure and behaviour.
 \image html images/ur3e.jpg
 
 @section main_overview Main Page Overview
@@ -76,7 +76,7 @@ Before Starting the node, it assumes that you have followed the Intallation, Phy
 Without all that infrastructure running, the Node will be unable to function.
 When spinning the node into the ROS2 environment, the following will happen:
 1. 
-
+WILL FINISH THIS TOMORROW
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
