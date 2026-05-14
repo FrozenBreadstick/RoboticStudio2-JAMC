@@ -11,7 +11,7 @@
 *Description: Intermediate coupling between the main housing and the key-striking assembly.*
 
 ### 1.3 Interface: Mounting Adapter to Key Actuator
-\image html images/Connector3Image.png width=50%
+\image html images/Connector3Image.png height=50%
 *Description: Securement of the terminal striking component (Key Actuator) to the mounting adapter.*
 
 ---
