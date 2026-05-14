@@ -1,5 +1,4 @@
-UI_README.md
-# HOW TO USE THE PIANO UI CLASS {#ui_usage}
+# How to use the Piano Ui Class
 The **PianoUI** class is a hybrid Qt-ROS 2 node that provides the graphical interface for MIDI-to-UR3 playback. 
 It handles file conversion, playback state management, and real-time camera visualization.
 

@@ -1,15 +1,18 @@
-UR_README.md
 # How to use the Controller Class
 <hr style="border: none; border-top: 3px double #558bff;">
 
 ## 1. Installation
 
 #### UR Driver Installtion
+
 ```bash
 sudo apt-get install ros-humble-ur
 ```
+
 ---
+
 #### Motion Planner Installation
+
 ```bash
 sudo apt install ros-humble-moveit
 sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers
@@ -20,6 +23,7 @@ sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers
 ## 2. Physical Robot Setup
 
 #### On Teach Pendant
+
 1. Installation > URCaps > External Control
     - Enter your ip into HostIP & Host name
 ```bash
@@ -42,6 +46,7 @@ hostname -I
 
 ### Automatic
 #### Running the Built in Launch File
+
 ```bash
 # Once the repository is compiled as per build instructions
 ros2 launch jamc all.launch.py
@@ -51,12 +56,16 @@ ros2 launch jamc all.launch.py
 
 ### Manual
 #### Running the Driver
+
 ```bash
 # Replace the IP address with the IP address of your actual robot / URSim
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3e robot_ip:=192.168.0.191 launch_rviz:=false
 ```
+
 ---
+
 #### Running MoveIT
+
 ```bash
 # TURN OFF YOUR WIFI
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3e launch_rviz:=true launch_servo:=true
@@ -68,8 +77,11 @@ ros2 service call /servo_node/stop_servo std_srvs/srv/Trigger {} #Stop when done
 ####### Alternative ########
 ros2 control switch_controllers --activate scaled_joint_trajectory_controller --deactivate joint_trajectory_controller # IF USING GOAL PLANNING
 ```
+
 ---
+
 ## Extracting Robot Calibration
+
 ```bash
 # Replace the IP address with the IP address of your actual robot / URSim
 # Calibration extraction will be saved to the target_filename
@@ -81,15 +93,18 @@ ros2 launch ur_calibration calibration_correction.launch.py robot_ip:=<robot_ip>
 ## 4. Using the Controller Class in Code
 
 #### How to start the node
+
 ```C++
 rclcpp::init(argc, argv); //Initialise ROS2
 auto controller_node = std::make_shared<Control::Controller>(); //Create an instance of the controller class node
 rclcpp::spin(controller_node); //Spin the node into ROS2
 ```
+
 The Controller class exposes no public class members and as such can only be instantiated and destroyed.
 See below for a list of exposed ROS2 interfaces that allow interaction when the node is running.
 
 #### Interface List
+
 | Interface Name | Topic/Service Name | Type | Description |
 | :--- | :--- | :--- | :--- |
 | **Services** | | | |
