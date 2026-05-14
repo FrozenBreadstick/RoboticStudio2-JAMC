@@ -75,8 +75,20 @@ It exposes no public members to be interacted with and as such must be controlle
 Before Starting the node, it assumes that you have followed the Intallation, Physical Robot Setup and Software Setup sections defined in the Usage Guide.
 Without all that infrastructure running, the Node will be unable to function.
 When spinning the node into the ROS2 environment, the following will happen:
-1. 
-WILL FINISH THIS TOMORROW
+1. The node will enter a startup loop where it will:
+   - Attempt to read /joint_states message from the robot
+   - Attempt to send direct JointJog Trajectory messages to the robot to bring it to the starting position
+   - For best results, ensure robot is in the default "Home" position before starting the node
+2. Once startup is achieved, the node will enter the main loop where it will wait for a song to be loaded and the play button to be pressed. In this state, the robot will:
+   - Read the /key_positions topic to get the current position of the keyboard keys
+   - Have the 4 control services mentioned in the usage guide available to manipulate song playback
+   - Once the play button is pressed:
+      - The node will read the MIDI data from the loaded song file
+      - Iterate through the note array and:
+         - For each note, attempt to align the robot end effector with the key position
+         - If they key is not visible, it will travel the length of the keyboard to find it
+         - Once aligned, it will wait until the key is meant to be pressed down (based on the timing of the song), and then press the key once this time is expired
+      - It will iterate through the entire song until it is done
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
