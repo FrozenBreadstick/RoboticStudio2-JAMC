@@ -93,7 +93,10 @@ When spinning the node into the ROS2 environment, the following will happen:
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
 
-Describe what it does with images, diagrams, code snippets, etc
+The vision code utilises the Intel RealSense camera to detect the two AprilTags placed on either side of the piano, along with each black and white key on the keyboard. 
+Every key is individually segmented, allowing its midpoint to be marked and displayed. 
+At present, the keys are mapped from the right to the left side of the keyboard. 
+The next step is to identify the coloured dots on the keys, which will allow each key to be recognised more accurately and its position mapped using these coloured stickers.
 
 @subsection external_section External Libraries - JSON, MIDI Parsing, etc
 Acknowledgements of External Library Usage:
