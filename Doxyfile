@@ -133,7 +133,8 @@ FILE_PATTERNS          = *.c \
                          *.hxx \
                          *.hpp \
                          *.h++ \
-                         *.dox
+                         *.dox \
+                         *.py
 
 INPUT_ENCODING         = UTF-8
 RECURSIVE              = YES

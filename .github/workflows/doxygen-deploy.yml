@@ -3,15 +3,13 @@ name: Generate and Deploy Doxygen Docs
 on:
   push:
     branches:
-      - main  # Triggers automation every time someone pushes to the main branch
+      - main
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment to avoid race condition conflicts
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -26,10 +24,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Doxygen and Graphviz
+      - name: Install Doxygen 1.17.0
+        uses: ssciwr/doxygen-install@v2
+        with:
+          # Explicitly pinned to 1.17.0
+          version: "1.17.0"
+
+      - name: Install Graphviz
         run: |
           sudo apt-get update
-          sudo apt-get install -y doxygen graphviz
+          sudo apt-get install -y graphviz
 
       - name: Build Doxygen Documentation
         run: |
@@ -41,7 +45,7 @@ jobs:
       - name: Upload Static Web Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          # Targets the exact folder your Doxyfile outputs its HTML files to
+          # Ensure this matches the 'OUTPUT_DIRECTORY' in your Doxyfile
           path: './docs' 
 
       - name: Deploy to GitHub Pages Live Site
