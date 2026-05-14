@@ -26,7 +26,7 @@ executor to handle service calls and image subscriptions.
 ---
  
 # How to Interact with the UI Features
-\image html images/UI_REFERENCE_IMAGE.png
+\image html images/UI_REFERENCE_IMAGE.png width=50% 
  
   ## Step 1: Processing a New MIDI File
   - **Action:** Click the "Select A MIDI File" button.
