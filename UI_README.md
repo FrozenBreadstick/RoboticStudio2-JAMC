@@ -23,9 +23,10 @@ executor to handle service calls and image subscriptions.
   rclcpp::spin(ui_node);
 ```
  
-  ---
+---
  
-  # How to Interact with the UI Features
+# How to Interact with the UI Features
+\image html images/UI_REFERENCE_IMAGE.png
  
   ## Step 1: Processing a New MIDI File
   - **Action:** Click the "Select A MIDI File" button.
