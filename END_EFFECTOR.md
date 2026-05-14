@@ -1,5 +1,6 @@
 # End Effector Technical Specifications
-\image html images/ConnectorLife.png height=50%
+
+\image html images/ConnectorLife.png width=30%
 
 ## 1. Assembly Interface Visuals
 
@@ -12,7 +13,7 @@
 *Description: Intermediate coupling between the main housing and the key-striking assembly.*
 
 ### 1.3 Interface: Mounting Adapter to Key Actuator
-\image html images/Connector3Image.png height=50%
+\image html images/Connector3Image.png width=50%
 *Description: Securement of the terminal striking component (Key Actuator) to the mounting adapter.*
 
 ---
@@ -30,4 +31,3 @@
 ### 2.3 Drawing: Actuator Mounting to Key Actuator
 \image html images/Connector3.png width=60%
 *Specifications: Precision dimensions for the terminal key-striking component.*
-
