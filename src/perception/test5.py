@@ -16,18 +16,26 @@ import torch
 from ultralytics import YOLO
 
 
-YOLO_IMG_SIZE  = 640    # Full YOLO resolution
-YOLO_SKIP      = 1      # Run YOLO every frame
+YOLO_IMG_SIZE  = 640    ## Full YOLO resolution
+YOLO_SKIP      = 1      ## Run YOLO every frame
 YOLO_HALF      = True
-DISPLAY_SCALE  = 1.0    # Full resolution preview
+DISPLAY_SCALE  = 1.0    ## Full resolution preview
 
-#                      ( X offset,  Y offset )
+##                      ( X offset,  Y offset ) pixel offset added to the raw white- black key centroide before publishing
 WHITE_KEY_OFFSET = (0, 30)
 BLACK_KEY_OFFSET = (0, 10)
 
 
-
+ 
 class AprilTagPianoDetector(Node):
+    """!
+    @brief ros 2 node combining apriltag detection with yolo based piano key segmenytation
+    on each incoming image the node:
+    1) Runs Yolo segmengation and detection to locate piano keys
+    2) Detects AprilTags
+    3)Anotate a previw frame and show it in an opencv window.
+    4) publish key poses andtag offsets to downstream node   
+    """
 
     def __init__(self):
         super().__init__('apriltag_piano_detector')
@@ -87,8 +95,19 @@ class AprilTagPianoDetector(Node):
         )
 
     def image_callback(self, msg: Image):
+        """!
+        @brief Ros 2 subscriber calback prosses one incoming colour image 
+        perfore mthe full detection, annotation and the publish pipeline:
+        1) convert the Ros image massages to a RGB Numpy array.
+        2)runs Apriltag detection on a greyscale copy.
+        3) annotates and displayes the preview frame 
+        4)publishes tag offsets and key positions.
+        5)shuts the node down cleany when the user presses q 
+
+        param msg sensor_msgs/image massages from the camera topic.
+        """
         try:
-            bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8') # numPy reead format convertts the image 
         except Exception as e:
             self.get_logger().error(f"Image conversion failed: {e}")
             return
@@ -105,10 +124,10 @@ class AprilTagPianoDetector(Node):
         display = bgr.copy()
         self._draw_piano_keys(display, self.ordered_keys)
 
-        gray    = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        gray    = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)  # aprel tag detection gray scale changer 
         results = self.tag_detector.detect(gray)
 
-        # ── Frame centre marker (drawn once, behind all tag lines) ────────────
+        # Frame centre marker (drawn once, behind all tag lines)
         frame_cx = int(center_x)
         frame_cy = int(center_y)
         cv2.drawMarker(
@@ -118,7 +137,7 @@ class AprilTagPianoDetector(Node):
             markerSize=20,
             thickness=2
         )
-        # ──────────────────────────────────────────────────────────────────────
+
 
         for r in results:
             (ptA, ptB, ptC, ptD) = r.corners
@@ -137,7 +156,7 @@ class AprilTagPianoDetector(Node):
             cv2.putText(display, f"TAG {r.tag_id}", (cX, cY - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            # ── Line from frame centre → tag centre ───────────────────────────
+            #  Line from frame centre  tag centre 
             cv2.line(display, (frame_cx, frame_cy), (cX, cY), (0, 255, 255), 2)
 
             # Distance in pixels
@@ -155,10 +174,12 @@ class AprilTagPianoDetector(Node):
                 (label_x, label_y),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2
             )
-            # ──────────────────────────────────────────────────────────────────
+  
 
             offset_x = (cX - center_x) / center_x
             offset_y = -((cY - center_y) / center_y)
+
+            # marks the nearest key to apriltag
 
             nearest = self._find_nearest_key(cX, cY)
             if nearest is not None:
@@ -168,7 +189,7 @@ class AprilTagPianoDetector(Node):
                     (cX + 10, cY + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2
                 )
-
+            # publishes the tags nnormilised position
             pt   = Point()
             pt.x = float(offset_x)
             pt.y = float(offset_y)
@@ -205,6 +226,7 @@ class AprilTagPianoDetector(Node):
 
 
     def _detect_piano_keys(self, bgr_image: np.ndarray) -> list:
+        # Runs the train yolo model on the drame returns bounding box and segmentation 
         yolo_results = self.yolo_model(
             bgr_image,
             imgsz=YOLO_IMG_SIZE,
@@ -220,6 +242,7 @@ class AprilTagPianoDetector(Node):
             masks  = result.masks
 
             if masks is None:
+                # just uses the center of the bonding box for the key position 
                 for box in boxes:
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     conf  = float(box.conf[0])
@@ -243,6 +266,7 @@ class AprilTagPianoDetector(Node):
 
                 contour = mask.astype(np.float32)
                 if len(contour) >= 3:
+                    # uses segmentation to find the mid point of the detection keys
                     M = cv2.moments(contour)
                     if M["m00"] != 0:
                         cx = M["m10"] / M["m00"]
@@ -262,11 +286,32 @@ class AprilTagPianoDetector(Node):
                     "mid_y":      cy + off_y,
                     "confidence": conf,
                 })
-
+        # Sorts keys left-to-right by their x position, then assigns each one an index 
         raw_keys.sort(key=lambda k: k["bbox"][0])
-        return [{"key_index": i, **k} for i, k in enumerate(raw_keys)]
+        return [{"key_index": i, **k} for i, k in enumerate(raw_keys)] 
 
     def _draw_piano_keys(self, bgr_image: np.ndarray, keys: list) -> None:
+         
+        """!
+        @brief  Runs yolo interfece on a RGB frame and returns ordere key metdata.
+
+        when the model returns segmentation masks the centroid is computed from the mask
+        poligon moments. otherwise the bounding box center is used.,
+
+        keys are sorted left to right by theyer boaunding box x1 cordinate and assigned a sequance key index.
+
+        Each return dict has the following fields:,
+        1) key_index: left to right ordring
+        2) label: class name from the yolo modle.
+        3) bbox: [x1, y1, x2, y2] in pixel cordinats 
+        4) contour: Mask polygon points or [] if avalibal
+        5) mid_x and mid_y: Adjused centroid of x and y after applying the offset
+        6) confidance: yolo detection confidance score.
+
+        @param bgr_image Full resolution BGR frame as a Numpy uint8 array.
+        @return List of key dicts sorted by horizontal position  
+        """
+        # this bit is for the Visuilisation for the segmented display 
         overlay = bgr_image.copy()
         for k in keys:
             contour = k["contour"]
@@ -321,6 +366,17 @@ class AprilTagPianoDetector(Node):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.42, colour, 1)
 
     def _publish_keys(self) -> None:
+        """!
+        @brief  publishing the current ordered_keys list as a poseArray message.
+
+        each key is encoded as a geometry_msgs/pose where:
+        1) pose.position.x: adjusted cordinat of x.
+        2) pose.position.y: adjusted cordinat of y.
+        3) pose.position.z: 0.0
+
+        poses are ordered left to right maching key-index in the source list
+        """
+        #Packs every key's centroid into a PoseArray message and publishes it. The robot arm controller reads this on /piano_keys to know where each key is in the camera frame.
         msg = PoseArray()
         for k in self.ordered_keys:
             pose = Pose()
@@ -331,15 +387,32 @@ class AprilTagPianoDetector(Node):
         self.publisher_keys.publish(msg)
 
     def _find_nearest_key(self, px: float, py: float) -> dict | None:
+        """!
+        @brief returns the key whose adjusted centroid is closest to a query point.
+
+        Uses squared euclidean distance with this no sqrt required.
+        @param px: Query point x cordinate in pixel space.
+        @param py: Query point y cordinate in pixel space.
+        @return: The nearest key dict or none if no keys have been detected
+        """
         if not self.ordered_keys:
             return None
         return min(
             self.ordered_keys,
             key=lambda k: (k["mid_x"] - px) ** 2 + (k["mid_y"] - py) ** 2
         )
+    #Finds which key centroid is closest to a given pixel coordinate using squared Euclidean distanc
 
 
 def main(args=None):
+    """!
+    @brief Ros 2 entery point 
+
+    initilizeses the ros2 context spins the apriltagPianoDetection node until intruppted.
+    Then tears down th OpenCV window and shuts down cleanly.
+
+    @param args Optional command line argumant list forwarded to rclpy.init()
+    """
     rclpy.init(args=args)
     node = AprilTagPianoDetector()
     try:

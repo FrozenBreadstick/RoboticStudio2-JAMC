@@ -80,8 +80,9 @@ namespace Control
         std::vector<double> latest_joint_state_; //The latest joint state of the robot
 
         rclcpp::TimerBase::SharedPtr control_timer_; //Timer for the control loop
-
         rclcpp::TimerBase::SharedPtr startup_timer_; //Timer for the startup sequence
+
+        bool startup_complete_ = false; //Whether the startup sequence is complete or not
         ///@}
 
         //Methods
@@ -91,6 +92,8 @@ namespace Control
          */
         ///@{
         void sendTwistMsg(double x, double y, double z, double angular_x = 0.0, double angular_y = 0.0, double angular_z = 0.0);
+        void sendJointJog(double shoulder_lift, double elbow, double wrist_1, double wrist_2, double wrist_3, double shoulder_pan);
+        void sendJointJog(std::vector<double> vel);
         void sendVector(const vector3 &vec);
         void sendStop();
         int activeTrackDebug(vector3 target, bool x = false, bool y = false, bool z = false);
@@ -103,7 +106,6 @@ namespace Control
          */
         ///@{
         void startup();
-        void shutdown();
         ///@}
 
         //Publishers
@@ -148,6 +150,7 @@ namespace Control
         rclcpp::Service<jamc::srv::TimeScale>::SharedPtr time_service_;
         rclcpp::Service<jamc::srv::Func>::SharedPtr play_pause_service_;
         rclcpp::Service<jamc::srv::Func>::SharedPtr play_direction_service_;
+        rclcpp::Service<jamc::srv::Func>::SharedPtr debug_service_;
         ///@}
 
         //Service Callbacks
@@ -160,6 +163,7 @@ namespace Control
         void time_scale_callback(const std::shared_ptr<jamc::srv::TimeScale::Request> request, std::shared_ptr<jamc::srv::TimeScale::Response> response);
         void play_pause_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
         void play_direction_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
+        void debug_service_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response);
         ///@}
 
         //Control Loop

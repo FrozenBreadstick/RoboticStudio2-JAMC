@@ -63,7 +63,72 @@ comes to a safe halt before new MIDI data is loaded into the controller.
 @subsection midi_section MIDI Processing - For parsing and converting midi files to a readable format by our system
 **@ref MIDI_README.md "MIDI Processing"** - Usage Guide
 
-Describe what it does with images, diagrams, code snippets, etc
+MidiProcessor is a standalone C++ utility class designed for reading, processing, filtering, and serializing MIDI data into a custom JSON-based .mipi format. It uses the midifile library for MIDI parsing and nlohmann::json for data storage and retrieval.
+
+The class extracts musical information from MIDI files on a per-channel basis, including instruments, notes, note timings, note durations, and song length. It also converts MIDI note data into a simplified keyboard mapping system suitable for playback, visualization, or hardware interaction.
+
+\subsubsection Main Features
+- Loads and parses standard MIDI files
+- Extracts:
+- MIDI channels
+- Instrument/program assignments
+- Note pitches
+- Note timestamps
+- Note durations
+- Song duration
+- Applies preprocessing filters to simplify note data
+- Maps notes to a constrained keyboard range
+- Saves processed data into reusable .mipi JSON files
+- Reloads previously processed .mipi files
+- Provides getter methods for all processed data structures
+
+\subsubsection Processing Pipeline
+
+The **processMidiFile()** function performs the complete processing workflow in the following order:
+
+1. Open and analyze the MIDI file
+
+2. Extract instruments and channels
+
+3. Extract notes, timestamps, and durations
+
+4. Determine total song duration
+
+5. Apply note filtering:
+
+   5.1. Chord filtering
+
+   5.2. Trill filtering
+   
+   5.3. Overlapping note filtering
+   
+   5.4. Trim overlapping note durations
+
+6. Assign notes to keyboard ranges
+
+7. Save processed data to a .mipi file
+
+\subsubsection Note Filtering
+
+The class includes several preprocessing filters to simplify dense MIDI data:
+
+Chord Filter: 
+- Detects notes played simultaneously
+- Keeps either the highest or lowest note depending on instrument type
+
+Trill Filter
+- Removes rapidly repeated notes occurring within a minimum time gap
+- Preserves only the first note
+
+Overlapping Note Filter
+- Removes notes completely contained within the duration of another note
+
+Duration Trimming
+- Prevents note durations from overlapping subsequent notes
+- Keyboard Mapping System
+
+After filtering, notes are mapped onto a 37-key keyboard range centered around the average pitch of each channel. Notes outside the valid range are octave-shifted until they fit within bounds.
+
 
 @subsection controller_section Controller - Control Engine for UR3e Piano Playing
 **@ref UR_README.md "Controller"** - Usage Guide
@@ -89,11 +154,15 @@ When spinning the node into the ROS2 environment, the following will happen:
          - If they key is not visible, it will travel the length of the keyboard to find it
          - Once aligned, it will wait until the key is meant to be pressed down (based on the timing of the song), and then press the key once this time is expired
       - It will iterate through the entire song until it is done
+3. On shutdown, the robot will attempt to return to the "Home" position before all nodes are shutdown using the same method as the startup process.
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
 
-Describe what it does with images, diagrams, code snippets, etc
+The vision code utilises the Intel RealSense camera to detect the two AprilTags placed on either side of the piano, along with each black and white key on the keyboard. 
+Every key is individually segmented, allowing its midpoint to be marked and displayed. 
+At present, the keys are mapped from the right to the left side of the keyboard. 
+The next step is to identify the coloured dots on the keys, which will allow each key to be recognised more accurately and its position mapped using these coloured stickers.
 
 @subsection external_section External Libraries - JSON, MIDI Parsing, etc
 Acknowledgements of External Library Usage:
@@ -109,6 +178,9 @@ Acknowledgements of External Library Usage:
 To build the package please refer to *@ref README.md "BUILD"**
 
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
+```all.launch.py``` - This launch file will start all 3 nodes together, and is the recommended way to start the system. It will also start all dependencies, like the UR_driver, MoveIt Servo, and Realsense Camera program.
+```controller_test.launch.py``` - Starts the Controller node on its own, without any dependencies. 
+```ui_test.launch.py``` - Starts the UI node on its own, without any dependencies.
 
 Refer to the source code for detailed topic and service names, and to adjust parameters as needed for your environment.
 
