@@ -63,7 +63,72 @@ comes to a safe halt before new MIDI data is loaded into the controller.
 @subsection midi_section MIDI Processing - For parsing and converting midi files to a readable format by our system
 **@ref MIDI_README.md "MIDI Processing"** - Usage Guide
 
-Describe what it does with images, diagrams, code snippets, etc
+MidiProcessor is a standalone C++ utility class designed for reading, processing, filtering, and serializing MIDI data into a custom JSON-based .mipi format. It uses the midifile library for MIDI parsing and nlohmann::json for data storage and retrieval.
+
+The class extracts musical information from MIDI files on a per-channel basis, including instruments, notes, note timings, note durations, and song length. It also converts MIDI note data into a simplified keyboard mapping system suitable for playback, visualization, or hardware interaction.
+
+\subsubsection Main Features
+- Loads and parses standard MIDI files
+- Extracts:
+- MIDI channels
+- Instrument/program assignments
+- Note pitches
+- Note timestamps
+- Note durations
+- Song duration
+- Applies preprocessing filters to simplify note data
+- Maps notes to a constrained keyboard range
+- Saves processed data into reusable .mipi JSON files
+- Reloads previously processed .mipi files
+- Provides getter methods for all processed data structures
+
+\subsubsection Processing Pipeline
+
+The **processMidiFile()** function performs the complete processing workflow in the following order:
+
+1. Open and analyze the MIDI file
+
+2. Extract instruments and channels
+
+3. Extract notes, timestamps, and durations
+
+4. Determine total song duration
+
+5. Apply note filtering:
+
+   5.1. Chord filtering
+
+   5.2. Trill filtering
+   
+   5.3. Overlapping note filtering
+   
+   5.4. Trim overlapping note durations
+
+6. Assign notes to keyboard ranges
+
+7. Save processed data to a .mipi file
+
+\subsubsection Note Filtering
+
+The class includes several preprocessing filters to simplify dense MIDI data:
+
+Chord Filter: 
+- Detects notes played simultaneously
+- Keeps either the highest or lowest note depending on instrument type
+
+Trill Filter
+- Removes rapidly repeated notes occurring within a minimum time gap
+- Preserves only the first note
+
+Overlapping Note Filter
+- Removes notes completely contained within the duration of another note
+
+Duration Trimming
+- Prevents note durations from overlapping subsequent notes
+- Keyboard Mapping System
+
+After filtering, notes are mapped onto a 37-key keyboard range centered around the average pitch of each channel. Notes outside the valid range are octave-shifted until they fit within bounds.
+
 
 @subsection controller_section Controller - Control Engine for UR3e Piano Playing
 **@ref UR_README.md "Controller"** - Usage Guide
