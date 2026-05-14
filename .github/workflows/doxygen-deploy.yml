@@ -24,13 +24,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Installs the official Doxygen binary (e.g., 1.17.0)
-      - name: Install Latest Doxygen
+      - name: Install Doxygen 1.17.0
         uses: ssciwr/doxygen-install@v2
         with:
-          version: "latest"
+          # Explicitly pinned to 1.17.0
+          version: "1.17.0"
 
-      # Graphviz is still best installed via apt as a dependency
       - name: Install Graphviz
         run: |
           sudo apt-get update
@@ -46,7 +45,8 @@ jobs:
       - name: Upload Static Web Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs' # Adjust this to match your Doxyfile OUTPUT_DIRECTORY
+          # Ensure this matches the 'OUTPUT_DIRECTORY' in your Doxyfile
+          path: './docs' 
 
       - name: Deploy to GitHub Pages Live Site
         id: deployment
