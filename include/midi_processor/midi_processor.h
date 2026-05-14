@@ -42,6 +42,11 @@ using json = nlohmann::json;
  * - **Assigned Keys**: A vector of all assigned keys in the midi file, where each assigned key is a vector of the assigned key and the note timing 
  * - **Keyboard Values**: A vector of all keyboard values in the midi file, where each keyboard value is a vector of the keyboard value and the note timing
  * - **Keyboard Indexs**: A vector of all keyboard indexs in the midi file, where each keyboard index is a vector of the keyboard index and the note timing
+ *  
+ * There are 3 filters that are applied to the data before it is saved to the mipi file. These are applied in the following order:
+ * - **Chords**: Notes that are played in succession are grouped together and only the highest note is kept
+ * - **Trills**: Notes that are played in succession are grouped together and only the first note is kept
+ * - **Overlapping Notes**: Notes that are completely overlap with each other the first note played is kept
  * 
  * @todo Add more documentation, make getter for vector of vectors of ints that stores index positions of notes in the keyboard values vectors
  */
