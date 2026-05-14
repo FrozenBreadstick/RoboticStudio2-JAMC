@@ -1,5 +1,5 @@
 # End Effector Technical Specifications
-\images html images/ConnectorLife.png height=50%
+\image html images/ConnectorLife.png height=50%
 
 ## 1. Assembly Interface Visuals
 
