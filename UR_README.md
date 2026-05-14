@@ -4,9 +4,6 @@ UR_README.md
 
 ## 1. Installation
 
-<details>
-<summary>Click to see installation guide</summary>
-
 #### UR Driver Installtion
 ```bash
 sudo apt-get install ros-humble-ur
@@ -18,15 +15,9 @@ sudo apt install ros-humble-moveit
 sudo apt install ros-humble-ros2-control ros-humble-ros2-controllers
 ```
 
-</markdown>
-</details>
-
 <hr style="border: none; border-top: 3px double #558bff;">
 
 ## 2. Physical Robot Setup
-
-<details>
-<summary>Click to see physical robot setup guide</summary>
 
 #### On Teach Pendant
 1. Installation > URCaps > External Control
@@ -45,15 +36,9 @@ hostname -I
 
 5. Click the start button in the bottom right, and start the RobotProgram
 
-</markdown>
-</details>
-
 <hr style="border: none; border-top: 3px double #558bff;">
 
 ## 3. Software Setup
-
-<details>
-<summary>Click to see software setup guide</summary>
 
 ### Automatic
 #### Running the Built in Launch File
@@ -90,14 +75,10 @@ ros2 control switch_controllers --activate scaled_joint_trajectory_controller --
 # Calibration extraction will be saved to the target_filename
 ros2 launch ur_calibration calibration_correction.launch.py robot_ip:=<robot_ip> target_filename:="${HOME}/my_robot_calibration.yaml"
 ```
-</markdown>
-</details>
 
 <hr style="border: none; border-top: 3px double #558bff;">
 
 ## 4. Using the Controller Class in Code
-<details>
-<summary>Click to see code usage guide</summary>
 
 #### How to start the node
 ```C++
@@ -123,9 +104,3 @@ See below for a list of exposed ROS2 interfaces that allow interaction when the 
 | **Publishers** | | | |
 | `twist_pub_` | `/servo_node/delta_twist_cmds` | `geometry_msgs::msg::TwistStamped` | Publishes to the MoveIt servo node for streaming End Effector velocities |
 | `joint_traj_streaming_pub_` | `/servo_server/delta_joint_cmds` | `control_msgs::msg::JointJog` | Publishes to the MoveIt servo_server to directly stream joint velocities. Used in the startup sequence to bring the robot into position |
-
-
-
-
-</markdown>
-</details>
