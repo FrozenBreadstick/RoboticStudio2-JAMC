@@ -109,6 +109,9 @@ Acknowledgements of External Library Usage:
 To build the package please refer to *@ref README.md "BUILD"**
 
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
+```all.launch.py``` - This launch file will start all 3 nodes together, and is the recommended way to start the system. It will also start all dependencies, like the UR_driver, MoveIt Servo, and Realsense Camera program.
+```controller_test.launch.py``` - Starts the Controller node on its own, without any dependencies. 
+```ui_test.launch.py``` - Starts the UI node on its own, without any dependencies.
 
 Refer to the source code for detailed topic and service names, and to adjust parameters as needed for your environment.
 
