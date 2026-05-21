@@ -120,7 +120,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 
 # Make sure INPUT includes your mainpage.dox and the src directory
-INPUT                  = mainpage.dox src include midi_files mipi_files UI_README.md UR_README.md MIDI_README.md AI_README.md README.md images
+INPUT                  = mainpage.dox src include midi_files mipi_files UI_README.md UR_README.md MIDI_README.md AI_README.md README.md END_EFFECTOR.md images
 
 # Make sure FILE_PATTERNS covers your C++ and Doxygen files
 FILE_PATTERNS          = *.c \

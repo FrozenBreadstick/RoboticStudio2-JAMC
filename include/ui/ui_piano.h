@@ -75,6 +75,7 @@ namespace UI
             rclcpp::Client<jamc::srv::Func>::SharedPtr direction_client;
             rclcpp::Client<jamc::srv::TimeScale>::SharedPtr time_scale_client;
             rclcpp::Client<jamc::srv::Load>::SharedPtr channel_client;
+            rclcpp::Client<jamc::srv::Func>::SharedPtr debug_client;
 
             MidiProcessor processor;
 

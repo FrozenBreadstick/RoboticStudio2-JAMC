@@ -39,6 +39,7 @@ namespace UI
         direction_client = this->create_client<jamc::srv::Func>("/MIPI/direction");
         time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
         channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
+        debug_client = this->create_client<jamc::srv::Func>("/MIPI/debug");
 
         // Camera Subscription
         _camera_sub = this->create_subscription<sensor_msgs::msg::Image>
@@ -163,12 +164,12 @@ namespace UI
         auto request = std::make_shared<jamc::srv::Func::Request>();
         RCLCPP_INFO(this->get_logger(), "Sending DEBUG request");
 
-        if (!playback_client->service_is_ready()) {
+        if (!debug_client->service_is_ready()) {
             RCLCPP_WARN(this->get_logger(), "Playback service is not available for debug.");
             return;
         }
 
-        playback_client->async_send_request(request, 
+        debug_client->async_send_request(request, 
             [this](rclcpp::Client<jamc::srv::Func>::SharedFuture future) {
                 try {
                     auto response = future.get();

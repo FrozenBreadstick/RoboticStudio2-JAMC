@@ -23,12 +23,13 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
     play_pause_service_ = this->create_service<jamc::srv::Func>("/MIPI/play_pause", std::bind(&Controller::play_pause_callback, this, std::placeholders::_1, std::placeholders::_2));
     play_direction_service_ = this->create_service<jamc::srv::Func>("/MIPI/direction", std::bind(&Controller::play_direction_callback, this, std::placeholders::_1, std::placeholders::_2));
+    debug_service_ = this->create_service<jamc::srv::Func>("/MIPI/debug", std::bind(&Controller::debug_service_callback, this, std::placeholders::_1, std::placeholders::_2));
 
     control_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::control_loop, this));
 
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&Controller::joint_state_callback, this, std::placeholders::_1));
-    joint_traj_streaming_pub_ = this->create_publisher<control_msgs::msg::JointJog>("/servo_server/delta_joint_cmds", 10);
-    // startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::startup, this));
+    joint_traj_streaming_pub_ = this->create_publisher<control_msgs::msg::JointJog>("/servo_node/delta_joint_cmds", 10);
+    startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::startup, this));
 }
 
 /**
@@ -279,6 +280,7 @@ void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::sr
  */
 void Control::Controller::control_loop()
 {
+    if(!startup_complete_) return;
     int note = 0;
     double duration = 0.0;
     long timing = 0;
@@ -375,6 +377,7 @@ void Control::Controller::control_loop()
 std::optional<vector3> Control::Controller::play_note(double duration, double time)
 {
     //Will eventually do this, same time when we do Z velocity stuff
+
     return std::nullopt;
 }
 
@@ -405,11 +408,6 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
 
 // TODO:
 /*
-- Initialisation sequences to bring robot from home to the starting position for playing (Can probably get target joint positions from testing and just stream individual joint velocities to move there on startup)
-    Topic: /servo_server/delta_joint_cmds (I believe)
-    Message type: control_msgs::msg::JointJog (I think)
-    Velocity in rad/s
-
 - Implement actual Z velocity control for pressing keys based on a target Z height, read current EE Z Height from TF. Bring to hover above key until not timing is expired (or if the move took longer than the note timing) (probably minus a constant from not timing so that it plays in time)
 - Target array position is Math::INF, Math::INF, Math::INF average the positions of keys in the direction we need to travel and travel that way until the target key is visible
 */
@@ -429,35 +427,26 @@ void Control::Controller::joint_state_callback(const sensor_msgs::msg::JointStat
  */
 void Control::Controller::startup() 
 {
-    //Define constants
-    double scaling = 2; //Scaling factor for velocity
-    double tolerance = 0.1;
-    //                                       base, shoulder, elbow, wrist1, wrist2, wrist3
-    //                                          90,   -75,  100,  -115,   -90,  0
-    std::vector<double> target_joint_state = {1.57, -1.309, 1.75, -2.01, -1.57, 0}; //Find actual target joint state for startup
-    std::vector<std::string> joint_names_ = {
-    "shoulder_pan_joint",
-    "shoulder_lift_joint",
-    "elbow_joint",
-    "wrist_1_joint",
-    "wrist_2_joint",
-    "wrist_3_joint"
-    };
+    double tolerance = 0.01; //Tolerance
+    double max_error = 0.0; //Set the max error
+
+    //                                    shoulder, elbow, wrist1, wrist2, wrist3, base
+    //                                          -75,  100,  -115,   -90,  0,  90
+    std::vector<double> target_joint_state = {-1.309, 1.75, -2.01, -1.57, 0, 1.57}; //Find actual target joint state for startup
     
-    double max_error = 0.0;
-    
-    //Get current joint state
-    std::vector<double> current;
+    std::vector<double> current;     //Get current joint state
     {
         std::lock_guard<std::mutex> lock(joint_mutex_);
         current = latest_joint_state_;
     }
 
-    if(current.empty() || current.size() != target_joint_state.size()) return;
+    if(current.empty() || current.size() != target_joint_state.size()) {
+        RCLCPP_INFO(this->get_logger(), "Mismatch in robot joint_state size and target size, make sure there is no gripper attached!");
+        return; //Exit if there is a mismatch for safety
+    }
     
-    //Calculate Error
     std::vector<double> error;
-    for (size_t i = 0; i < target_joint_state.size(); i++) {
+    for (size_t i = 0; i < target_joint_state.size(); i++) { //Calculate Error
         error.push_back(target_joint_state[i] - current[i]);
     }
 
@@ -468,22 +457,48 @@ void Control::Controller::startup()
     //Break if done
     if (max_error < tolerance)
     {
-        sendStop();
+        sendJointJog(0,0,0,0,0,0);
         startup_timer_->cancel(); //Cancel the startup timer so this only runs once
+        startup_complete_ = true; //Mark that the startup sequence is complete so the control loop can run
+        RCLCPP_INFO(this->get_logger(), "REACHED STARTING POSITION");
         return;
     }
 
+    sendJointJog(error);
+}
+
+/**
+ * @brief A wrapper for sending joint jog commands for direct joint velocity control
+ * @param shoulder_lift Velocity for the shoulder lift joint
+ * @param elbow Velocity for the elbow joint
+ * @param wrist_1 Velocity for the wrist 1 joint
+ * @param wrist_2 Velocity for the wrist 2 joint
+ * @param wrist_3 Velocity for the wrist 3 joint
+ * @param shoulder_pan Velocity for the shoulder pan joint
+ */
+void Control::Controller::sendJointJog(double shoulder_lift, double elbow, double wrist_1, double wrist_2, double wrist_3, double shoulder_pan) 
+{
+    std::vector<std::string> joint_names_ = {
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+    "shoulder_pan_joint"
+    };
+    double scaling = 2; //Scaling factor for velocity
+
+    std::vector<double> vel = {shoulder_lift, elbow, wrist_1, wrist_2, wrist_3, shoulder_pan};
+
     control_msgs::msg::JointJog cmd;
     cmd.header.stamp = this->now();
-
+    cmd.header.frame_id = "base_link";
     cmd.joint_names = joint_names_;
+    cmd.velocities.resize(vel.size());
 
-    cmd.velocities.resize(error.size());
-
-    for (size_t i = 0; i < error.size(); i++)
+    for (size_t i = 0; i < vel.size(); i++)
     {
-        cmd.velocities[i] = scaling * error[i];
-
+        cmd.velocities[i] = scaling * vel[i];
         //safety clamp (important for UR)
         cmd.velocities[i] = std::clamp(cmd.velocities[i], -1.0, 1.0);
     }
@@ -491,14 +506,62 @@ void Control::Controller::startup()
     cmd.duration = 0.4;  // Servo timeout protection
 
     joint_traj_streaming_pub_->publish(cmd);
-
 }
 
 /**
- * @brief The shutdown sequence that moves the robot home
+ * @brief A secondary wrapper for the sending Joint Jog commands that takes a vector instead of individual velocities
+ * @param vel A vector of doubles containing the joint velocities
  */
-void Control::Controller::shutdown() 
+void Control::Controller::sendJointJog(std::vector<double> vel) 
 {
-    RCLCPP_INFO(this->get_logger(), "Running shutdown sequence...");
-    
+    std::vector<std::string> joint_names_ = {
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+    "shoulder_pan_joint"
+    };
+    double scaling = 5; //Scaling factor for velocity
+
+    control_msgs::msg::JointJog cmd;
+    cmd.header.stamp = this->now();
+    cmd.header.frame_id = "base_link";
+    cmd.joint_names = joint_names_;
+    cmd.velocities.resize(vel.size());
+
+    for (size_t i = 0; i < vel.size(); i++)
+    {
+        cmd.velocities[i] = scaling * vel[i];
+        //safety clamp (important for UR)
+        cmd.velocities[i] = std::clamp(cmd.velocities[i], -1.0, 1.0);
+    }
+
+    cmd.duration = 0.4;  // Servo timeout protection
+
+    joint_traj_streaming_pub_->publish(cmd);
+}
+
+/**
+ * @brief Callback function for the debug service, used to test anything
+ * @param request The request from the service call, empty for this trigger service
+ * @param response The response for the service call, containing a message
+ */
+void Control::Controller::debug_service_callback(const std::shared_ptr<jamc::srv::Func::Request> request, std::shared_ptr<jamc::srv::Func::Response> response)
+{
+    double duration = 2.0;
+    double time = 0.0;
+    std::optional<vector3> target = play_note(duration, time);
+    while(true) {
+        target = play_note(duration, time);
+        if(!target.has_value()) {
+            RCLCPP_INFO(this->get_logger(), "Done Playing Note");
+            return;
+        }
+        sendVector(target.value());
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        time += 25;
+    }
+    (void)request; // Unused parameter
+    response->message = std::string("Debug service called");
 }

@@ -154,6 +154,7 @@ When spinning the node into the ROS2 environment, the following will happen:
          - If they key is not visible, it will travel the length of the keyboard to find it
          - Once aligned, it will wait until the key is meant to be pressed down (based on the timing of the song), and then press the key once this time is expired
       - It will iterate through the entire song until it is done
+3. On shutdown, the robot will attempt to return to the "Home" position before all nodes are shutdown using the same method as the startup process.
 
 @subsection perception_section Perception & Computer Vision - Let's the robot see
 **@ref AI_README.md "Perception"** - Usage Guide
