@@ -26,7 +26,6 @@ WHITE_KEY_OFFSET = (0, 30)
 BLACK_KEY_OFFSET = (0, 10)
 
 
- 
 class AprilTagPianoDetector(Node):
     """!
     @brief ros 2 node combining apriltag detection with yolo based piano key segmenytation
@@ -63,7 +62,7 @@ class AprilTagPianoDetector(Node):
                 "https://download.pytorch.org/whl/cu121"
             )
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.yolo_model = YOLO('src/perception/best.pt')
+        self.yolo_model = YOLO('src/RoboticStudio2-JAMC/src/perception/best2.pt') #NEED TO MAKE THIS RELATIVE OR SOME COMMON FOLDER
         self.yolo_model.to(self.device)
         if YOLO_HALF and self.device == 'cuda':
             self.yolo_model.model.half()
