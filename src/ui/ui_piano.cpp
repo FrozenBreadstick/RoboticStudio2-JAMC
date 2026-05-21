@@ -61,6 +61,15 @@ namespace UI
         _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
         main_layout->addWidget(_camera_view, 0, Qt::AlignCenter);
 
+        //CAMERA FEED RESET TIMER
+        _camera_frame_watch = new QTimer(this);
+        _camera_frame_watch->setSingleShot(true); // Only fire once per timeout
+        connect(_camera_frame_watch, &QTimer::timeout, this, [this]() {
+            _camera_view->clear();
+            _camera_view->setText("Waiting for camera feed...");
+            _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
+        });
+
         // --- CONFIGURATION GROUP ---
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
@@ -146,10 +155,16 @@ namespace UI
     PianoUI::~PianoUI() {}
 
     /**
-     * @brief Callback function for processing incoming ROS 2 image messages.
-     * @param msg A shared pointer to the incoming sensor_msgs::msg::Image.
-     * @note This uses QMetaObject::invokeMethod to ensure the UI update happens on the main thread, avoiding thread collisions with the ROS executor.
-     */
+    * @brief Callback function for processing and displaying live ROS 2 camera feeds.
+    * * @details This function processes incoming images and renders them to the Qt GUI. 
+    * It includes several built-in optimizations and formatting checks:
+    * - **Frame Throttling:** Limits the update rate to a maximum of 20 FPS (50ms intervals) to reduce CPU load and prevent UI thread lockups.
+    * - **Format Validation:** Ensures the incoming image uses the `rgb8` encoding, issuing a throttled warning if an unsupported format is received.
+    * - **Image Mirroring:** Horizontally flips the image to provide an intuitive, mirror-like perspective for the operator.
+    * - **Fast Scaling:** Utilizes `Qt::FastTransformation` to efficiently resize the image to fit the `_camera_view` label.
+    * * @param msg A shared pointer to the incoming sensor_msgs::msg::Image.
+    * * @note Uses QMetaObject::invokeMethod with Qt::QueuedConnection to guarantee thread-safe GUI updates, securely bridging the ROS 2 executor thread and the Qt main event loop.
+    */
     void PianoUI::image_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
         static auto last_frame_time = std::chrono::steady_clock::now();
         auto current_time = std::chrono::steady_clock::now();
@@ -162,11 +177,12 @@ namespace UI
 
         if (msg->encoding == "rgb8") {
             QImage open_img(&msg->data[0], msg->width, msg->height, msg->step, QImage::Format_RGB888);
-            QImage clean_img = open_img.mirrored(true, false);
+            QImage clean_img = open_img.mirrored(true,false);
             QPixmap pixmap = QPixmap::fromImage(clean_img).scaled(_camera_view->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
 
             QMetaObject::invokeMethod(_camera_view, [this, pixmap]() {
                 _camera_view->setPixmap(pixmap);
+                _camera_frame_watch->start(1000);
             }, Qt::QueuedConnection);
         } else {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000, 

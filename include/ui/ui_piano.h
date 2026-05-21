@@ -17,6 +17,7 @@
 #include <QString>
 #include <QFileInfo>
 #include <QtWidgets/QButtonGroup>
+#include <QTimer>
 
 #include "jamc/srv/func.hpp"
 #include "jamc/srv/time_scale.hpp"
@@ -90,6 +91,8 @@ namespace UI
             * @note Uses QMetaObject::invokeMethod to ensure thread-safety when updating the UI thread from the ROS executor thread.
             */
             void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+
+            QTimer* _camera_frame_watch;
 
         private slots:
             void play_pause();
