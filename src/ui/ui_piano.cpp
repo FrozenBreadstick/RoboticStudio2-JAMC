@@ -5,6 +5,7 @@
 
 #include "ui/ui_piano.h"
 #include <QList>
+#include <chrono>
 
 namespace UI
 {
@@ -150,11 +151,27 @@ namespace UI
      * @note This uses QMetaObject::invokeMethod to ensure the UI update happens on the main thread, avoiding thread collisions with the ROS executor.
      */
     void PianoUI::image_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
-        QImage img(&msg->data[0], msg->width, msg->height, QImage::Format_RGB888);
-        QPixmap pixmap = QPixmap::fromImage(img).scaled(_camera_view->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        QMetaObject::invokeMethod(_camera_view, [this, pixmap]() {
-            _camera_view->setPixmap(pixmap);
-        }, Qt::QueuedConnection);
+        static auto last_frame_time = std::chrono::steady_clock::now();
+        auto current_time = std::chrono::steady_clock::now();
+
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_frame_time).count() < 50) {
+            return;
+        }
+
+        last_frame_time = current_time;
+
+        if (msg->encoding == "rgb8") {
+            QImage open_img(&msg->data[0], msg->width, msg->height, msg->step, QImage::Format_RGB888);
+            QImage clean_img = open_img.mirrored(true, false);
+            QPixmap pixmap = QPixmap::fromImage(clean_img).scaled(_camera_view->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
+
+            QMetaObject::invokeMethod(_camera_view, [this, pixmap]() {
+                _camera_view->setPixmap(pixmap);
+            }, Qt::QueuedConnection);
+        } else {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000, 
+                "PianoUI Camera Warning: Expected 'rgb8' image encoding, but received '%s'", msg->encoding.c_str());
+        }
     }
 
     /**
