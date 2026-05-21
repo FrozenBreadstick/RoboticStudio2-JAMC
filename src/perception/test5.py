@@ -137,7 +137,6 @@ class AprilTagPianoDetector(Node):
             thickness=2
         )
 
-
         for r in results:
             (ptA, ptB, ptC, ptD) = r.corners
             ptA = tuple(int(x) for x in ptA)
@@ -377,12 +376,112 @@ class AprilTagPianoDetector(Node):
         """
         #Packs every key's centroid into a PoseArray message and publishes it. The robot arm controller reads this on /piano_keys to know where each key is in the camera frame.
         msg = PoseArray()
+
         for k in self.ordered_keys:
             pose = Pose()
             pose.position.x = round(k["mid_x"], 1)
             pose.position.y = round(k["mid_y"], 1)
             pose.position.z = 0.0
             msg.poses.append(pose)
+
+        size = len(self.ordered_keys)
+
+        if size < 37:
+
+            # find c key
+            blue_key = None
+            red_key = None
+            green_key = None
+
+            for index, k in enumerate(self.ordered_keys):
+                if k["label"] == "C":
+                    blue_index = index
+                    blue_key = k
+                    break
+
+            if(blue_key != None):
+                # blue key found
+                # pad front if index wrong
+                if blue_index != 7:
+                    pre_diff = 7 - blue_index
+                    for i in range(pre_diff):
+                        dummy_pose = Pose()
+                        dummy_pose.position.x = float("nan")
+                        dummy_pose.position.y = float("nan")
+                        dummy_pose.position.z = float("nan")
+                        msg.poses.insert(0, dummy_pose)
+                
+                # pad back if length wrong
+                size2 = len(msg.poses)
+                if size2 < 37:
+                    post_diff = 37 -size2
+                    for i in range(post_diff):
+                        dummy_pose = Pose()
+                        dummy_pose.position.x = float("nan")
+                        dummy_pose.position.y = float("nan")
+                        dummy_pose.position.z = float("nan")
+                        msg.poses.append(dummy_pose)
+                
+            else:
+                for index, k in enumerate(self.ordered_keys):
+                    if k["label"] == "Red":
+                        red_index = index
+                        red_key = k
+                        break
+
+                if (red_key != None):
+                    # red key found
+                    # pad front if index wrong
+                    if red_index != 19:
+                        pre_diff = 19 - red_index
+                        for i in range(pre_diff):
+                            dummy_pose = Pose()
+                            dummy_pose.position.x = float("nan")
+                            dummy_pose.position.y = float("nan")
+                            dummy_pose.position.z = float("nan")
+                            msg.poses.insert(0, dummy_pose)
+
+                    # pad back if length wrong
+                    size2 = len(msg.poses)
+                    if size2 < 37:
+                        post_diff = 37 - size2
+                        for i in range(post_diff):
+                            dummy_pose = Pose()
+                            dummy_pose.position.x = float("nan")
+                            dummy_pose.position.y = float("nan")
+                            dummy_pose.position.z = float("nan")
+                            msg.poses.append(dummy_pose)
+
+                else:
+                    for index, k in enumerate(self.ordered_keys):
+                        if k["label"] == "Green":
+                            green_index = index
+                            green_key = k
+                            break
+
+                    if (green_key != None):
+                        # green key found
+                        # pad front if index wrong
+                        if green_index != 31:
+                            pre_diff = 31 - green_index
+                            for i in range(pre_diff):
+                                dummy_pose = Pose()
+                                dummy_pose.position.x = float("nan")
+                                dummy_pose.position.y = float("nan")
+                                dummy_pose.position.z = float("nan")
+                                msg.poses.insert(0, dummy_pose)
+
+                        # pad back if length wrong
+                        size2 = len(msg.poses)
+                        if size2 < 37:
+                            post_diff = 37 - size2
+                            for i in range(post_diff):
+                                dummy_pose = Pose()
+                                dummy_pose.position.x = float("nan")
+                                dummy_pose.position.y = float("nan")
+                                dummy_pose.position.z = float("nan")
+                                msg.poses.append(dummy_pose)
+
         self.publisher_keys.publish(msg)
 
     def _find_nearest_key(self, px: float, py: float) -> dict | None:
