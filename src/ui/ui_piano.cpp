@@ -91,9 +91,25 @@ namespace UI
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
 
-        _channel_layout = new QVBoxLayout(); 
+        auto* channel_section_layout = new QVBoxLayout(); 
         _channel_title = new QLabel("Channel Selector:", this);
-        _channel_layout->addWidget(_channel_title);
+        channel_section_layout->addWidget(_channel_title);
+
+        _channel_layout = new QVBoxLayout(); 
+        _channel_layout->setAlignment(Qt::AlignTop);
+
+        auto* channel_container = new QWidget();
+        channel_container->setLayout(_channel_layout);
+        channel_container->setStyleSheet("background-color: transparent;"); 
+
+        auto* channel_scroll = new QScrollArea(this);
+        channel_scroll->setWidget(channel_container);
+        channel_scroll->setWidgetResizable(true);
+        channel_scroll->setFrameShape(QFrame::NoFrame);
+        channel_scroll->setMinimumHeight(100);
+        channel_scroll->setMaximumWidth(250); 
+        
+        channel_section_layout->addWidget(channel_scroll);
 
         _channel_group = new QButtonGroup(this);
         connect(_channel_group, QOverload<int>::of(&QButtonGroup::idClicked), this, &PianoUI::send_channel_selection);
@@ -118,7 +134,7 @@ namespace UI
         _speed_control->setMinimumHeight(100);
         speed_layout->addWidget(_speed_control, 0, Qt::AlignCenter);
 
-        config_layout->addLayout(_channel_layout);
+        config_layout->addLayout(channel_section_layout);
         config_layout->addLayout(files_layout);
         config_layout->addLayout(speed_layout);
         main_layout->addWidget(config_group);
