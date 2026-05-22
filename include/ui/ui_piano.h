@@ -18,6 +18,10 @@
 #include <QFileInfo>
 #include <QtWidgets/QButtonGroup>
 #include <QTimer>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QGraphicsRectItem>
+#include <QGraphicsLineItem>
 
 #include "jamc/srv/func.hpp"
 #include "jamc/srv/time_scale.hpp"
@@ -57,6 +61,7 @@ namespace UI
             QPushButton* _new_file_button;
             QLabel* _old_file_label;
             QComboBox* _old_file_button;
+            QTimer* _playback_timer;
             
             // Status Labels
             QLabel* _status_val;
@@ -93,6 +98,12 @@ namespace UI
             void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
 
             QTimer* _camera_frame_watch;
+
+            QGraphicsScene* _roll_scene;
+            QGraphicsView* _roll_view;
+            QGraphicsLineItem* _playhead;
+
+            void draw_piano_roll(int channel_index);
 
         private slots:
             void play_pause();

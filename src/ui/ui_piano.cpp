@@ -70,6 +70,23 @@ namespace UI
             _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
         });
 
+        _playback_timer = new QTimer(this);
+        connect(_playback_timer, &QTimer::timeout, this, [this]() {
+        if (!is_playing) return;
+            
+        // Check if we are going forward or backward
+        int step = (current_dir == PlaybackDirection::Forward) ? 1 : -1;
+        int new_time = _track_slider->value() + step;
+            
+            // Move the slider if we haven't reached the end/beginning
+        if (new_time >= 0 && new_time <= _track_slider->maximum()) {
+            _track_slider->setValue(new_time);
+        } else {
+            // We reached the end of the song!
+            force_pause_and_reset(); 
+            }
+        });
+
         // --- CONFIGURATION GROUP ---
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
@@ -105,6 +122,29 @@ namespace UI
         config_layout->addLayout(files_layout);
         config_layout->addLayout(speed_layout);
         main_layout->addWidget(config_group);
+
+        auto* roll_group = new QGroupBox("Sheet Music Visualisation", this);
+        auto* roll_layout = new QVBoxLayout(roll_group);
+
+        _roll_scene = new QGraphicsScene(this);
+        _roll_view = new QGraphicsView(_roll_scene, this);
+        _roll_view->setFixedHeight(150); // Keep it compact in the UI
+        
+        _roll_view->setStyleSheet("background-color: #121212; border: 1px solid #3a3a3a;"); 
+     
+        _roll_view->setRenderHint(QPainter::Antialiasing, false); 
+        _roll_view->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
+
+        // Create the moving playhead
+        _playhead = new QGraphicsLineItem();
+        QPen playhead_pen(Qt::red);
+        playhead_pen.setWidth(2);
+        _playhead->setPen(playhead_pen);
+        _playhead->setZValue(10); // Ensure the line always draws on top of the notes
+        _roll_scene->addItem(_playhead);
+
+        roll_layout->addWidget(_roll_view);
+        main_layout->addWidget(roll_group);
 
         // --- PLAYBACK GROUP ---
         auto* playback_group = new QGroupBox("Playback", this);
@@ -158,7 +198,7 @@ namespace UI
     * @brief Callback function for processing and displaying live ROS 2 camera feeds.
     * * @details This function processes incoming images and renders them to the Qt GUI. 
     * It includes several built-in optimizations and formatting checks:
-    * - **Frame Throttling:** Limits the update rate to a maximum of 20 FPS (50ms intervals) to reduce CPU load and prevent UI thread lockups.
+    * - **Frame Throttling:** Limits the update rate to a maximum of 30 FPS (33ms intervals) to reduce CPU load and prevent UI thread lockups.
     * - **Format Validation:** Ensures the incoming image uses the `rgb8` encoding, issuing a throttled warning if an unsupported format is received.
     * - **Image Mirroring:** Horizontally flips the image to provide an intuitive, mirror-like perspective for the operator.
     * - **Fast Scaling:** Utilizes `Qt::FastTransformation` to efficiently resize the image to fit the `_camera_view` label.
@@ -169,7 +209,7 @@ namespace UI
         static auto last_frame_time = std::chrono::steady_clock::now();
         auto current_time = std::chrono::steady_clock::now();
 
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_frame_time).count() < 50) {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_frame_time).count() < 33) {
             return;
         }
 
@@ -221,6 +261,7 @@ namespace UI
         if (is_playing) {
             is_playing = false;
             _play_pause_button->setText("▶");
+            _playback_timer->stop();
             
             auto request = std::make_shared<jamc::srv::Func::Request>();
             if (playback_client->service_is_ready()) {
@@ -280,6 +321,13 @@ namespace UI
     void PianoUI::play_pause(){
         is_playing = !is_playing;
         _play_pause_button->setText(is_playing ? "▐▐" : "▶");
+
+        if (is_playing) {
+            double scale = static_cast<double>(_speed_control->value()) / 100.0;
+            _playback_timer->start(1000 / scale); 
+        } else {
+            _playback_timer->stop();
+        }
         
         auto request = std::make_shared<jamc::srv::Func::Request>();
         if (!playback_client->service_is_ready()) return;
@@ -349,6 +397,8 @@ namespace UI
 
         force_pause_and_reset();
 
+        draw_piano_roll(button_id);
+
         std::vector<int> channels = processor.get_channels();
         if (button_id >= static_cast<int>(channels.size())) return;
         int selected_channel = channels.at(button_id);
@@ -412,6 +462,18 @@ namespace UI
         int speed_percent = _speed_control->value();
         _speed_val->setText(QString("Speed: %1%").arg(speed_percent));
         _time_val->setText(QString("Time: %1 / %2").arg(_track_slider->value()).arg(processor.get_song_duration()));
+
+        if (_playhead && _roll_scene) { // Safety check
+            const double time_scale = 10.0; // MUST match the time_scale in draw_piano_roll()
+            double current_x = _track_slider->value() * time_scale;
+
+            // Redraw the line from the top to the bottom of the visible scene area
+            double scene_height = _roll_scene->height();
+            _playhead->setLine(current_x, 0, current_x, scene_height > 0 ? scene_height : 150);
+
+            // Make the window automatically scroll to follow the line
+            _roll_view->centerOn(current_x, _roll_scene->height() / 2);
+        }
     }
 
     /**
@@ -421,8 +483,64 @@ namespace UI
         update_status_info();
         auto request = std::make_shared<jamc::srv::TimeScale::Request>();
         request->scale = static_cast<double>(_speed_control->value()) / 100.0;
+
+        if (_playback_timer->isActive()) {
+            _playback_timer->setInterval(1000 / request->scale);
+        }
         
         if (!time_scale_client->service_is_ready()) return;
         time_scale_client->async_send_request(request);
+    }
+
+    void PianoUI::draw_piano_roll(int channel_index) {
+        _roll_scene->removeItem(_playhead);
+        _roll_scene->clear();
+        _roll_scene->addItem(_playhead);
+
+        std::vector<std::vector<int>> all_notes = processor.get_channel_notes();
+        std::vector<std::vector<double>> all_timings = processor.get_channel_note_timings();
+        std::vector<std::vector<double>> all_durations = processor.get_channel_note_durations();
+
+        if (channel_index < 0 || channel_index >= static_cast<int>(all_notes.size()) || all_notes[channel_index].empty()) {
+            return; 
+        }
+
+        std::vector<int> channel_notes = all_notes[channel_index];
+        std::vector<double> channel_timings = all_timings[channel_index];
+        std::vector<double> channel_durations = all_durations[channel_index];
+
+        int max_pitch = -1;
+        int min_pitch = 999;
+        for (int p : channel_notes) {
+            if (p > max_pitch) max_pitch = p;
+            if (p < min_pitch) min_pitch = p;
+        }
+
+        const double time_scale = 10.0; // 10 pixels per second
+        const double pitch_scale = 4.0; // 4 pixels height per key
+
+        double note_block_height = (max_pitch - min_pitch + 1) * pitch_scale;
+        
+        double view_height = 150.0; 
+        double y_offset = (view_height - note_block_height) / 2.0;
+
+        for (size_t i = 0; i < channel_notes.size(); ++i) {
+            
+            double start_time = channel_timings[i];
+            double duration = channel_durations[i];
+            int pitch = channel_notes[i]; 
+
+            double x = start_time * time_scale;
+            double y = y_offset + (max_pitch - pitch) * pitch_scale; 
+            
+            double width = std::max(duration * time_scale, 2.0); 
+            double height = pitch_scale;
+
+            QGraphicsRectItem* rect = _roll_scene->addRect(x, y, width, height);
+            rect->setBrush(QBrush(QColor("#00aaff"))); // Matches your UI's blue color
+            rect->setPen(QPen(Qt::NoPen)); 
+        }
+
+        _roll_scene->setSceneRect(_roll_scene->itemsBoundingRect());
     }
 }
