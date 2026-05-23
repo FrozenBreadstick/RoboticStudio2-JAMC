@@ -48,7 +48,7 @@ using json = nlohmann::json;
  * - **Trills**: Notes that are played in succession are grouped together and only the first note is kept
  * - **Overlapping Notes**: Notes that are completely overlap with each other the first note played is kept
  * 
- * @todo Add more documentation, make getter for vector of vectors of ints that stores index positions of notes in the keyboard values vectors
+ * @todo
  */
 class MidiProcessor
 {
