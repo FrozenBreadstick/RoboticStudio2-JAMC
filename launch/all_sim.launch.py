@@ -19,11 +19,13 @@ def create_ur_driver(): # Launch the UR_Driver
             "ur_type": LaunchConfiguration("ur_type"),
             "robot_ip": LaunchConfiguration("robot_ip"),
             "launch_rviz": "false",
+            "controller_manager_timeout": "60",
+            "use_fake_hardware": "true",
+            "initial_joint_controller": "joint_trajectory_controller"
         }.items()
     )
 
 def start_moveit():  # Launch MoveIt
-
     moveit_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -36,6 +38,7 @@ def start_moveit():  # Launch MoveIt
             "ur_type": LaunchConfiguration("ur_type"),
             "launch_rviz": "true",
             "launch_servo": "true",
+            "use_fake_hardware": "true"
         }.items()
     )
 
@@ -46,7 +49,6 @@ def start_moveit():  # Launch MoveIt
     )
 
 def switch_to_servo_controller():
-
     switch_cmd = ExecuteProcess(
         cmd=[
             'ros2',
@@ -150,7 +152,7 @@ def generate_launch_description():
     ld.add_action(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="192.168.0.192"
+            default_value="127.0.0.1"
         )
     )
 

@@ -65,6 +65,11 @@ namespace Control
         std::mutex key_positions_mutex_; //Mutex to protect access to the key positions
         geometry_msgs::msg::PoseArray key_positions_; //The positions of the keys on the piano, used for calculating target positions for the end effector
 
+        geometry_msgs::msg::Point ee_; //The current end effector position
+        std::mutex ee_mutex_; //Mutex to protect access to the end effector position
+
+        double global_speed_scaling_ = 5.0; //A global speed scaler for the baseline speed scaling, seperate from the time scaling by the UI
+
         std::mutex song_mutex_; //Mutex to protect access to the song data
         std::vector<int> song_; //The notes in the currently loaded channel of the currently loaded song
         std::vector<double> note_timings_; //The timings of the notes in the current channel of the currently loaded song
@@ -83,6 +88,14 @@ namespace Control
         rclcpp::TimerBase::SharedPtr startup_timer_; //Timer for the startup sequence
 
         bool startup_complete_ = false; //Whether the startup sequence is complete or not
+
+        double playnote_target_x = 0.0; //Hardcoded x offset to play a key on the keyboard
+        double playnote_target_y = 0.015; //Hardcoded y offset to play a key on the keyboard
+        double playnote_target_z = -0.015; //Hardcoded z offset to play a key on the keyboard
+        geometry_msgs::msg::Point start_pn_ee_;
+        geometry_msgs::msg::Point pn_target_;
+        bool playing_note_ = false;
+        bool returning_note_ = false;
         ///@}
 
         //Methods
@@ -127,6 +140,7 @@ namespace Control
         rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr debug_target_sub_;
         rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr key_positions_sub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+        rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr ee_sub_;
         ///@}
 
         //Subscriber Callbacks
@@ -138,6 +152,7 @@ namespace Control
         void debug_target_callback(const geometry_msgs::msg::Point::SharedPtr msg);
         void key_positions_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg);
         void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
+        void ee_callback(const geometry_msgs::msg::Point::SharedPtr msg);
         ///@}
 
         //Services
@@ -173,7 +188,6 @@ namespace Control
          */
         ///@{
         void control_loop();
-        double calculate_z(double xy);
         std::optional<vector3> calculate_velocity(int note);
         std::optional<vector3> play_note(double duration, double time);
         ///@}
