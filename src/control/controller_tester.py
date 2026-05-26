@@ -10,7 +10,13 @@ from rclpy.executors import MultiThreadedExecutor
 
 from end_effector_streamer import EndEffectorStreamer
 
+"""!
+@brief The UR3eOffsetPublisher node, sets up TF2 listener, and simulates a piano keyboard and the perception system by publishing preset target poses and their offsets relative to the end-effector position.
+"""
 class UR3eOffsetPublisher(Node):
+    """!
+    @brief Initializes the UR3eOffsetPublisher node 
+    """
     def __init__(self):
         super().__init__('ur3e_offset_publisher')
 
@@ -26,8 +32,10 @@ class UR3eOffsetPublisher(Node):
         
         self.get_logger().info("UR3e Offset Publisher Node has started.")
 
+    """!
+    @brief Generates a PoseArray of preset target poses representing piano keys, with X/Y offsets to simulate the perception system's output. The keys are arranged in a standard piano layout with appropriate spacing for black and white keys.
+    """
     def generate_preset_poses(self):
-        """Generates a stored array of 37 preset target poses."""
         pose_array = PoseArray()
         pose_array.header.frame_id = 'base_link'
         pose_array.header.stamp = self.get_clock().now().to_msg()
@@ -49,6 +57,9 @@ class UR3eOffsetPublisher(Node):
             
         return pose_array
 
+    """!
+    @brief Timer callback that calculates the offset from the end effector to each preset key pose and publishes it as a PoseArray to /piano_keys. It also publishes the absolute positions of the keys to /key_positions for visualization.
+    """
     def timer_callback(self):
         target_frame = 'tool0' #End-effector frame
         source_frame = 'base_link' #Robot base frame
@@ -104,7 +115,6 @@ class UR3eOffsetPublisher(Node):
             offset_pose_array.poses.append(offset_pose)
 
         self.offset_pub.publish(offset_pose_array)
-
 
 def main(args=None):
     rclpy.init(args=args)

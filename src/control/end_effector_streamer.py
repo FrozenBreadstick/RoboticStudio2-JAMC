@@ -7,10 +7,15 @@ from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
+"""!
+@brief A ROS2 Python Node that interfaces with TF2 to stream the End Effector position so that we don't have to do it in C++
+- Runs by itself if the perception node is running.
+- Is instantiated by controller_tester.py if running with simulated perception.
+"""
 class EndEffectorStreamer(Node):
-    '''
-    @brief A ROS2 Python Node that interfaces with TF2 to stream the End Effector position so that we don't have to do it in C++
-    '''
+    """!
+    @brief Initialises the EndEffectorStreamer node, sets up TF2 listener, and creates a publisher for the end-effector position.
+    """
     def __init__(self):
         super().__init__('end_effector_streamer')
 
@@ -23,6 +28,9 @@ class EndEffectorStreamer(Node):
         
         self.get_logger().info("End Effector Streamer Node has started.")
 
+    """!
+    @brief Timer callback that looks up the transform from 'base_link' to 'tool0', extracts the end-effector position, and publishes it as a Point to /MIPI/EE
+    """
     def timer_callback(self):
         source_frame = 'base_link'
         target_frame = 'tool0'
