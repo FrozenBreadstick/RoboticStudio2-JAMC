@@ -52,6 +52,9 @@ hostname -I
 ros2 launch jamc all.launch.py
 ```
 
+If running without perception, run controller_tester.py (in folder /src/control).
+If running with perception, run end_effector_streamer.py (in folder /src/control).
+
 ---
 
 ### Manual
@@ -97,6 +100,12 @@ ros2 control switch_controllers --activate forward_position_controller --deactiv
 
 ros2 service call /servo_node/start_servo std_srvs/srv/Trigger {}
 ```
+
+Or you can run the simulation launch file:
+```bash
+ros2 launch jamc all_sim.launch.py
+```
+And run controller_tester.py (in folder /src/control)
 
 ---
 
