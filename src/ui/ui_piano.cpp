@@ -1,6 +1,6 @@
 /**
  * @file ui_piano.cpp
- * @brief Implementation of the PianoUI class, providing a graphical interface for MIDI playback control.
+ * @brief Implementation of the PianoUI class for MIDI playback control.
  */
 
 #include "ui/ui_piano.h"
@@ -10,15 +10,8 @@
 namespace UI
 {
     /**
-     * @brief Hybrid Qt-ROS2 Class for managing the User Interface of the MIDI-to-UR3 system. 
-     * * @details This class inherits from QWidget and rclcpp::Node. It contains the following ROS2 I/O:
-     * - **Service Clients**
-     * - `/MIPI/play_pause` (jamc/srv/Func): Triggers a play/pause state change on the robot.
-     * - `/MIPI/direction` (jamc/srv/Func): Toggles the playback direction (Forward/Reverse).
-     * - `/MIPI/time_scale` (jamc/srv/TimeScale): Sends a float (0.01 to 1.0) to scale robot velocity.
-     * - `/MIPI/load` (jamc/srv/Load): Sends the filepath and instrument index to the controller.
-     * - **Subscriptions**
-     * - `/camera/camera/color/image_raw` (sensor_msgs/msg/Image): Receives live feed for UI visualization.
+     * @brief Initializes the PianoUI Node and Qt widgets.
+     * @details Sets up ROS 2 service clients, subscriptions, and the graphical layout.
      */
     PianoUI::PianoUI() : QWidget(), Node("piano_ui") {
         this->setStyleSheet(
@@ -35,16 +28,19 @@ namespace UI
 
         processor = MidiProcessor();
 
-        // Client Creations
+        // Initialize ROS 2 clients
         playback_client = this->create_client<jamc::srv::Func>("/MIPI/play_pause");
         direction_client = this->create_client<jamc::srv::Func>("/MIPI/direction");
         time_scale_client = this->create_client<jamc::srv::TimeScale>("/MIPI/time_scale");
         channel_client = this->create_client<jamc::srv::Load>("/MIPI/load");
         debug_client = this->create_client<jamc::srv::Func>("/MIPI/debug");
 
-        // Camera Subscription
-        _camera_sub = this->create_subscription<sensor_msgs::msg::Image>
-        ("/camera/camera/color/image_raw", 10, std::bind(&PianoUI::image_callback, this, std::placeholders::_1));
+        // Camera feed subscription
+        _camera_sub = this->create_subscription<sensor_msgs::msg::Image>(
+            "/camera/camera/color/image_raw", 
+            10, 
+            std::bind(&PianoUI::image_callback, this, std::placeholders::_1)
+        );
 
         auto* main_layout = new QVBoxLayout(this);
         
@@ -54,40 +50,55 @@ namespace UI
         main_layout->addWidget(_title);
         main_layout->addStretch(1);
 
-        // --- CAMERA VISUALISATION GROUP ---
+        // Camera view setup
         _camera_view = new QLabel("Waiting for camera feed...", this);
         _camera_view->setFixedSize(400, 300);
         _camera_view->setAlignment(Qt::AlignCenter);
         _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
         main_layout->addWidget(_camera_view, 0, Qt::AlignCenter);
 
-        //CAMERA FEED RESET TIMER
+        // Watchdog timer to clear feed on disconnect
         _camera_frame_watch = new QTimer(this);
-        _camera_frame_watch->setSingleShot(true); // Only fire once per timeout
+        _camera_frame_watch->setSingleShot(true);
         connect(_camera_frame_watch, &QTimer::timeout, this, [this]() {
             _camera_view->clear();
             _camera_view->setText("Waiting for camera feed...");
             _camera_view->setStyleSheet("border: 2px solid #00aaff; background-color: black; border-radius: 5px; color: #00aaff;");
         });
 
+        // Playback timer with buffer for hardware lag
         _playback_timer = new QTimer(this);
+        _playback_timer->setProperty("overtime_seconds", 0);
+        _playback_timer->setProperty("overtime_limit", 15); 
+
         connect(_playback_timer, &QTimer::timeout, this, [this]() {
-        if (!is_playing) return;
-            
-        // Check if we are going forward or backward
-        int step = (current_dir == PlaybackDirection::Forward) ? 1 : -1;
-        int new_time = _track_slider->value() + step;
-            
-            // Move the slider if we haven't reached the end/beginning
-        if (new_time >= 0 && new_time <= _track_slider->maximum()) {
-            _track_slider->setValue(new_time);
-        } else {
-            // We reached the end of the song!
-            force_pause_and_reset(); 
+            if (!is_playing) return;
+                
+            int step = (current_dir == PlaybackDirection::Forward) ? 1 : -1;
+            int new_time = _track_slider->value() + step;
+                
+            if (new_time >= 0 && new_time <= _track_slider->maximum()) {
+                _track_slider->setValue(new_time);
+                _playback_timer->setProperty("overtime_seconds", 0); 
+            } else {
+                if (current_dir == PlaybackDirection::Forward) {
+                    int current_overtime = _playback_timer->property("overtime_seconds").toInt();
+                    int max_overtime_allowed = _playback_timer->property("overtime_limit").toInt();
+
+                    // Allow hardware to finish execution
+                    if (current_overtime < max_overtime_allowed) {
+                        _playback_timer->setProperty("overtime_seconds", current_overtime + 1);
+                    } else {
+                        force_pause_and_reset(); 
+                        _playback_timer->setProperty("overtime_seconds", 0);
+                    }
+                } else {
+                    force_pause_and_reset();
+                }
             }
         });
 
-        // --- CONFIGURATION GROUP ---
+        // Configuration layout
         auto* config_group = new QGroupBox("Configuration", this);
         auto* config_layout = new QHBoxLayout(config_group);
 
@@ -139,30 +150,29 @@ namespace UI
         config_layout->addLayout(speed_layout);
         main_layout->addWidget(config_group);
 
+        // Visualisation layout
         auto* roll_group = new QGroupBox("Sheet Music Visualisation", this);
         auto* roll_layout = new QVBoxLayout(roll_group);
 
         _roll_scene = new QGraphicsScene(this);
         _roll_view = new QGraphicsView(_roll_scene, this);
-        _roll_view->setFixedHeight(150); // Keep it compact in the UI
-        
+        _roll_view->setFixedHeight(150); 
         _roll_view->setStyleSheet("background-color: #121212; border: 1px solid #3a3a3a;"); 
-     
         _roll_view->setRenderHint(QPainter::Antialiasing, false); 
         _roll_view->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing);
 
-        // Create the moving playhead
+        // Playhead setup
         _playhead = new QGraphicsLineItem();
         QPen playhead_pen(Qt::red);
         playhead_pen.setWidth(2);
         _playhead->setPen(playhead_pen);
-        _playhead->setZValue(10); // Ensure the line always draws on top of the notes
+        _playhead->setZValue(10); 
         _roll_scene->addItem(_playhead);
 
         roll_layout->addWidget(_roll_view);
         main_layout->addWidget(roll_group);
 
-        // --- PLAYBACK GROUP ---
+        // Playback controls
         auto* playback_group = new QGroupBox("Playback", this);
         auto* playback_layout = new QVBoxLayout(playback_group);
         
@@ -177,7 +187,7 @@ namespace UI
         playback_layout->addWidget(_track_slider);
         main_layout->addWidget(playback_group);
 
-        // --- STATUS GROUP ---
+        // Status dashboard
         auto* status_group = new QGroupBox("System Status", this);
         auto* status_layout = new QHBoxLayout(status_group);
         _status_val = new QLabel("Status: Idle", this);
@@ -191,7 +201,7 @@ namespace UI
         status_layout->addWidget(_time_val);
         main_layout->addWidget(status_group);
 
-        // --- CONNECTIONS ---
+        // Signal connections
         connect(_new_file_button, &QPushButton::clicked, this, &PianoUI::open_midi_file);
         connect(_play_pause_button, &QPushButton::clicked, this, &PianoUI::play_pause);
         connect(_direction_button, &QPushButton::clicked, this, &PianoUI::toggle_direction); 
@@ -206,25 +216,19 @@ namespace UI
     }
 
     /**
-     * @brief Standard Destructor for PianoUI Class.
+     * @brief Destructor for PianoUI.
      */
     PianoUI::~PianoUI() {}
 
     /**
-    * @brief Callback function for processing and displaying live ROS 2 camera feeds.
-    * * @details This function processes incoming images and renders them to the Qt GUI. 
-    * It includes several built-in optimizations and formatting checks:
-    * - **Frame Throttling:** Limits the update rate to a maximum of 30 FPS (33ms intervals) to reduce CPU load and prevent UI thread lockups.
-    * - **Format Validation:** Ensures the incoming image uses the `rgb8` encoding, issuing a throttled warning if an unsupported format is received.
-    * - **Image Mirroring:** Horizontally flips the image to provide an intuitive, mirror-like perspective for the operator.
-    * - **Fast Scaling:** Utilizes `Qt::FastTransformation` to efficiently resize the image to fit the `_camera_view` label.
-    * * @param msg A shared pointer to the incoming sensor_msgs::msg::Image.
-    * * @note Uses QMetaObject::invokeMethod with Qt::QueuedConnection to guarantee thread-safe GUI updates, securely bridging the ROS 2 executor thread and the Qt main event loop.
-    */
+     * @brief Processes incoming ROS 2 image messages and renders them.
+     * @param msg Shared pointer to the sensor_msgs::msg::Image.
+     */
     void PianoUI::image_callback(const sensor_msgs::msg::Image::SharedPtr msg) {
         static auto last_frame_time = std::chrono::steady_clock::now();
         auto current_time = std::chrono::steady_clock::now();
 
+        // Throttle to 30 FPS
         if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_frame_time).count() < 33) {
             return;
         }
@@ -233,7 +237,7 @@ namespace UI
 
         if (msg->encoding == "rgb8") {
             QImage open_img(&msg->data[0], msg->width, msg->height, msg->step, QImage::Format_RGB888);
-            QImage clean_img = open_img.mirrored(true,false);
+            QImage clean_img = open_img.mirrored(true, false);
             QPixmap pixmap = QPixmap::fromImage(clean_img).scaled(_camera_view->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
 
             QMetaObject::invokeMethod(_camera_view, [this, pixmap]() {
@@ -247,7 +251,7 @@ namespace UI
     }
 
     /**
-     * @brief Sends a trigger request to the debug service for development testing.
+     * @brief Sends an execution request to the debug service.
      */
     void PianoUI::send_debug_request() {
         auto request = std::make_shared<jamc::srv::Func::Request>();
@@ -270,8 +274,7 @@ namespace UI
     }
 
     /**
-     * @brief Immediate helper method to halt UI playback tracking and reset visual sliders.
-     * @details Sends a PAUSE request to the robot and resets the track slider to zero. Always enforces a Forward direction state.
+     * @brief Halts playback tracking, pauses the robot, and resets the slider.
      */
     void PianoUI::force_pause_and_reset() {
         if (is_playing) {
@@ -290,8 +293,7 @@ namespace UI
     }
 
     /**
-     * @brief Scans the ~/mipi_files directory to refresh the dropdown list.
-     * @note Blocks signals during execution to prevent recursive load triggers.
+     * @brief Scans the ~/mipi_files directory and populates the cache dropdown list.
      */
     void PianoUI::populate_mipi_combobox() {
         _old_file_button->blockSignals(true);
@@ -309,7 +311,7 @@ namespace UI
     }
 
     /**
-     * @brief Rebuilds the radio button group based on the currently loaded MIDI processor data.
+     * @brief Generates radio buttons corresponding to instrument channels in the active file.
      */
     void PianoUI::update_channel_radio_buttons() {
         QList<QAbstractButton*> buttons = _channel_group->buttons();
@@ -332,9 +334,9 @@ namespace UI
     }
 
     /**
-     * @brief Toggles the playback state and notifies the /MIPI/play_pause service.
+     * @brief Toggles playback state and transmits the command to the hardware node.
      */
-    void PianoUI::play_pause(){
+    void PianoUI::play_pause() {
         is_playing = !is_playing;
         _play_pause_button->setText(is_playing ? "▐▐" : "▶");
 
@@ -360,8 +362,7 @@ namespace UI
     }
 
     /**
-     * @brief UI Slot for opening a file dialog to process a raw .mid file.
-     * @details Converts the file to .mipi and automatically selects the first available channel for loading.
+     * @brief Opens a file dialog to select and parse a raw MIDI file.
      */
     void PianoUI::open_midi_file() {
         QString file_name = QFileDialog::getOpenFileName(this, "Select MIDI File", QDir::homePath(), "MIDI Files (*.mid *.midi)");        
@@ -385,8 +386,8 @@ namespace UI
     }
 
     /**
-     * @brief UI Slot for loading a file selected from the dropdown menu.
-     * @param index The index of the selected file in the QComboBox.
+     * @brief Loads a cached .mipi file directly from the dropdown menu.
+     * @param index Combobox selection index.
      */
     void PianoUI::load_existing_mipi(int index) {
         if (index <= 0) return;
@@ -404,16 +405,26 @@ namespace UI
     }
 
     /**
-     * @brief Sends a load request to the robot controller for a specific instrument channel.
-     * @param button_id The ID of the radio button corresponding to the instrument index.
-     * @details Clears the current playback state before sending the new file data to the robot.
+     * @brief Transmits target instrument channel load instructions to the robot controller.
+     * @param button_id Associated radio button identifier.
      */
     void PianoUI::send_channel_selection(int button_id) {
         if (button_id < 0 || _midi_file_path.isEmpty()) return;
 
         force_pause_and_reset();
-
         draw_piano_roll(button_id);
+
+        std::vector<std::vector<int>> all_notes = processor.get_channel_notes();
+        if (button_id >= 0 && button_id < static_cast<int>(all_notes.size())) {
+            size_t note_count = all_notes[button_id].size();
+
+            // Scale padding dynamically based on note density
+            int calculated_padding = std::max(10, static_cast<int>(note_count * 0.25));
+            
+            if (_playback_timer) {
+                _playback_timer->setProperty("overtime_limit", calculated_padding);
+            }
+        }
 
         std::vector<int> channels = processor.get_channels();
         if (button_id >= static_cast<int>(channels.size())) return;
@@ -437,7 +448,7 @@ namespace UI
     }
 
     /**
-     * @brief Toggles between Forward and Reverse playback logic.
+     * @brief Alternates standard playback navigation sequence logic.
      */
     void PianoUI::toggle_direction() {
         if (current_dir == PlaybackDirection::Forward) set_direction_reverse();
@@ -445,7 +456,7 @@ namespace UI
     }
 
     /**
-     * @brief Explicitly sets playback direction to Forward via the /MIPI/direction service.
+     * @brief Triggers direct forward trajectory execution mode.
      */
     void PianoUI::set_direction_forward() {
         if (current_dir == PlaybackDirection::Forward) return;
@@ -458,7 +469,7 @@ namespace UI
     }
 
     /**
-     * @brief Explicitly sets playback direction to Reverse via the /MIPI/direction service.
+     * @brief Triggers direct inverse trajectory execution mode.
      */
     void PianoUI::set_direction_reverse() {
         if (current_dir == PlaybackDirection::Reverse) return;
@@ -471,7 +482,7 @@ namespace UI
     }
 
     /**
-     * @brief Refreshes all status labels in the UI with the latest system state information.
+     * @brief Updates system label properties mapping to live state variants.
      */
     void PianoUI::update_status_info() {
         _status_val->setText(_midi_file_path.isEmpty() ? "Status: No File" : "Status: Ready");
@@ -479,21 +490,19 @@ namespace UI
         _speed_val->setText(QString("Speed: %1%").arg(speed_percent));
         _time_val->setText(QString("Time: %1 / %2").arg(_track_slider->value()).arg(processor.get_song_duration()));
 
-        if (_playhead && _roll_scene) { // Safety check
-            const double time_scale = 10.0; // MUST match the time_scale in draw_piano_roll()
+        if (_playhead && _roll_scene) { 
+            const double time_scale = 10.0; 
             double current_x = _track_slider->value() * time_scale;
 
-            // Redraw the line from the top to the bottom of the visible scene area
             double scene_height = _roll_scene->height();
             _playhead->setLine(current_x, 0, current_x, scene_height > 0 ? scene_height : 150);
 
-            // Make the window automatically scroll to follow the line
             _roll_view->centerOn(current_x, _roll_scene->height() / 2);
         }
     }
 
     /**
-     * @brief Transmits the current speed slider value as a time scale factor (0.01-1.0) to the robot.
+     * @brief Propagates time scale adjustments to execution systems.
      */
     void PianoUI::send_time_scale() {
         update_status_info();
@@ -508,6 +517,10 @@ namespace UI
         time_scale_client->async_send_request(request);
     }
 
+    /**
+     * @brief Generates graphic layout block representation matching parsed note timings.
+     * @param channel_index Data channel list identifier.
+     */
     void PianoUI::draw_piano_roll(int channel_index) {
         _roll_scene->removeItem(_playhead);
         _roll_scene->clear();
@@ -532,8 +545,8 @@ namespace UI
             if (p < min_pitch) min_pitch = p;
         }
 
-        const double time_scale = 10.0; // 10 pixels per second
-        const double pitch_scale = 4.0; // 4 pixels height per key
+        const double time_scale = 10.0; 
+        const double pitch_scale = 4.0; 
 
         double note_block_height = (max_pitch - min_pitch + 1) * pitch_scale;
         
@@ -553,7 +566,7 @@ namespace UI
             double height = pitch_scale;
 
             QGraphicsRectItem* rect = _roll_scene->addRect(x, y, width, height);
-            rect->setBrush(QBrush(QColor("#00aaff"))); // Matches your UI's blue color
+            rect->setBrush(QBrush(QColor("#00aaff"))); 
             rect->setPen(QPen(Qt::NoPen)); 
         }
 
