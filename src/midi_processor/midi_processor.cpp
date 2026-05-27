@@ -25,7 +25,7 @@
  * - **Trills**: Notes that are played in succession are grouped together and only the first note is kept
  * - **Overlapping Notes**: Notes that are completely overlap with each other the first note played is kept
  * 
- * @todo Improve filters
+ * @todo 
  */
 
 
@@ -680,7 +680,6 @@
                         double diff = note_timeStamp - last_kept_timeStamp;
 
                         if(diff < min_note_gap) {
-                            
                             // remove note from arrays
                             notes.at(i).erase(notes.at(i).begin() + j);
                             note_durations.at(i).erase(note_durations.at(i).begin() + j);

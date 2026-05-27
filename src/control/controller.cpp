@@ -18,6 +18,7 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/servo_node/delta_twist_cmds", 10);
     debug_target_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/debug_target", 10, std::bind(&Controller::debug_target_callback, this, std::placeholders::_1));
     key_positions_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/piano_keys", 10, std::bind(&Controller::key_positions_callback, this, std::placeholders::_1));
+    ee_sub_ = this->create_subscription<geometry_msgs::msg::Point>("/MIPI/EE", 10, std::bind(&Controller::ee_callback, this, std::placeholders::_1));
 
     load_service_ = this->create_service<jamc::srv::Load>("/MIPI/load", std::bind(&Controller::load_callback, this, std::placeholders::_1, std::placeholders::_2));
     time_service_ = this->create_service<jamc::srv::TimeScale>("/MIPI/time_scale", std::bind(&Controller::time_scale_callback, this, std::placeholders::_1, std::placeholders::_2));
@@ -25,11 +26,11 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     play_direction_service_ = this->create_service<jamc::srv::Func>("/MIPI/direction", std::bind(&Controller::play_direction_callback, this, std::placeholders::_1, std::placeholders::_2));
     debug_service_ = this->create_service<jamc::srv::Func>("/MIPI/debug", std::bind(&Controller::debug_service_callback, this, std::placeholders::_1, std::placeholders::_2));
 
-    control_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::control_loop, this));
+    control_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Controller::control_loop, this));
 
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&Controller::joint_state_callback, this, std::placeholders::_1));
     joint_traj_streaming_pub_ = this->create_publisher<control_msgs::msg::JointJog>("/servo_node/delta_joint_cmds", 10);
-    startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(25), std::bind(&Controller::startup, this));
+    startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Controller::startup, this));
 }
 
 /**
@@ -65,7 +66,7 @@ void Control::Controller::sendTwistMsg(double x, double y, double z, double angu
 
     twist_pub_->publish(msg);
 
-    RCLCPP_INFO(this->get_logger(), "Sending Twist message: linear=(%.2f, %.2f, %.2f), angular=(%.2f, %.2f, %.2f)", x, y, z, angular_x, angular_y, angular_z);
+    //RCLCPP_INFO(this->get_logger(), "Sending Twist message: linear=(%.2f, %.2f, %.2f), angular=(%.2f, %.2f, %.2f)", x, y, z, angular_x, angular_y, angular_z);
 }
 
 /**
@@ -136,7 +137,8 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
     vec.y *= scaling;
     vec.z *= scaling;
 
-    double deadzone = 0.05; //prevent jitter
+    double deadzone = deadzone_;
+    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
     if (std::abs(vec.x) < deadzone) vec.x = 0.0;
     if (std::abs(vec.y) < deadzone) vec.y = 0.0;
 
@@ -149,9 +151,9 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
  */
 std::optional<vector3> Control::Controller::calculate_velocity(int note)
 {
-    double scaling = 1; //Start small, controlled via parameter later
-    double z = calculate_z(1.0);
     vector3 target;
+
+    bool is_fallback = false; 
     {
         std::lock_guard<std::mutex> lock(key_positions_mutex_);
         if (key_positions_.poses.empty()) {
@@ -159,22 +161,38 @@ std::optional<vector3> Control::Controller::calculate_velocity(int note)
             return vector3{0.0, 0.0, 0.0};
         };
         if (note < 0 || note >= static_cast<int>(key_positions_.poses.size())) {
-            RCLCPP_WARN(this->get_logger(), "Note index %d is out of bounds for key positions. (Somehow?)", note);
+            RCLCPP_WARN(this->get_logger(), "Note index %d is out of bounds for key positions.", note);
             return vector3{0.0, 0.0, 0.0};
         }
+
+        //Seek to nearest valid if we cannot currently see the target note
+        if (std::isinf(key_positions_.poses[note].position.x)) {
+            is_fallback = true; //We are tracking a boundary, will use if needed
+
+            if (key_positions_.poses[note].position.x > 0) {
+                //Target is +INFINITY. Iterate backwards to find the highest valid index
+                for (int i = static_cast<int>(key_positions_.poses.size()) - 1; i >= 0; --i) {
+                    if (!std::isinf(key_positions_.poses[i].position.x)) {
+                        note = i;
+                        break;
+                    }
+                }
+            } else {
+                //Target is -INFINITY. Iterate forwards to find the lowest valid index
+                for (size_t i = 0; i < key_positions_.poses.size(); ++i) {
+                    if (!std::isinf(key_positions_.poses[i].position.x)) {
+                        note = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Now proceed exactly as normal using whatever 'note' ended up being
         auto target_pose = key_positions_.poses[note];
         target.x = target_pose.position.x;
         target.y = target_pose.position.y;
-        target.z = z;
-    }
-
-    // CALCULATE IF WE NEED TO SEEK OUT THE NOTE
-    if (key_positions_.poses[note].position.x == INFINITY || key_positions_.poses[note].position.y == INFINITY) {
-        //Move up the vector of notes towards the positive index
-    } else if (key_positions_.poses[note].position.x == -INFINITY || key_positions_.poses[note].position.y == -INFINITY) {
-        //Move down the vector of notes towards the negative index
-    } else {
-        //Note is visible, move towards it. As we do below.
+        target.z = 0.0; //Z does not need to be changed for camera consistency
     }
 
     double max_val = std::max({std::abs(target.x), std::abs(target.y), std::abs(target.z)});
@@ -185,14 +203,16 @@ std::optional<vector3> Control::Controller::calculate_velocity(int note)
     }
 
     // Apply scaling (velocity gain)
-    target.x *= scaling;
-    target.y *= scaling;
-    target.z *= scaling;
+    target.x *= global_speed_scaling_;
+    target.y *= global_speed_scaling_;
+    target.z *= global_speed_scaling_;
 
-    double deadzone = 0.05; //prevent jitter & abort when goal reached
+    double deadzone = deadzone_;
+    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
     if (std::abs(target.x) < deadzone)  target.x = 0.0;
     if (std::abs(target.y) < deadzone)  target.y = 0.0;
-    if (std::abs(target.x) < deadzone && std::abs(target.y) < deadzone) {
+    if (std::abs(target.z) < deadzone)  target.z = 0.0;
+    if (std::abs(target.x) < deadzone && std::abs(target.y) < deadzone && !is_fallback) {
         return std::nullopt; //Goal reached, return empty optional
     }
     return target;
@@ -211,27 +231,26 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
         song_loaded_ = false;
         return;
     }
-    int i = 0;
-    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     std::lock_guard<std::mutex> lock(song_mutex_); // Ensure thread-safe access to song data
     play_ = false; //Reset play state when loading a new song
     state_ = STATE::MOVING; //Set state to moving to move to the first note position when a new song is loaded
     CONTROL_TIME = 0.0; //Reset control time for next time
     current_note_index_ = 0; //Reset note index when loading a new song
     song_loaded_ = true; //Mark that a song has been loaded
-    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     song_ = connor.get_keyboard_indexs()[request->index];
-    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     note_timings_ = connor.get_channel_note_timings()[request->index];
-    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     note_durations_ = connor.get_channel_note_durations()[request->index];
-    RCLCPP_INFO(this->get_logger(), "Load Here %d", i++);
     if (song_.empty() or song_.size() < 2) {
         response->message = "[ERROR] Loaded file but no (or 1) note(s) found for instrument index: " + std::to_string(request->index);
         song_loaded_ = false;
         return;
     }
     response->message = "[SUCCESS] Loaded file: " + request->filepath + " with instrument index: " + std::to_string(request->index);
+    RCLCPP_INFO(this->get_logger(), "Notes in song:");
+    for(auto note : song_)
+    {
+        RCLCPP_INFO(this->get_logger(), "Note: %d", note);
+    }
 }
 
 /**
@@ -275,6 +294,7 @@ void Control::Controller::play_direction_callback(const std::shared_ptr<jamc::sr
     response->message = std::string("[SUCCESS] Toggled play direction. Now playing: ") + (direction_ ? "forward" : "backward");
 }
 
+// MAKE SURE DURATIONS FOR NOTE TIMINGS ARE IN MILISECONDS
 /**
  * @brief The main control loop that runs when the control node starts
  */
@@ -307,8 +327,9 @@ void Control::Controller::control_loop()
             RCLCPP_INFO(this->get_logger(), "Reached beginning of song, stopping playback.");
             return;
         }
+
         note = song_[current_note_index_];
-        duration = note_durations_[current_note_index_];
+        duration = static_cast<long>(note_durations_[current_note_index_]*1000);
         timing = static_cast<long>(note_timings_[current_note_index_]*1000);
         dir = direction_;
         time_scale = 1/time_scale_;
@@ -322,6 +343,7 @@ void Control::Controller::control_loop()
             if(CONTROL_TIME >= timing * time_scale) { //If moving has already exceeded the time to reach the note, we go straight to playing, otherwise, wait until it is time
                 state_ = STATE::PLAYING; //Go to playing state once we've reached the note timing
                 CONTROL_TIME = 0.0; //Reset control time for the playing state
+                RCLCPP_INFO(this->get_logger(), "BEGUN PLAYING");
                 sendStop();
             }
             break;
@@ -339,6 +361,7 @@ void Control::Controller::control_loop()
                 }
                 state_ = STATE::MOVING;
                 CONTROL_TIME = 0; //Reset control time for the moving state
+                RCLCPP_INFO(this->get_logger(), "BEGUN MOVING -> NEXT NOTE: %d", song_[current_note_index_]);
                 sendStop();
             } else {
                 sendVector(target.value());            
@@ -350,6 +373,7 @@ void Control::Controller::control_loop()
             if(!target.has_value()) {
                 sendStop();
                 state_ = STATE::WAITING; //Go to the waiting step once target position is reached
+                RCLCPP_INFO(this->get_logger(), "BEGUN WAITING");
             } else {
                 sendVector(target.value());
             }
@@ -357,6 +381,8 @@ void Control::Controller::control_loop()
         }
         default: {
             RCLCPP_ERROR(this->get_logger(), "Unknown state!");
+            state_ = STATE::MOVING;
+            break;
         }
     }
     auto now = Clock::now();
@@ -368,28 +394,86 @@ void Control::Controller::control_loop()
     LAST_CONTROL_TIME_POINT = now;
 }
 
-// Need a play_note function that returns optional, normally would just give a z velocity back to be sent, when no value is received we would then increment the note and set state back to moving
 /**
  * @brief Plays a single note or presses a button, streams Z velocity for a hardcoded duration to push down on whatever the EE is above
- * @param duration The time to hold the note for
- * @param time The current time into the note
+ * @param duration The time to hold the note for (in milliseconds)
+ * @param time The current time into the note (in milliseconds)
  */
 std::optional<vector3> Control::Controller::play_note(double duration, double time)
 {
-    //Will eventually do this, same time when we do Z velocity stuff
+    geometry_msgs::msg::Point ee;
+    { //Thread safe access
+        std::lock_guard<std::mutex> lock(ee_mutex_);
+        ee = ee_;
+    }
+    if(!playing_note_ && !returning_note_) {
+        start_pn_ee_ = ee; //Record the starting EE position for this note
+        
+        pn_target_.x = ee.x + playnote_target_x; 
+        pn_target_.y = ee.y + playnote_target_y;
+        pn_target_.z = ee.z + playnote_target_z;
+        playing_note_ = true; 
+    }
+    
+    vector3 target{0.0, 0.0, 0.0};
+
+    if (playing_note_) {
+        target.y = pn_target_.y - ee.y;
+        target.z = pn_target_.z - ee.z;
+
+        double distance_error = std::hypot(target.y, target.z);
+        double physical_deadzone = 0.001; // 1mm
+
+        if (distance_error < physical_deadzone) {
+            target.y = 0.0;
+            target.z = 0.0;
+        } else {
+            double Kp = 10.0;
+            target.y *= Kp;
+            target.z *= Kp;
+
+            double current_speed = std::max(std::abs(target.y), std::abs(target.z));
+            if (current_speed > global_speed_scaling_) {
+                target.y = (target.y / current_speed) * global_speed_scaling_;
+                target.z = (target.z / current_speed) * global_speed_scaling_;
+            }
+        }
+
+        if (time >= duration) {
+            playing_note_ = false;
+            returning_note_ = true;
+        }
+
+        return target;
+    }
+
+    if (returning_note_) {
+        target.y = start_pn_ee_.y - ee.y;
+        target.z = start_pn_ee_.z - ee.z;
+
+        double distance_error = std::hypot(target.y, target.z);
+        double physical_deadzone = 0.001; // 1mm
+
+        if (distance_error < physical_deadzone) {
+            // Return complete, reset state and signal done
+            returning_note_ = false;
+            return std::nullopt;
+        } else {
+            double Kp = 10.0;
+            target.y *= Kp;
+            target.z *= Kp;
+
+            double current_speed = std::max(std::abs(target.y), std::abs(target.z));
+            if (current_speed > global_speed_scaling_) {
+                target.y = (target.y / current_speed) * global_speed_scaling_;
+                target.z = (target.z / current_speed) * global_speed_scaling_;
+            }
+        }
+
+        return target;
+    }
 
     return std::nullopt;
-}
-
-/**
- * @brief A helper method for calculating the target Z velocity (Scaled to meet a target height based on the X&Y magnitued)
- * @param xy The magnitude of the vector in the x and y direction
- */
-double Control::Controller::calculate_z(double xy)
-{
-    // auto transform = tf_buffer_.lookupTransform("base_link", "tool0", tf2::TimePointZero); //Get the position of the end effector using TF
-    //OR If we can get Z height from Ayberks april tags, that would work too and might be more accurate
-    return 0;
 }
 
 /**
@@ -405,12 +489,6 @@ void Control::Controller::key_positions_callback(const geometry_msgs::msg::PoseA
     }
     key_positions_ = *msg;
 }
-
-// TODO:
-/*
-- Implement actual Z velocity control for pressing keys based on a target Z height, read current EE Z Height from TF. Bring to hover above key until not timing is expired (or if the move took longer than the note timing) (probably minus a constant from not timing so that it plays in time)
-- Target array position is Math::INF, Math::INF, Math::INF average the positions of keys in the direction we need to travel and travel that way until the target key is visible
-*/
 
 /**
  * @brief Subscriber Callback that obtains the joint state of the robot
@@ -428,7 +506,7 @@ void Control::Controller::joint_state_callback(const sensor_msgs::msg::JointStat
 void Control::Controller::startup() 
 {
     double tolerance = 0.01; //Tolerance
-    double max_error = 0.0; //Set the max error
+    double max_error = 0.0; //Set the max error to 0
 
     //                                    shoulder, elbow, wrist1, wrist2, wrist3, base
     //                                          -75,  100,  -115,   -90,  0,  90
@@ -564,4 +642,13 @@ void Control::Controller::debug_service_callback(const std::shared_ptr<jamc::srv
     }
     (void)request; // Unused parameter
     response->message = std::string("Debug service called");
+}
+
+/**
+ * @brief Subscriber Callback that obtains the current End Effector position, used for play_note and Z height control
+ */
+void Control::Controller::ee_callback(const geometry_msgs::msg::Point::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(ee_mutex_);
+    ee_ = *msg;
 }
