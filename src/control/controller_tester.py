@@ -86,30 +86,30 @@ class UR3eOffsetPublisher(Node):
         offset_pose_array.header.stamp = self.get_clock().now().to_msg()
         offset_pose_array.header.frame_id = 'base_link'
         
-        # Calculate X/Y offsets relative to the current end effector position
+        #Calculate X/Y offsets relative to the current end effector position
         for target_pose in self.preset_poses.poses:
             offset_pose = Pose()
             
-            # The X distance from the end effector
+            #The X distance from the end effector
             dx = target_pose.position.x - ee_x
             
-            # Apply Field of View limitations for the camera simulation
+            #Apply Field of View limitations to mimic irl camera
             if dx < -0.1:
-                # Key is out of view to the left
+                #Key is out of view to the left
                 offset_pose.position.x = float('-inf')
                 offset_pose.position.y = float('-inf')
             elif dx > 0.1:
-                # Key is out of view to the right
+                #Key is out of view to the right
                 offset_pose.position.x = float('inf')
                 offset_pose.position.y = float('inf')
             else:
-                # Key is visible! Calculate normal offset
+                #Key is visible
                 offset_pose.position.x = dx
                 offset_pose.position.y = target_pose.position.y - ee_y
             
             offset_pose.position.z = 0.0
             
-            # Maintaining basic orientation identity for the offset map
+            #Maintaining basic orientation identity for the offset map
             offset_pose.orientation.w = 1.0
             
             offset_pose_array.poses.append(offset_pose)

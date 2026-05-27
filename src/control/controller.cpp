@@ -137,8 +137,8 @@ void Control::Controller::debug_target_callback(const geometry_msgs::msg::Point:
     vec.y *= scaling;
     vec.z *= scaling;
 
-    double deadzone = 0.05; //prevent jitter
-    // deadzone = 0.005; //SIMULATION PREVENT JITTER REMOVE LATER
+    double deadzone = deadzone_;
+    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
     if (std::abs(vec.x) < deadzone) vec.x = 0.0;
     if (std::abs(vec.y) < deadzone) vec.y = 0.0;
 
@@ -207,8 +207,8 @@ std::optional<vector3> Control::Controller::calculate_velocity(int note)
     target.y *= global_speed_scaling_;
     target.z *= global_speed_scaling_;
 
-    double deadzone = 0.05; //prevent jitter
-    // deadzone = 0.005; //SIMULATION PREVENT JITTER REMOVE LATER
+    double deadzone = deadzone_;
+    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
     if (std::abs(target.x) < deadzone)  target.x = 0.0;
     if (std::abs(target.y) < deadzone)  target.y = 0.0;
     if (std::abs(target.z) < deadzone)  target.z = 0.0;
@@ -394,69 +394,6 @@ void Control::Controller::control_loop()
     LAST_CONTROL_TIME_POINT = now;
 }
 
-// /**
-//  * @brief Plays a single note or presses a button, streams Z velocity for a hardcoded duration to push down on whatever the EE is above
-//  * @param duration The time to hold the note for
-//  * @param time The current time into the note
-//  */
-// std::optional<vector3> Control::Controller::play_note(double duration, double time)
-// {
-//     geometry_msgs::msg::Point ee;
-//     { //Thread safe access
-//         std::lock_guard<std::mutex> lock(ee_mutex_);
-//         ee = ee_;
-//     }
-//     if(!playing_note_ && !returning_note_) {
-//         start_pn_ee_ = ee; //Record the starting EE position for this note
-//         pn_target_.x = ee.x + playnote_target_x; //Calculate the target position for this note based on the starting position and the hardcoded offset
-//         pn_target_.y = ee.y + playnote_target_y;
-//         pn_target_.z = ee.z + playnote_target_z;
-//         playing_note_ = true; //Mark that we are now playing a note
-//     }
-    
-//     vector3 target;
-//     if (playing_note_) {
-//         target.x = 0.0; //We do not move in the x
-//         target.y = (start_pn_ee_.y + playnote_target_y) - ee.y; //Calculate the velocity needed to reach the target y position
-//         target.z = (start_pn_ee_.z + playnote_target_z) - ee.z; //Calculate the velocity needed to reach the target z position
-//     } else if (returning_note_) {
-//         target.x = 0.0; //We do not move in the x
-//         target.y = start_pn_ee_.y - ee.y; //Calculate the velocity needed to return to the starting y position
-//         target.z = start_pn_ee_.z - ee.z; //Calculate the velocity needed to return to the starting z position
-//     }
-
-// 	// double max_val = std::max({std::abs(target.x), std::abs(target.y), std::abs(target.z)});
-//     // if (max_val > 0.001) { //Scale better for the small distance to cover. Test this.
-//     //     target.x /= max_val;
-//     //     target.y /= max_val;
-//     //     target.z /= max_val;
-//     // }
-
-//     //Apply scaling
-//     target.x *= global_speed_scaling_;
-//     target.y *= global_speed_scaling_;
-//     target.z *= global_speed_scaling_;
-
-//     double deadzone = 0.001; //prevent jitter
-//     // deadzone = 0.005; //SIMULATION PREVENT JITTER REMOVE LATER
-//     if (std::abs(target.x) < deadzone)  target.x = 0.0;
-//     if (std::abs(target.y) < deadzone)  target.y = 0.0;
-//     if (std::abs(target.z) < deadzone)  target.z = 0.0;
-
-//     if(time >= duration && !returning_note_ && target.z == 0.0) {
-//         playing_note_ = false; //Mark that we are no longer playing 
-//         returning_note_ = true;
-//     }
-
-//     if(target.x == 0.0 && target.y == 0.0 && target.z == 0.0 && returning_note_) { //If we have reached the target and we are returning, return null to proceed to next note
-//         returning_note_ = false;
-//         return std::nullopt;
-//     }
-
-//     return target;
-// }
-
-
 /**
  * @brief Plays a single note or presses a button, streams Z velocity for a hardcoded duration to push down on whatever the EE is above
  * @param duration The time to hold the note for (in milliseconds)
@@ -499,7 +436,8 @@ std::optional<vector3> Control::Controller::play_note(double duration, double ti
         target.z = (target.z / current_speed) * global_speed_scaling_;
     }
 
-    double deadzone = 0.001; 
+    double deadzone = deadzone_;
+    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
     if (std::abs(target.x) < deadzone)  target.x = 0.0;
     if (std::abs(target.y) < deadzone)  target.y = 0.0;
     if (std::abs(target.z) < deadzone)  target.z = 0.0;

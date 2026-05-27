@@ -96,6 +96,8 @@ namespace Control
         geometry_msgs::msg::Point pn_target_;
         bool playing_note_ = false;
         bool returning_note_ = false;
+        double deadzone_ = 0.05; //Deadzone for robot control. Based on physical pixel measurements in camera, not simulated measurements.
+        double simulated_deadzone = 0.001; //Deadzone for robot control in simulation. COMMENTS OUT LINES THAT MENTION THIS BEFORE BUILDING IF NOT RUNNING IN SIMULATION.
         ///@}
 
         //Methods
