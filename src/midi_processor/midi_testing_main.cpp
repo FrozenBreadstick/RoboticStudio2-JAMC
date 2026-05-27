@@ -11,6 +11,7 @@ int test_notes();
 int test_process();
 int test_get_instrument_names();
 int test_save_and_load_mipi_data();
+int test_load_mipi_data();
 
 
 int main() {
@@ -18,7 +19,7 @@ int main() {
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_process();
+    test_load_mipi_data();
 
     // close file
     return 0;
@@ -107,4 +108,31 @@ int test_save_and_load_mipi_data() {
     midi.load_json_file("mary.mipi");
 
     return 0;
+}
+
+
+int test_load_mipi_data() {
+
+    // create midi
+    MidiProcessor midi;
+
+    // open file 1
+    std::cout << "Opening midi file 1" << std::endl;
+    if(!midi.load_json_file("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/mipi_files/max_min.mipi")) {
+        std::cout << "Error opening midi file" << std::endl;
+        return 0;
+    }
+
+    auto data = midi.get_channel_notes();
+
+    // display notes
+    for(size_t i = 0; i < data.size(); i++) {
+        std::cout << "Channel: " << i << std::endl;
+        for(size_t j = 0; j < data.at(i).size(); j++) {
+            std::cout << data.at(i).at(j) << std::endl;
+        }
+    }
+
+    return 0;
+    
 }
