@@ -680,7 +680,6 @@
                         double diff = note_timeStamp - last_kept_timeStamp;
 
                         if(diff < min_note_gap) {
-                            
                             // remove note from arrays
                             notes.at(i).erase(notes.at(i).begin() + j);
                             note_durations.at(i).erase(note_durations.at(i).begin() + j);

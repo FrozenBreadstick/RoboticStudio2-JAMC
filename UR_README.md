@@ -52,6 +52,9 @@ hostname -I
 ros2 launch jamc all.launch.py
 ```
 
+If running without perception, run controller_tester.py (in folder /src/control).
+If running with perception, run end_effector_streamer.py (in folder /src/control).
+
 ---
 
 ### Manual
@@ -77,6 +80,32 @@ ros2 service call /servo_node/stop_servo std_srvs/srv/Trigger {} #Stop when done
 ####### Alternative ########
 ros2 control switch_controllers --activate scaled_joint_trajectory_controller --deactivate joint_trajectory_controller # IF USING GOAL PLANNING
 ```
+
+---
+
+### Simulated
+
+If you want to simulate the hardware, run these commands instead:
+
+Driver Setup:
+```bash
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3e robot_ip:=127.0.0.1 use_fake_hardware:=true initial_joint_controller:=joint_trajectory_controller launch_rviz:=false controller_manager_timeout:=60
+```
+
+MoveIT:
+```bash
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3e use_fake_hardware:=true launch_rviz:=true launch_servo:=true
+
+ros2 control switch_controllers --activate forward_position_controller --deactivate joint_trajectory_controller
+
+ros2 service call /servo_node/start_servo std_srvs/srv/Trigger {}
+```
+
+Or you can run the simulation launch file:
+```bash
+ros2 launch jamc all_sim.launch.py
+```
+And run controller_tester.py (in folder /src/control)
 
 ---
 
