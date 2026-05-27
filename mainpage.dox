@@ -178,7 +178,7 @@ Acknowledgements of External Library Usage:
 To build the package please refer to *@ref README.md "BUILD"**
 
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
-**Main Launch Files**
+\bMain Launch Files
 
 ```all.launch.py``` - This launch file will start the UI and Control nodes together. It will also start all dependencies, like the UR_driver, and MoveIt Servo.
 ```all_sim.launch.py``` - This launch file will start the UI and Control nodes together. It will also start all dependencies. The UR_Driver and MoveIt Servo libraries are start with use_fake_hardware set to true, allowing you to test the system without a physical robot.
@@ -192,7 +192,8 @@ If starting the system with real perception:
 If you would like to start the system with simulated perception:
 1. Run controller_tester.py in /src/control. This will publish simulated key positions to the /piano_keys topic, mimicking the real perception node behaviour, allowing you to test the system without the perception node but with the caveat of it not being perfectly mapped to a real life keyboard.
 
-**Testing Launch Files**
+There are several files for testing too.
+\bTesting Launch Files
 ```controller_test.launch.py``` - Starts the Controller node on its own, without any dependencies. 
 ```ui_test.launch.py``` - Starts the UI node on its own, without any dependencies.
 
