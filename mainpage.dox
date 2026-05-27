@@ -200,11 +200,14 @@ There are several files for testing too.
 Refer to the source code for detailed topic and service names, and to adjust parameters as needed for your environment.
 
 @section startup_guide Full Startup Guide
+ENSURE LAPTOP WIFI IS OFF
 1. Setup the Teach Pendant (if using a real robot) as per UR_README.md (DO NOT START ROBOT PROGRAM YET)
 2. Run all.launch.py or all_sim.launch.py
 3. Run the correct perception setup as seen above in the launch file instructions
 4. Once the launch file is finished launching, (should see some errors regarding TF tree problems). Start the RobotProgram on the teach pendant. The robot will move to the starting position. And you will see REACHED STARTING POSITION in the terminal.
 5. At this stage you may load a midi/mipi file using the UI, and then press play to begin playback.
+
+Note: To visualise the simulated perception piano keys, in Rviz, add a new PoseArray visualisation set to AXES visualisation type. Set the Axes length to .01, and the Axes radius to .005, then set the topic to /key_positions
 
 */
 

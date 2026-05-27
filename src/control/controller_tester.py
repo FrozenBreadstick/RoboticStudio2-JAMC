@@ -28,7 +28,7 @@ class UR3eOffsetPublisher(Node):
 
         self.preset_poses = self.generate_preset_poses()
 
-        self.timer = self.create_timer(0.1, self.timer_callback)
+        self.timer = self.create_timer(0.025, self.timer_callback)
         
         self.get_logger().info("UR3e Offset Publisher Node has started.")
 
