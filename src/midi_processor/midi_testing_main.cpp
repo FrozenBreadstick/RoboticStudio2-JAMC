@@ -34,7 +34,7 @@ int test_process() {
     // twinkle twinkle little star
     // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid";
     // pokemon
-    // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/Driftveil_City_(Pokémon B1W1).mid";
+    std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/Driftveil_City_(Pokémon B1W1).mid";
     // mary had a little lamb
     // std::string midi_file_path = "/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid";
     // rick roll
