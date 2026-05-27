@@ -424,23 +424,23 @@ std::optional<vector3> Control::Controller::play_note(double duration, double ti
         target.z = start_pn_ee_.z - ee.z; 
     }
 
-    double Kp = 10.0; 
-    target.x *= Kp;
-    target.y *= Kp;
-    target.z *= Kp;
+    double distance_error = std::hypot(target.y, target.z);
+    double physical_deadzone = 0.001; // 1mm
+    
+    if (distance_error < physical_deadzone) {
+        target.y = 0.0;
+        target.z = 0.0;
+    } else {
+        double Kp = 10.0; 
+        target.y *= Kp;
+        target.z *= Kp;
 
-    double current_speed = std::max({std::abs(target.x), std::abs(target.y), std::abs(target.z)});
-    if (current_speed > global_speed_scaling_) {
-        target.x = (target.x / current_speed) * global_speed_scaling_;
-        target.y = (target.y / current_speed) * global_speed_scaling_;
-        target.z = (target.z / current_speed) * global_speed_scaling_;
+        double current_speed = std::max(std::abs(target.y), std::abs(target.z));
+        if (current_speed > global_speed_scaling_) {
+            target.y = (target.y / current_speed) * global_speed_scaling_;
+            target.z = (target.z / current_speed) * global_speed_scaling_;
+        }
     }
-
-    double deadzone = deadzone_;
-    deadzone = simulated_deadzone; //SIMULATION PREVENT JITTER REMOVE LATER
-    if (std::abs(target.x) < deadzone)  target.x = 0.0;
-    if (std::abs(target.y) < deadzone)  target.y = 0.0;
-    if (std::abs(target.z) < deadzone)  target.z = 0.0;
 
     if(time >= duration && !returning_note_) {
         playing_note_ = false; //Mark that we are no longer playing 
