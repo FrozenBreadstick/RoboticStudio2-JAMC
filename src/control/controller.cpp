@@ -31,6 +31,8 @@ Control::Controller::Controller() : Node("MIPI_Controller"), CONTROL_TIME(0), LA
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&Controller::joint_state_callback, this, std::placeholders::_1));
     joint_traj_streaming_pub_ = this->create_publisher<control_msgs::msg::JointJog>("/servo_node/delta_joint_cmds", 10);
     startup_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Controller::startup, this));
+
+    progress_pub_ = this->create_publisher<std_msgs::msg::Int32>("/MIPI/progress", 10);
 }
 
 /**
@@ -358,6 +360,7 @@ void Control::Controller::control_loop()
                     } else {
                         current_note_index_--;
                     }
+                    progress_pub_->publish(std_msgs::msg::Int32().set__data(current_note_index_)); //Publish progress to UI
                 }
                 state_ = STATE::MOVING;
                 CONTROL_TIME = 0; //Reset control time for the moving state

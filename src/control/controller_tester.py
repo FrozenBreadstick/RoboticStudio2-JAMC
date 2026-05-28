@@ -46,13 +46,13 @@ class UR3eOffsetPublisher(Node):
 
         for i in range(37):
             pose = Pose()
-            x_offset += 0.01 if i or i-1 in black_keys else 0.02
-            y_offset = 0.0 if i in black_keys else -0.02
+            x_offset += 0.0095 if i or i-1 in black_keys else 0.019
+            y_offset = 0.0 if i in black_keys else -0.019
             pose.position.x = -0.2 + (x_offset)
-            pose.position.y = 0.45 + (y_offset)
+            pose.position.y = 0.34 + (y_offset)
             pose.position.z = 0.0
             pose.orientation.w = 1.0
-            
+            if i >= 36: print(x_offset)
             pose_array.poses.append(pose)
             
         return pose_array
