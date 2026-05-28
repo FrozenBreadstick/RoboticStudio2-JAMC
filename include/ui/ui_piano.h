@@ -28,6 +28,7 @@
 #include "jamc/srv/load.hpp"
 
 #include <sensor_msgs/msg/image.hpp>
+#include <std_msgs/msg/int32.hpp>
 
 #include "midi_processor/midi_processor.h"
 
@@ -88,6 +89,9 @@ namespace UI
             QLabel* _camera_view;
             rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _camera_sub;
 
+            rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr position_sub;
+            void position_callback(const std_msgs::msg::Int32::SharedPtr msg);
+
             QPushButton* _debug_button;
 
             /**
@@ -104,6 +108,9 @@ namespace UI
             QGraphicsLineItem* _playhead;
 
             void draw_piano_roll(int channel_index);
+
+            int _active_channel_index = -1;
+            void update_playhead_position(double exact_time);
 
         private slots:
             void play_pause();

@@ -36,11 +36,8 @@ namespace UI
         debug_client = this->create_client<jamc::srv::Func>("/MIPI/debug");
 
         // Camera feed subscription
-        _camera_sub = this->create_subscription<sensor_msgs::msg::Image>(
-            "/camera/camera/color/image_raw", 
-            10, 
-            std::bind(&PianoUI::image_callback, this, std::placeholders::_1)
-        );
+        _camera_sub = this->create_subscription<sensor_msgs::msg::Image>("/camera/camera/color/image_raw", 10,std::bind(&PianoUI::image_callback, this, std::placeholders::_1));
+        position_sub = this->create_subscription<std_msgs::msg::Int32>("/MIPI/progress", 10,std::bind(&PianoUI::position_callback, this, std::placeholders::_1));
 
         auto* main_layout = new QVBoxLayout(this);
         
@@ -71,31 +68,14 @@ namespace UI
         _playback_timer->setProperty("overtime_seconds", 0);
         _playback_timer->setProperty("overtime_limit", 15); 
 
+        _playback_timer = new QTimer(this);
+        _playback_timer->setInterval(2000); 
+
         connect(_playback_timer, &QTimer::timeout, this, [this]() {
             if (!is_playing) return;
-                
-            int step = (current_dir == PlaybackDirection::Forward) ? 1 : -1;
-            int new_time = _track_slider->value() + step;
-                
-            if (new_time >= 0 && new_time <= _track_slider->maximum()) {
-                _track_slider->setValue(new_time);
-                _playback_timer->setProperty("overtime_seconds", 0); 
-            } else {
-                if (current_dir == PlaybackDirection::Forward) {
-                    int current_overtime = _playback_timer->property("overtime_seconds").toInt();
-                    int max_overtime_allowed = _playback_timer->property("overtime_limit").toInt();
 
-                    // Allow hardware to finish execution
-                    if (current_overtime < max_overtime_allowed) {
-                        _playback_timer->setProperty("overtime_seconds", current_overtime + 1);
-                    } else {
-                        force_pause_and_reset(); 
-                        _playback_timer->setProperty("overtime_seconds", 0);
-                    }
-                } else {
-                    force_pause_and_reset();
-                }
-            }
+            RCLCPP_WARN(this->get_logger(), "Robot Progress taking along time");
+            //force_pause_and_reset(); 
         });
 
         // Configuration layout
@@ -248,6 +228,43 @@ namespace UI
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000, 
                 "PianoUI Camera Warning: Expected 'rgb8' image encoding, but received '%s'", msg->encoding.c_str());
         }
+    }
+
+    /**
+    * @brief Synchronizes the UI using the note index executed by the robot.
+    */
+    void PianoUI::position_callback(const std_msgs::msg::Int32::SharedPtr msg) {
+        int note_index = msg->data; 
+
+        QMetaObject::invokeMethod(this, [this, note_index]() {
+            if (is_playing) {
+                _playback_timer->start(); 
+            }
+
+            if (_active_channel_index < 0) return;
+
+            auto all_timings = processor.get_channel_note_timings();
+            if (_active_channel_index >= static_cast<int>(all_timings.size())) return;
+
+            std::vector<double>& channel_timings = all_timings[_active_channel_index];
+            
+            if (note_index >= static_cast<int>(channel_timings.size())) {
+                RCLCPP_INFO(this->get_logger(), "Song complete. Resetting UI.");
+                force_pause_and_reset();
+                return; 
+            }
+            if (note_index < 0) return;
+
+            double exact_note_time = channel_timings[note_index];
+
+            _track_slider->blockSignals(true);
+            _track_slider->setValue(static_cast<int>(exact_note_time));
+            _track_slider->blockSignals(false);
+
+            update_status_info();
+            update_playhead_position(exact_note_time);
+
+        }, Qt::QueuedConnection);
     }
 
     /**
@@ -408,6 +425,8 @@ namespace UI
     void PianoUI::send_channel_selection(int button_id) {
         if (button_id < 0 || _midi_file_path.isEmpty()) return;
 
+        _active_channel_index = button_id;
+
         force_pause_and_reset();
         draw_piano_roll(button_id);
 
@@ -487,15 +506,6 @@ namespace UI
         _speed_val->setText(QString("Speed: %1%").arg(speed_percent));
         _time_val->setText(QString("Time: %1 / %2").arg(_track_slider->value()).arg(processor.get_song_duration()));
 
-        if (_playhead && _roll_scene) { 
-            const double time_scale = 10.0; 
-            double current_x = _track_slider->value() * time_scale;
-
-            double scene_height = _roll_scene->height();
-            _playhead->setLine(current_x, 0, current_x, scene_height > 0 ? scene_height : 150);
-
-            _roll_view->centerOn(current_x, _roll_scene->height() / 2);
-        }
     }
 
     /**
@@ -568,5 +578,31 @@ namespace UI
         }
 
         _roll_scene->setSceneRect(_roll_scene->itemsBoundingRect());
+    }
+
+    /**
+    * @brief Moves the red bar line to align with the precise time of the active note.
+    * @param exact_time The double-precision timestamp of the note.
+    */
+    void PianoUI::update_playhead_position(double exact_time) {
+        if (!_playhead || !_roll_scene) return;
+
+        const double time_scale = 10.0; 
+        double current_x = exact_time * time_scale;
+
+        QRectF scene_bounds = _roll_scene->sceneRect();
+        double top = scene_bounds.top();
+        double bottom = scene_bounds.bottom();
+
+        if (bottom <= top) {
+            top = 0;
+            bottom = 150;
+        }
+
+        _playhead->setLine(current_x, top, current_x, bottom);
+
+        _playhead->setZValue(10);
+
+        _roll_view->centerOn(current_x, scene_bounds.center().y());
     }
 }
