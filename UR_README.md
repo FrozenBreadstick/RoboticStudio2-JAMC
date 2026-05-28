@@ -148,3 +148,4 @@ See below for a list of exposed ROS2 interfaces that allow interaction when the 
 | **Publishers** | | | |
 | `twist_pub_` | `/servo_node/delta_twist_cmds` | `geometry_msgs::msg::TwistStamped` | Publishes to the MoveIt servo node for streaming End Effector velocities |
 | `joint_traj_streaming_pub_` | `/servo_server/delta_joint_cmds` | `control_msgs::msg::JointJog` | Publishes to the MoveIt servo_server to directly stream joint velocities. Used in the startup sequence to bring the robot into position |
+| `progress_pub_` | `/MIPI/progress` | `std_msgs::msg::Int32` | Publishes the current note index as an integer for the UI to update the playback indicator |
