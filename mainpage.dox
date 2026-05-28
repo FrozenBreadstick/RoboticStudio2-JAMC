@@ -181,6 +181,9 @@ To build the package please refer to *@ref README.md "BUILD"**
 \bMain Launch Files
 
 ```all.launch.py``` - This launch file will start the UI and Control nodes together. It will also start all dependencies, like the UR_driver, and MoveIt Servo.
+Params:
+robot_ip: The IP address of the robot.
+
 ```all_sim.launch.py``` - This launch file will start the UI and Control nodes together. It will also start all dependencies. The UR_Driver and MoveIt Servo libraries are start with use_fake_hardware set to true, allowing you to test the system without a physical robot.
 
 For both of the launch files specified above, the perception node and its depndencies is not included. This is due to integration limitations due to time constraints. 
@@ -201,7 +204,7 @@ Refer to the source code for detailed topic and service names, and to adjust par
 
 @section startup_guide Full Startup Guide
 ENSURE LAPTOP WIFI IS OFF
-1. Setup the Teach Pendant (if using a real robot) as per UR_README.md (DO NOT START ROBOT PROGRAM YET)
+1. Setup the Teach Pendant (if using a real robot) as per Controller Usage Guide (DO NOT START ROBOT PROGRAM YET)
 2. Run all.launch.py or all_sim.launch.py
 3. Run the correct perception setup as seen above in the launch file instructions
 4. Once the launch file is finished launching, (should see some errors regarding TF tree problems). Start the RobotProgram on the teach pendant. The robot will move to the starting position. And you will see REACHED STARTING POSITION in the terminal.
