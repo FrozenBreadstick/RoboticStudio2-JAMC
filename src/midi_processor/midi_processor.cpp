@@ -157,9 +157,9 @@
             }
 
             // print data -------
-            if(!debug_print_data()) {
-                return -1;
-            }
+            // if(!debug_print_data()) {
+            //     return -1;
+            // }
 
             return 0;
         }
