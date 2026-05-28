@@ -18,6 +18,7 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <control_msgs/msg/joint_jog.hpp>
+#include <std_msgs/msg/int32.hpp>
 
 using Clock = std::chrono::steady_clock;
 
@@ -91,13 +92,13 @@ namespace Control
 
         double playnote_target_x = 0.0; //Hardcoded x offset to play a key on the keyboard
         double playnote_target_y = 0.015; //Hardcoded y offset to play a key on the keyboard
-        double playnote_target_z = -0.015; //Hardcoded z offset to play a key on the keyboard
+        double playnote_target_z = -0.025; //Hardcoded z offset to play a key on the keyboard
         geometry_msgs::msg::Point start_pn_ee_;
         geometry_msgs::msg::Point pn_target_;
         bool playing_note_ = false;
         bool returning_note_ = false;
         double deadzone_ = 0.05; //Deadzone for robot control. Based on physical pixel measurements in camera, not simulated measurements.
-        double simulated_deadzone = 0.001; //Deadzone for robot control in simulation. COMMENTS OUT LINES THAT MENTION THIS BEFORE BUILDING IF NOT RUNNING IN SIMULATION.
+        double simulated_deadzone = 0.005; //Deadzone for robot control in simulation. COMMENTS OUT LINES THAT MENTION THIS BEFORE BUILDING IF NOT RUNNING IN SIMULATION.
         ///@}
 
         //Methods
@@ -131,6 +132,7 @@ namespace Control
         ///@{
         rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
         rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_traj_streaming_pub_;
+        rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr progress_pub_;
         ///@}
 
         //Subscribers

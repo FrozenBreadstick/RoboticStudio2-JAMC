@@ -150,7 +150,7 @@ def generate_launch_description():
     ld.add_action(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="192.168.0.192"
+            default_value="192.168.0.194"
         )
     )
 
