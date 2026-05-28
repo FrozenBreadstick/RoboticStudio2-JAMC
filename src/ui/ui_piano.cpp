@@ -282,14 +282,11 @@ namespace UI
             _play_pause_button->setText("▶");
             _playback_timer->stop();
             
-            auto request = std::make_shared<jamc::srv::Func::Request>();
-            if (playback_client->service_is_ready()) {
-                RCLCPP_INFO(this->get_logger(), "Sending PAUSE request to reset playback");
-                playback_client->async_send_request(request);
             }
-        }
         _track_slider->setValue(0);
-        set_direction_forward();
+        if (current_dir == PlaybackDirection::Forward) return;
+        current_dir = PlaybackDirection::Forward;
+        _direction_button->setText("⏩");
     }
 
     /**
