@@ -9,3 +9,5 @@ latex
 install
 log
 docs
+__pychache__
+*.cpython-310.pyc

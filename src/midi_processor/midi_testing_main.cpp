@@ -12,6 +12,7 @@ int test_process();
 int test_get_instrument_names();
 int test_save_and_load_mipi_data();
 int test_load_mipi_data();
+int test_pass_requirements();
 
 
 int main() {
@@ -19,7 +20,7 @@ int main() {
     std::cout << "Testing midi Processor class - v0.1" << std::endl;
 
     // Run test
-    test_load_mipi_data();
+    test_pass_requirements();
 
     // close file
     return 0;
@@ -135,4 +136,169 @@ int test_load_mipi_data() {
 
     return 0;
     
+}
+
+
+int test_pass_requirements() {
+
+    // create midi
+    MidiProcessor midi;
+
+    // open file 1
+    std::cout << "Opening midi file 1" << std::endl;
+    
+    int error = midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/mary-had-a-little-lamb.mid", "mary.mipi");
+    if(error != 0) {
+        std::cout << "Error opening midi file 1" << std::endl;
+        return 0;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    std::vector<std::vector<int>> notes = midi.get_channel_notes();
+    std::vector<std::vector<int>> assigned_indexs = midi.get_keyboard_indexs();
+    std::vector<std::vector<double>> note_timings = midi.get_channel_note_timings();
+    std::vector<std::vector<double>> note_durations = midi.get_channel_note_durations();
+    double song_duration = midi.get_song_duration();
+
+    // display notes and timings
+    std::cout << "song duration: " << song_duration << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "first 10 Notes: " << std::endl;
+    for(size_t i = 0; i < 10; i++) {
+        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // -----------------------------------------------------------------------------
+
+    // open file 2
+    std::cout << "Opening midi file 2" << std::endl;
+    error = midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/twinkle-twinkle-little-star.mid", "twinkle.mipi");
+    if(error != 0) {
+        std::cout << "Error opening midi file 2" << std::endl;
+        return 0;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    notes = midi.get_channel_notes();
+    assigned_indexs = midi.get_keyboard_indexs();
+    note_timings = midi.get_channel_note_timings();
+    note_durations = midi.get_channel_note_durations();
+    song_duration = midi.get_song_duration();
+
+    // display notes and timings
+    std::cout << "song duration: " << song_duration << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "first 10 Notes: " << std::endl;
+    for(size_t i = 0; i < 10; i++) {
+        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // -----------------------------------------------------------------------------
+
+    // open file 3
+    std::cout << "Opening midi file 3" << std::endl;
+    error = midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/californication.mid", "cali.mipi");
+    if(error != 0) {
+        std::cout << "Error opening midi file 3" << std::endl;
+        return 0;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    notes = midi.get_channel_notes();
+    assigned_indexs = midi.get_keyboard_indexs();
+    note_timings = midi.get_channel_note_timings();
+    note_durations = midi.get_channel_note_durations();
+    song_duration = midi.get_song_duration();
+
+    // display notes and timings
+    std::cout << "song duration: " << song_duration << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "first 10 Notes: " << std::endl;
+    for(size_t i = 0; i < 10; i++) {
+        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // -----------------------------------------------------------------------------
+
+    // open file 4
+    std::cout << "Opening midi file 4" << std::endl;
+    error = midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/jingle_bells.mid", "jingle.mipi");
+    if(error != 0) {
+        std::cout << "Error opening midi file 4" << std::endl;
+        return 0;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    notes = midi.get_channel_notes();
+    assigned_indexs = midi.get_keyboard_indexs();
+    note_timings = midi.get_channel_note_timings();
+    note_durations = midi.get_channel_note_durations();
+    song_duration = midi.get_song_duration();
+
+    // display notes and timings
+    std::cout << "song duration: " << song_duration << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "first 10 Notes: " << std::endl;
+    for(size_t i = 0; i < 10; i++) {
+        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // -----------------------------------------------------------------------------
+
+    // open file 5
+    std::cout << "Opening midi file 5" << std::endl;
+    error = midi.processMidiFile("/home/connor/git/robo-studio-2/RoboticStudio2-JAMC/midi_files/cant-stop.mid", "cant.mipi");
+    if(error != 0) {
+        std::cout << "Error opening midi file 5" << std::endl;
+        return 0;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    notes = midi.get_channel_notes();
+    assigned_indexs = midi.get_keyboard_indexs();
+    note_timings = midi.get_channel_note_timings();
+    note_durations = midi.get_channel_note_durations();
+    song_duration = midi.get_song_duration();
+
+    // display notes and timings
+    std::cout << "song duration: " << song_duration << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "first 10 Notes: " << std::endl;
+    for(size_t i = 0; i < 10; i++) {
+        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    // -----------------------------------------------------------------------------
+
+    return 0;
 }

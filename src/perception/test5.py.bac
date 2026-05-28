@@ -10,7 +10,6 @@ import cv2
 import numpy as np
 import json
 import torch
-import math
 from ultralytics import YOLO
 YOLO_IMG_SIZE  = 1088    ## Full YOLO resolution
 YOLO_SKIP      = 1      ## Run YOLO every frame
@@ -19,45 +18,6 @@ DISPLAY_SCALE  = 1.0    ## Full resolution preview
 ##                      ( X offset,  Y offset ) pixel offset added to the raw white- black key centroide before publishing
 WHITE_KEY_OFFSET = (0, 30)
 BLACK_KEY_OFFSET = (0, 10)
-
-## ── Total number of piano keys ──────────────────────────────────────────
-TOTAL_KEYS = 37
-
-## ── Anchor dots on C keys ───────────────────────────────────────────────
-## Physical coloured stickers placed on specific C keys so the detector
-## can work out absolute key indices from the YOLO detections.
-ANCHOR_MAP = {
-    "blue":  7,    # blue dot sits on key index  7
-    "Green": 19,   # green dot sits on key index 19
-    "Red":   31,   # red dot sits on key index   31
-}
-
-## ── Merge threshold (pixels) ────────────────────────────────────────────
-## If a dot detection and a key detection are closer than this they are
-## treated as the same physical key (the dot is ON that key).
-MERGE_THRESH = 50
-
-## ── Per-class colour map (BGR) ──────────────────────────────────────────
-## Each class gets a unique, high-contrast colour so you can instantly
-## tell what the model is detecting.
-CLASS_COLOURS = {
-    "blue":  (255, 150,   0),   # bright blue
-    "Green": (  0, 200,   0),   # green
-    "Red":   (  0,   0, 255),   # red
-    "Key-W": (255,   0, 255),   # magenta / pink  (white keys)
-    "Key-B": (  0, 255, 255),   # yellow / cyan    (black keys)
-}
-## Slightly darker / muted versions used for the translucent fill overlay
-CLASS_FILLS = {
-    "blue":  (200, 120,   0),
-    "Green": (  0, 160,   0),
-    "Red":   (  0,   0, 200),
-    "Key-W": (180,   0, 180),
-    "Key-B": (  0, 200, 200),
-}
-## Fallback if the model ever returns a class we haven't mapped
-DEFAULT_COLOUR = (0, 215, 255)
-DEFAULT_FILL   = (0, 160, 200)
  
 class AprilTagPianoDetector(Node):
     """!
@@ -99,8 +59,6 @@ class AprilTagPianoDetector(Node):
         self.bridge = CvBridge()
         self._frame_count  = 0
         self.ordered_keys  = []
-        self._merged_keys  = []     # deduplicated keys used for publishing
-        self._key_offset   = None   # absolute offset: absolute_index = merged_index + offset
         self._fps_t0    = None
         self._fps_count = 0
         self._fps       = 0.0
@@ -109,7 +67,6 @@ class AprilTagPianoDetector(Node):
         self.get_logger().info(
             f"Detector ready  |  YOLO imgsz={YOLO_IMG_SIZE}  "
             f"skip={YOLO_SKIP}  device={self.device.upper()}\n"
-            f"  Total keys={TOTAL_KEYS}  Anchors: blue→7  Green→19  Red→31\n"
             f"  Waiting on /camera/camera/color/image_raw\n"
             f"  Launch camera first:  ros2 launch realsense2_camera rs_launch.py"
         )
@@ -133,11 +90,81 @@ class AprilTagPianoDetector(Node):
         h, w = bgr.shape[:2]
         if self._frame_count % YOLO_SKIP == 0:
             self.ordered_keys = self._detect_piano_keys(bgr)
-            self._merged_keys, self._key_offset = self._merge_and_calibrate(self.ordered_keys)
             self._publish_keys()
         display = bgr.copy()
         self._draw_piano_keys(display, self.ordered_keys)
-        self._draw_legend(display)
+
+        gray    = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)  # aprel tag detection gray scale changer 
+        results = self.tag_detector.detect(gray)
+
+        # Frame centre marker (drawn once, behind all tag lines)
+        frame_cx = int(center_x)
+        frame_cy = int(center_y)
+        cv2.drawMarker(
+            display, (frame_cx, frame_cy),
+            color=(0, 255, 255),
+            markerType=cv2.MARKER_CROSS,
+            markerSize=20,
+            thickness=2
+        )
+
+        for r in results:
+            (ptA, ptB, ptC, ptD) = r.corners
+            ptA = tuple(int(x) for x in ptA)
+            ptB = tuple(int(x) for x in ptB)
+            ptC = tuple(int(x) for x in ptC)
+            ptD = tuple(int(x) for x in ptD)
+
+            cv2.line(display, ptA, ptB, (0, 255, 0), 2)
+            cv2.line(display, ptB, ptC, (0, 255, 0), 2)
+            cv2.line(display, ptC, ptD, (0, 255, 0), 2)
+            cv2.line(display, ptD, ptA, (0, 255, 0), 2)
+
+            cX, cY = int(r.center[0]), int(r.center[1])
+            cv2.circle(display, (cX, cY), 5, (255, 0, 0), -1)
+            cv2.putText(display, f"TAG {r.tag_id}", (cX, cY - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+            #  Line from frame centre  tag centre 
+            cv2.line(display, (frame_cx, frame_cy), (cX, cY), (0, 255, 255), 2)
+
+            # Distance in pixels
+            dx   = cX - frame_cx
+            dy   = cY - frame_cy
+            dist = (dx ** 2 + dy ** 2) ** 0.5
+
+            # Place the label at the midpoint of the line, offset slightly so
+            # it does not sit directly on top of the line itself.
+            label_x = (frame_cx + cX) // 2 + 8
+            label_y = (frame_cy + cY) // 2 - 8
+            cv2.putText(
+                display,
+                f"{dist:.1f}px",
+                (label_x, label_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2
+            )
+  
+
+            offset_x = (cX - center_x) / center_x
+            offset_y = -((cY - center_y) / center_y)
+
+            # marks the nearest key to apriltag
+
+            nearest = self._find_nearest_key(cX, cY)
+            if nearest is not None:
+                cv2.putText(
+                    display,
+                    f"Key #{nearest['key_index']}",
+                    (cX + 10, cY + 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2
+                )
+            # publishes the tags nnormilised position
+            pt   = Point()
+            pt.x = float(offset_x)
+            pt.y = float(offset_y)
+            pt.z = 0.0
+            self.publisher_tag.publish(pt)
+
         import time
         now = time.monotonic()
         if self._fps_t0 is None:
@@ -150,13 +177,10 @@ class AprilTagPianoDetector(Node):
             self._fps_t0    = now
         cv2.putText(display, f"FPS: {self._fps:.1f}",
                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-        cv2.putText(display, f"Keys: {len(self._merged_keys)}",
+        cv2.putText(display, f"Keys: {len(self.ordered_keys)}",
                     (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
         cv2.putText(display, f"Device: {self.device.upper()}",
                     (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (180, 180, 180), 2)
-        offset_str = str(self._key_offset) if self._key_offset is not None else "no anchor"
-        cv2.putText(display, f"Offset: {offset_str}",
-                    (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (180, 180, 180), 2)
         if DISPLAY_SCALE != 1.0:
             dw = int(w * DISPLAY_SCALE)
             dh = int(h * DISPLAY_SCALE)
@@ -185,7 +209,7 @@ class AprilTagPianoDetector(Node):
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     conf  = float(box.conf[0])
                     label = names.get(int(box.cls[0]), str(int(box.cls[0])))
-                    off_x, off_y = WHITE_KEY_OFFSET if label == "Key-B" else BLACK_KEY_OFFSET
+                    off_x, off_y = WHITE_KEY_OFFSET if label == "key_B" else BLACK_KEY_OFFSET
                     raw_keys.append({
                         "label":      label,
                         "bbox":       [x1, y1, x2, y2],
@@ -199,7 +223,7 @@ class AprilTagPianoDetector(Node):
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
                 conf  = float(box.conf[0])
                 label = names.get(int(box.cls[0]), str(int(box.cls[0])))
-                off_x, off_y = WHITE_KEY_OFFSET if label == "Key-B" else BLACK_KEY_OFFSET
+                off_x, off_y = WHITE_KEY_OFFSET if label == "key_B" else BLACK_KEY_OFFSET
                 contour = mask.astype(np.float32)
                 if len(contour) >= 3:
                     # uses segmentation to find the mid point of the detection keys
@@ -223,123 +247,7 @@ class AprilTagPianoDetector(Node):
                 })
         # Sorts keys left-to-right by their x position, then assigns each one an index 
         raw_keys.sort(key=lambda k: k["bbox"][0])
-        return [{"key_index": i, **k} for i, k in enumerate(raw_keys)]
-
-    # ── anchor calibration ────────────────────────────────────────────────
-    def _merge_and_calibrate(self, detections: list) -> tuple:
-        """!
-        @brief  Merges overlapping dot / key detections and uses anchor dots
-        to compute the absolute key offset.
-
-        A coloured dot (blue, Green, Red) sits physically ON a piano key so
-        the YOLO model may return both a dot detection and a Key-W detection
-        at the same position.  This method keeps the dot and drops any key
-        detection within MERGE_THRESH pixels so every physical key appears
-        only once in the merged list.
-
-        The anchor dots have known absolute indices (blue=7, Green=19,
-        Red=31).  When at least one anchor is visible the offset that maps
-        a merged-list index to an absolute key index is computed.  If
-        multiple anchors are visible the median offset is used for
-        robustness.
-
-        @return (merged_keys, offset)
-                merged_keys – deduplicated list sorted left-to-right
-                offset      – int or None; absolute_index = merged_index + offset
-        """
-        if not detections:
-            return [], None
-
-        # separate anchor dots from plain key detections
-        anchors = []
-        keys    = []
-        for d in detections:
-            if d["label"] in ANCHOR_MAP:
-                anchors.append(d)
-            else:
-                keys.append(d)
-
-        # start the merged list with anchor dots
-        merged = list(anchors)
-
-        # add plain keys that do NOT overlap with any anchor
-        for k in keys:
-            overlaps = False
-            for a in anchors:
-                if abs(k["mid_x"] - a["mid_x"]) < MERGE_THRESH:
-                    overlaps = True
-                    break
-            if not overlaps:
-                merged.append(k)
-
-        # sort left to right by centroid x
-        merged.sort(key=lambda k: k["mid_x"])
-
-        # compute offset from every visible anchor, take the median
-        offsets = []
-        for i, m in enumerate(merged):
-            if m["label"] in ANCHOR_MAP:
-                offsets.append(ANCHOR_MAP[m["label"]] - i)
-
-        if offsets:
-            offsets.sort()
-            offset = offsets[len(offsets) // 2]   # median
-        else:
-            offset = None
-
-        return merged, offset
-
-    # ── publish 37-key PoseArray ──────────────────────────────────────────
-    def _publish_keys(self) -> None:
-        """!
-        @brief  Always publishes exactly 37 poses on /piano_keys.
-
-        Uses the anchor-calibrated offset so each pose slot corresponds to
-        an absolute key index (0-36).
-
-        Visible keys  → actual pixel coordinates.
-        Keys off-screen to the LEFT  → position.x = -inf, position.y = -inf
-        Keys off-screen to the RIGHT → position.x = +inf, position.y = +inf
-
-        If no anchor dot is visible (offset is None) the node cannot
-        determine absolute positions, so all 37 poses are set to NaN to
-        signal that the data is unreliable.
-        """
-        #Packs every key's centroid into a PoseArray message and publishes it. The robot arm controller reads this on /piano_keys to know where each key is in the camera frame.
-        msg = PoseArray()
-        merged = self._merged_keys
-        offset = self._key_offset
-        num_detected = len(merged)
-
-        for abs_idx in range(TOTAL_KEYS):
-            pose = Pose()
-
-            if offset is None:
-                # no anchor visible – cannot determine absolute positions
-                pose.position.x = float('nan')
-                pose.position.y = float('nan')
-            else:
-                merged_idx = abs_idx - offset
-                if 0 <= merged_idx < num_detected:
-                    # key is visible on screen
-                    pose.position.x = round(merged[merged_idx]["mid_x"], 1)
-                    pose.position.y = round(merged[merged_idx]["mid_y"], 1)
-                elif merged_idx < 0:
-                    # key is off-screen to the left
-                    pose.position.x = float('-inf')
-                    pose.position.y = float('-inf')
-                else:
-                    # key is off-screen to the right
-                    pose.position.x = float('inf')
-                    pose.position.y = float('inf')
-
-            pose.position.z = 0.0
-            msg.poses.append(pose)
-
-        #print(msg.poses)
-
-        self.publisher_keys.publish(msg)
-
+        return [{"key_index": i, **k} for i, k in enumerate(raw_keys)] 
     def _draw_piano_keys(self, bgr_image: np.ndarray, keys: list) -> None:
          
         """!
@@ -364,18 +272,15 @@ class AprilTagPianoDetector(Node):
             label   = k["label"]
             if not contour:
                 continue
-            pts  = np.array(contour, dtype=np.int32).reshape((-1, 1, 2))
-            fill = CLASS_FILLS.get(label, DEFAULT_FILL)
+            pts = np.array(contour, dtype=np.int32).reshape((-1, 1, 2))
+            if label == "key_B":
+                fill = (0, 200, 200)
+            elif label == "key_W":
+                fill = (180, 0, 180)
+            else:
+                fill = (0, 160, 200)
             cv2.fillPoly(overlay, [pts], fill)
         cv2.addWeighted(overlay, 0.30, bgr_image, 0.70, 0, bgr_image)
-
-        # work out absolute index for each detection so the on-screen label
-        # shows the real key number (0-36) instead of the detection order
-        abs_lookup = {}   # detection mid_x -> absolute index
-        if self._key_offset is not None:
-            for i, m in enumerate(self._merged_keys):
-                abs_lookup[round(m["mid_x"], 1)] = i + self._key_offset
-
         for k in keys:
             contour = k["contour"]
             label   = k["label"]
@@ -384,7 +289,12 @@ class AprilTagPianoDetector(Node):
             mx, my  = int(k["mid_x"]), int(k["mid_y"])
             x1      = int(k["bbox"][0])
             y1      = int(k["bbox"][1])
-            colour = CLASS_COLOURS.get(label, DEFAULT_COLOUR)
+            if label == "key_B":
+                colour = (0, 255, 255)
+            elif label == "key_W":
+                colour = (255, 0, 255)
+            else:
+                colour = (0, 215, 255)
             if contour:
                 pts = np.array(contour, dtype=np.int32).reshape((-1, 1, 2))
                 cv2.polylines(bgr_image, [pts], isClosed=True, color=colour, thickness=2)
@@ -395,60 +305,130 @@ class AprilTagPianoDetector(Node):
             cv2.putText(bgr_image, f"({mx},{my})",
                         (mx - 22, my + 18),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.35, colour, 1)
-            # show absolute key index if calibrated, otherwise detection index
-            abs_idx = abs_lookup.get(round(k["mid_x"], 1), None)
-            if abs_idx is not None:
-                tag = f"K{abs_idx}"
-            else:
-                tag = f"#{idx}"
-            cv2.putText(bgr_image, tag,
+            cv2.putText(bgr_image, f"#{idx}",
                         (x1, y1 - 8),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, colour, 2)
             cv2.putText(bgr_image, f"{label} {conf:.2f}",
                         (x1 + 2, y1 + 18),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.42, colour, 1)
-    def _draw_legend(self, bgr_image: np.ndarray) -> None:
+    def _publish_keys(self) -> None:
         """!
-        @brief  Draws a colour legend in the top-right corner so each class
-        is easy to identify at a glance.
+        @brief  publishing the current ordered_keys list as a poseArray message.
+        each key is encoded as a geometry_msgs/pose where:
+        1) pose.position.x: adjusted cordinat of x.
+        2) pose.position.y: adjusted cordinat of y.
+        3) pose.position.z: 0.0
+        poses are ordered left to right maching key-index in the source list
         """
-        # Collect which classes are actually present this frame
-        seen = set()
+        #Packs every key's centroid into a PoseArray message and publishes it. The robot arm controller reads this on /piano_keys to know where each key is in the camera frame.
+        msg = PoseArray()
+
         for k in self.ordered_keys:
-            seen.add(k["label"])
-        if not seen:
-            return
-        h, w = bgr_image.shape[:2]
-        line_h    = 28
-        pad       = 10
-        box_size  = 16
-        # Sort alphabetically so the legend order is stable
-        labels = sorted(seen)
-        legend_w  = 180
-        legend_h  = len(labels) * line_h + pad * 2
-        x0 = w - legend_w - pad
-        y0 = pad
-        # Semi-transparent dark background
-        overlay = bgr_image.copy()
-        cv2.rectangle(overlay, (x0, y0), (x0 + legend_w, y0 + legend_h), (30, 30, 30), -1)
-        cv2.addWeighted(overlay, 0.65, bgr_image, 0.35, 0, bgr_image)
-        for i, lab in enumerate(labels):
-            cy = y0 + pad + i * line_h
-            colour = CLASS_COLOURS.get(lab, DEFAULT_COLOUR)
-            # Colour swatch
-            cv2.rectangle(bgr_image,
-                          (x0 + pad, cy),
-                          (x0 + pad + box_size, cy + box_size),
-                          colour, -1)
-            cv2.rectangle(bgr_image,
-                          (x0 + pad, cy),
-                          (x0 + pad + box_size, cy + box_size),
-                          (255, 255, 255), 1)
-            # Label text with anchor index if applicable
-            anchor_str = f" (K{ANCHOR_MAP[lab]})" if lab in ANCHOR_MAP else ""
-            cv2.putText(bgr_image, f"{lab}{anchor_str}",
-                        (x0 + pad + box_size + 8, cy + box_size - 2),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.50, (255, 255, 255), 1)
+            pose = Pose()
+            pose.position.x = round(k["mid_x"], 1)
+            pose.position.y = round(k["mid_y"], 1)
+            pose.position.z = 0.0
+            msg.poses.append(pose)
+
+        size = len(self.ordered_keys)
+
+        if size < 37:
+
+            # find c key
+            blue_key = None
+            red_key = None
+            green_key = None
+
+            for index, k in enumerate(self.ordered_keys):
+                if k["label"] == "C":
+                    blue_index = index
+                    blue_key = k
+                    break
+
+            if(blue_key != None):
+                # blue key found
+                # pad front if index wrong
+                if blue_index != 7:
+                    pre_diff = 7 - blue_index
+                    for i in range(pre_diff):
+                        dummy_pose = Pose()
+                        dummy_pose.position.x = float("nan")
+                        dummy_pose.position.y = float("nan")
+                        dummy_pose.position.z = float("nan")
+                        msg.poses.insert(0, dummy_pose)
+                
+                # pad back if length wrong
+                size2 = len(msg.poses)
+                if size2 < 37:
+                    post_diff = 37 -size2
+                    for i in range(post_diff):
+                        dummy_pose = Pose()
+                        dummy_pose.position.x = float("nan")
+                        dummy_pose.position.y = float("nan")
+                        dummy_pose.position.z = float("nan")
+                        msg.poses.append(dummy_pose)
+                
+            else:
+                for index, k in enumerate(self.ordered_keys):
+                    if k["label"] == "Red":
+                        red_index = index
+                        red_key = k
+                        break
+
+                if (red_key != None):
+                    # red key found
+                    # pad front if index wrong
+                    if red_index != 19:
+                        pre_diff = 19 - red_index
+                        for i in range(pre_diff):
+                            dummy_pose = Pose()
+                            dummy_pose.position.x = float("nan")
+                            dummy_pose.position.y = float("nan")
+                            dummy_pose.position.z = float("nan")
+                            msg.poses.insert(0, dummy_pose)
+
+                    # pad back if length wrong
+                    size2 = len(msg.poses)
+                    if size2 < 37:
+                        post_diff = 37 - size2
+                        for i in range(post_diff):
+                            dummy_pose = Pose()
+                            dummy_pose.position.x = float("nan")
+                            dummy_pose.position.y = float("nan")
+                            dummy_pose.position.z = float("nan")
+                            msg.poses.append(dummy_pose)
+
+                else:
+                    for index, k in enumerate(self.ordered_keys):
+                        if k["label"] == "Green":
+                            green_index = index
+                            green_key = k
+                            break
+
+                    if (green_key != None):
+                        # green key found
+                        # pad front if index wrong
+                        if green_index != 31:
+                            pre_diff = 31 - green_index
+                            for i in range(pre_diff):
+                                dummy_pose = Pose()
+                                dummy_pose.position.x = float("nan")
+                                dummy_pose.position.y = float("nan")
+                                dummy_pose.position.z = float("nan")
+                                msg.poses.insert(0, dummy_pose)
+
+                        # pad back if length wrong
+                        size2 = len(msg.poses)
+                        if size2 < 37:
+                            post_diff = 37 - size2
+                            for i in range(post_diff):
+                                dummy_pose = Pose()
+                                dummy_pose.position.x = float("nan")
+                                dummy_pose.position.y = float("nan")
+                                dummy_pose.position.z = float("nan")
+                                msg.poses.append(dummy_pose)
+
+        self.publisher_keys.publish(msg)
     #Finds which key centroid is closest to a given pixel coordinate using squared Euclidean distanc
 def main(args=None):
     """!
