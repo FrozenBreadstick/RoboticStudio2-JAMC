@@ -242,7 +242,7 @@ int test_pass_requirements() {
     std::cout << "song duration: " << song_duration << std::endl;
     std::cout << std::endl;
 
-    int index = 2;
+    int index = 1;
     std::cout << "first 10 Notes: " << std::endl;
     for(size_t i = 0; i < 10; i++) {
         std::cout << "Index: " << assigned_indexs.at(index).at(i) << ", of pitch: " << notes.at(index).at(i) << ", at time: " << note_timings.at(index).at(i) << ", with duration: " << note_durations.at(index).at(i) << std::endl;
@@ -320,9 +320,9 @@ int test_pass_requirements() {
     std::cout << std::endl;
 
 
-    index = 4;
+    index = 1;
     std::cout << "first 10 Notes: " << std::endl;
-    for(size_t i = 0; i < 10; i++) {
+    for(size_t i = 63; i < 73; i++) {
         std::cout << "Index: " << assigned_indexs.at(index).at(i) << ", of pitch: " << notes.at(index).at(i) << ", at time: " << note_timings.at(index).at(i) << ", with duration: " << note_durations.at(index).at(i) << std::endl;
     }
 
