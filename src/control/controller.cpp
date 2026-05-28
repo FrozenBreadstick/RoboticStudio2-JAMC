@@ -253,6 +253,7 @@ void Control::Controller::load_callback(const std::shared_ptr<jamc::srv::Load::R
     {
         RCLCPP_INFO(this->get_logger(), "Note: %d", note);
     }
+    progress_pub_->publish(std_msgs::msg::Int32().set__data(0));
 }
 
 /**
@@ -317,6 +318,7 @@ void Control::Controller::control_loop()
         if(current_note_index_ >= static_cast<int>(song_.size())) {
             play_ = false; //Stop playback if we've reached the end of the song
             current_note_index_ = 0; //Reset note index for next time
+            progress_pub_->publish(std_msgs::msg::Int32().set__data(current_note_index_));
             state_ = STATE::MOVING;
             CONTROL_TIME = 0.0; //Reset control time for next time
             RCLCPP_INFO(this->get_logger(), "Reached end of song, stopping playback.");
@@ -324,6 +326,7 @@ void Control::Controller::control_loop()
         } else if (current_note_index_ < 0) {
             play_ = false; //Stop playback if we've reached the beginning of the song in reverse
             current_note_index_ = 0; //Reset note index for next time
+            progress_pub_->publish(std_msgs::msg::Int32().set__data(current_note_index_));
             CONTROL_TIME = 0.0; //Reset control time for next time
             state_ = STATE::MOVING;
             RCLCPP_INFO(this->get_logger(), "Reached beginning of song, stopping playback.");
