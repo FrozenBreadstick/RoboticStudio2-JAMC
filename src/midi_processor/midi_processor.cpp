@@ -105,6 +105,7 @@
             fileDuration = 0;
             assigned_keys.clear();
             keyboard_values.clear();
+            keyboard_indexs.clear();
 
             // open file
             if(!open_file(midi_file_path)) {
@@ -317,6 +318,17 @@
          */
         bool MidiProcessor::load_json_file(std::string json_file_path) 
         {
+            // clear all variables
+            channels.clear();
+            instruments.clear();
+            notes.clear();
+            note_timeStamps.clear();
+            note_durations.clear();
+            fileDuration = 0;
+            assigned_keys.clear();
+            keyboard_values.clear();
+            keyboard_indexs.clear();
+
             // file path for loading
             std::filesystem::path file_path = std::filesystem::path(homeDir) / "mipi_files" / json_file_path;
 

@@ -171,6 +171,13 @@ int test_pass_requirements() {
         std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
     }
 
+    // clear vectors
+    notes.clear();
+    assigned_indexs.clear();
+    note_timings.clear();
+    note_durations.clear();
+    song_duration = 0;
+
     std::cout << std::endl;
     std::cout << std::endl;
 
@@ -202,6 +209,13 @@ int test_pass_requirements() {
         std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
     }
 
+    // clear vectors
+    notes.clear();
+    assigned_indexs.clear();
+    note_timings.clear();
+    note_durations.clear();
+    song_duration = 0;
+
     std::cout << std::endl;
     std::cout << std::endl;
 
@@ -228,10 +242,18 @@ int test_pass_requirements() {
     std::cout << "song duration: " << song_duration << std::endl;
     std::cout << std::endl;
 
+    int index = 2;
     std::cout << "first 10 Notes: " << std::endl;
     for(size_t i = 0; i < 10; i++) {
-        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+        std::cout << "Index: " << assigned_indexs.at(index).at(i) << ", of pitch: " << notes.at(index).at(i) << ", at time: " << note_timings.at(index).at(i) << ", with duration: " << note_durations.at(index).at(i) << std::endl;
     }
+
+    // clear vectors
+    notes.clear();
+    assigned_indexs.clear();
+    note_timings.clear();
+    note_durations.clear();
+    song_duration = 0;
 
     std::cout << std::endl;
     std::cout << std::endl;
@@ -264,6 +286,13 @@ int test_pass_requirements() {
         std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
     }
 
+    // clear vectors
+    notes.clear();
+    assigned_indexs.clear();
+    note_timings.clear();
+    note_durations.clear();
+    song_duration = 0;
+
     std::cout << std::endl;
     std::cout << std::endl;
 
@@ -290,10 +319,19 @@ int test_pass_requirements() {
     std::cout << "song duration: " << song_duration << std::endl;
     std::cout << std::endl;
 
+
+    index = 4;
     std::cout << "first 10 Notes: " << std::endl;
     for(size_t i = 0; i < 10; i++) {
-        std::cout << "Index: " << assigned_indexs.at(0).at(i) << ", of pitch: " << notes.at(0).at(i) << ", at time: " << note_timings.at(0).at(i) << ", with duration: " << note_durations.at(0).at(i) << std::endl;
+        std::cout << "Index: " << assigned_indexs.at(index).at(i) << ", of pitch: " << notes.at(index).at(i) << ", at time: " << note_timings.at(index).at(i) << ", with duration: " << note_durations.at(index).at(i) << std::endl;
     }
+
+    // clear vectors
+    notes.clear();
+    assigned_indexs.clear();
+    note_timings.clear();
+    note_durations.clear();
+    song_duration = 0;
 
     std::cout << std::endl;
     std::cout << std::endl;
