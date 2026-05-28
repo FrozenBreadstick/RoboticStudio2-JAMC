@@ -180,6 +180,8 @@ To build the package please refer to *@ref README.md "BUILD"**
 @subsection launch_method Launch Files - Node Startup and Execution (Usage)
 \bMain Launch Files
 
+These launch files take approximately 60 seconds to complete startup.
+
 ```all.launch.py``` - This launch file will start the UI and Control nodes together. It will also start all dependencies, like the UR_driver, and MoveIt Servo.
 Params:
 robot_ip: The IP address of the robot.
