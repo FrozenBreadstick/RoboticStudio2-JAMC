@@ -191,7 +191,7 @@ robot_ip: The IP address of the robot.
 For both of the launch files specified above, the perception node and its depndencies is not included. This is due to integration limitations due to time constraints. 
 If starting the system with real perception:
 1. To start the perception node, please refer to the usage guide in the Perception README for starting the perception node.
-2. Run end_effector_streamer.py in /src/control
+2. Run test5.py in /src/perception
 3. In controller.cpp find and comment all lines that mention "simulated_deadzone". This ensures the system uses the correct units for the deadzone, pixel based for the real perception, physical simulated distance for the simulated perception.
 
 If you would like to start the system with simulated perception:
