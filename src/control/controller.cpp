@@ -428,7 +428,7 @@ std::optional<vector3> Control::Controller::play_note(double duration, double ti
         target.z = pn_target_.z - ee.z;
 
         double distance_error = std::hypot(target.y, target.z);
-        double physical_deadzone = 0.001; // 1mm
+        double physical_deadzone = 0.003; // 1mm
 
         if (distance_error < physical_deadzone) {
             target.y = 0.0;
@@ -445,11 +445,10 @@ std::optional<vector3> Control::Controller::play_note(double duration, double ti
             }
         }
 
-        if (time >= duration) {
+        if (time >= duration && distance_error < physical_deadzone) {
             playing_note_ = false;
             returning_note_ = true;
         }
-
         return target;
     }
 

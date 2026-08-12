@@ -69,7 +69,7 @@ namespace Control
         geometry_msgs::msg::Point ee_; //The current end effector position
         std::mutex ee_mutex_; //Mutex to protect access to the end effector position
 
-        double global_speed_scaling_ = 5.0; //A global speed scaler for the baseline speed scaling, seperate from the time scaling by the UI
+        double global_speed_scaling_ = 10.0; //A global speed scaler for the baseline speed scaling, seperate from the time scaling by the UI
 
         std::mutex song_mutex_; //Mutex to protect access to the song data
         std::vector<int> song_; //The notes in the currently loaded channel of the currently loaded song
@@ -92,7 +92,7 @@ namespace Control
 
         double playnote_target_x = 0.0; //Hardcoded x offset to play a key on the keyboard
         double playnote_target_y = 0.015; //Hardcoded y offset to play a key on the keyboard
-        double playnote_target_z = -0.025; //Hardcoded z offset to play a key on the keyboard
+        double playnote_target_z = -0.0175; //Hardcoded z offset to play a key on the keyboard
         geometry_msgs::msg::Point start_pn_ee_;
         geometry_msgs::msg::Point pn_target_;
         bool playing_note_ = false;

@@ -40,22 +40,61 @@ class UR3eOffsetPublisher(Node):
         pose_array.header.frame_id = 'base_link'
         pose_array.header.stamp = self.get_clock().now().to_msg()
         
-        # 1 3 5 8 10 13 15 17 20 22 25 27 29 32 34
-        black_keys = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25, 27, 29, 32, 34]
-        x_offset = 0
+        # Your exact black key indices (Keyboard starting on C)
+        black_keys = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25, 27, 29, 32, 34}
+        
+        total_length = 0.34
+        total_white_keys = 22 
+        
+        # Calculate uniform distance between the 22 white keys (21 intervals)
+        white_key_width = total_length / (total_white_keys - 1)
+        
+        white_key_counter = 0
 
+        # Loop strictly from 0 to 36 so they are appended in exact order
         for i in range(37):
             pose = Pose()
-            x_offset += 0.0095 if i or i-1 in black_keys else 0.019
-            y_offset = 0.0 if i in black_keys else -0.019
-            pose.position.x = -0.2 + (x_offset)
-            pose.position.y = 0.34 + (y_offset)
             pose.position.z = 0.0
             pose.orientation.w = 1.0
-            if i >= 36: print(x_offset)
+            
+            if i not in black_keys:
+                # White key: placed exactly on the grid line
+                x_pos = white_key_counter * white_key_width
+                y_offset = -0.019  # White keys pulled forward (or use 0.0 depending on your axis)
+                white_key_counter += 1
+            else:
+                # Black key: placed exactly halfway between the current white key position 
+                # and the previous one we just processed.
+                x_pos = (white_key_counter - 0.5) * white_key_width
+                y_offset = 0.0     # Black keys pushed back
+                
+            pose.position.x = -0.2 + x_pos
+            pose.position.y = 0.34 + y_offset
+            
             pose_array.poses.append(pose)
             
         return pose_array
+    # def generate_preset_poses(self):
+    #     pose_array = PoseArray()
+    #     pose_array.header.frame_id = 'base_link'
+    #     pose_array.header.stamp = self.get_clock().now().to_msg()
+        
+    #     # 1 3 5 8 10 13 15 17 20 22 25 27 29 32 34
+    #     black_keys = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25, 27, 29, 32, 34]
+    #     x_offset = 0
+
+    #     for i in range(37):
+    #         pose = Pose()
+    #         x_offset += 0.0095 if i or i-1 in black_keys else 0.019
+    #         y_offset = 0.0 if i in black_keys else -0.019
+    #         pose.position.x = -0.2 + (x_offset)
+    #         pose.position.y = 0.34 + (y_offset)
+    #         pose.position.z = 0.0
+    #         pose.orientation.w = 1.0
+    #         if i >= 36: print(x_offset)
+    #         pose_array.poses.append(pose)
+            
+    #     return pose_array
 
     """!
     @brief Timer callback that calculates the offset from the end effector to each preset key pose and publishes it as a PoseArray to /piano_keys. It also publishes the absolute positions of the keys to /key_positions for visualization.

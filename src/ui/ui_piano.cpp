@@ -74,8 +74,8 @@ namespace UI
         connect(_playback_timer, &QTimer::timeout, this, [this]() {
             if (!is_playing) return;
 
-            RCLCPP_WARN(this->get_logger(), "Robot Progress taking along time");
-            //force_pause_and_reset(); 
+            // RCLCPP_WARN(this->get_logger(), "Robot Progress taking along time");
+            // force_pause_and_reset(); 
         });
 
         // Configuration layout
